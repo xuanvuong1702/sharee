@@ -1,0 +1,68 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: sharee-db
+    environment:
+      POSTGRES_DB: sharee
+      POSTGRES_USER: sharee
+      POSTGRES_PASSWORD: sharee
+    ports:
+      - "5432:5432"
+    volumes:
+      - sharee-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sharee -d sharee"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: sharee-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sharee-api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Db: Host=db;Port=5432;Database=sharee;Username=sharee;Password=sharee
+      Jwt__Key: sharee-prod-key-change-me-0123456789abcdef
+      Auth__ExposeOtp: "true"
+    ports:
+      - "8080:8080"
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: sharee-admin
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+  mobile-web:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile
+    container_name: sharee-mobile-web
+    ports:
+      - "8081:80"
+
+volumes:
+  sharee-pgdata:

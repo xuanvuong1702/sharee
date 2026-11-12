@@ -1,0 +1,25 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/ios/Pods/
+
+# Node
+admin/node_modules/
+admin/dist/
+tools/uicheck/node_modules/
+tools/uicheck/*.png
+
+# Runtime / local
+*.log
+.env
+preview*.png
+admin/preview.png
+mobile/preview.png
