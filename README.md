@@ -119,6 +119,10 @@ cd mobile
 flutter pub get
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080
 
+# Flutter Android (emulator dùng 10.0.2.2)
+flutter build apk --dart-define=API_BASE_URL=http://10.0.2.2:8080
+# APK: mobile/build/app/outputs/flutter-apk/app-debug.apk
+
 # Admin
 cd admin
 npm install
