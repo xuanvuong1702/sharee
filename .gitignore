@@ -23,3 +23,6 @@ tools/uicheck/*.png
 preview*.png
 admin/preview.png
 mobile/preview.png
+
+mobile/android/.kotlin/
+*.salive
