@@ -61,7 +61,10 @@ class Vehicle {
         seats: (json['seats'] as num?)?.toInt() ?? 4,
       );
 
-  String get label => '$make $model · $plate';
+  String get label {
+    final name = [make, model].where((part) => part.trim().isNotEmpty).join(' ');
+    return name.isEmpty ? plate : '$name · $plate';
+  }
 }
 
 class Stop {
@@ -262,7 +265,7 @@ class Booking {
       departureTime: DateTime.parse(trip['departureTime'] as String),
       vehicle: Vehicle(
         id: '',
-        make: (trip['vehicle'] as String? ?? '').split(' ').first,
+        make: '',
         model: trip['vehicle'] as String? ?? '',
         plate: trip['plate'] as String? ?? '',
         seats: 4,

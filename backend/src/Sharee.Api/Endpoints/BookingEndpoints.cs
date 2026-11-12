@@ -255,7 +255,7 @@ public static class BookingEndpoints
                 return Results.Conflict(new { error = "Booking chưa ở trạng thái xác nhận" });
             }
 
-            var payout = booking.PriceTotal - booking.PriceTotal * 0 / 100;
+            var payout = booking.PriceTotal;
             await ledger.RecordAsync(conn, tx, "payout", "booking", id,
                 ("escrow", 'D', payout),
                 ("driver_payable", 'C', payout));

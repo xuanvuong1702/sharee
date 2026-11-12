@@ -41,10 +41,13 @@ class _LineList extends StatefulWidget {
 
 class _LineListState extends State<_LineList> {
   late Future<List<Line>> _future;
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _future = AppScope.of(context).api.lines();
   }
 
@@ -119,12 +122,15 @@ class LineDetailScreen extends StatefulWidget {
 
 class _LineDetailScreenState extends State<LineDetailScreen> {
   late Future<Line> _future;
+  bool _started = false;
   String? _stopId;
   bool _busy = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _future = AppScope.of(context).api.line(widget.lineId);
   }
 
@@ -229,10 +235,13 @@ class _MyTickets extends StatefulWidget {
 
 class _MyTicketsState extends State<_MyTickets> {
   late Future<List<ETicket>> _future;
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _future = AppScope.of(context).api.myTickets();
   }
 

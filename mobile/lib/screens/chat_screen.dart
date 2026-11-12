@@ -16,10 +16,13 @@ class ChatThreadsScreen extends StatefulWidget {
 
 class _ChatThreadsScreenState extends State<ChatThreadsScreen> {
   late Future<List<ChatThread>> _future;
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _load();
   }
 
@@ -110,12 +113,20 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage> _messages = [];
   Timer? _timer;
   bool _sending = false;
+  bool _started = false;
 
   @override
   void initState() {
     super.initState();
-    _load();
     _timer = Timer.periodic(const Duration(seconds: 3), (_) => _load(silent: true));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _load();
   }
 
   @override

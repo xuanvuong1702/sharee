@@ -15,6 +15,7 @@ class PublishScreen extends StatefulWidget {
 
 class _PublishScreenState extends State<PublishScreen> {
   late Future<List<Vehicle>> _vehicles;
+  bool _started = false;
   Vehicle? _vehicle;
   int _preset = 0;
   DateTime _departure = DateTime.now().add(const Duration(days: 1, hours: 1));
@@ -24,8 +25,10 @@ class _PublishScreenState extends State<PublishScreen> {
   bool _busy = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     _vehicles = AppScope.of(context).api.vehicles();
   }
 
