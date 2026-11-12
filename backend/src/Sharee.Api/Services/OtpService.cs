@@ -18,7 +18,7 @@ public sealed class OtpService
         lock (history)
         {
             history.RemoveAll(x => x < now.AddHours(-1));
-            if (history.Count >= 5)
+            if (history.Count >= 20)
                 throw new InvalidOperationException("RATE_LIMIT");
             history.Add(now);
         }

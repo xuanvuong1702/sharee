@@ -171,7 +171,25 @@ class _TripCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  StatusPill(status: result.bookingMode == 'instant' ? 'confirmed' : 'pending_driver'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: result.bookingMode == 'instant'
+                          ? const Color(0xFFE6F8F0)
+                          : const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Text(
+                      result.bookingMode == 'instant' ? 'Đặt ngay' : 'Duyệt tay',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: result.bookingMode == 'instant'
+                            ? const Color(0xFF067647)
+                            : const Color(0xFFB45309),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 4),
                   Text('${result.seatsAvailable} chỗ',
                       style: const TextStyle(fontSize: 10, color: AppTheme.muted)),

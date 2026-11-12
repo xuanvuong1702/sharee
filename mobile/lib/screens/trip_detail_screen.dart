@@ -83,9 +83,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       Text(hhmm(r.arriveEstimate),
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
                       const Spacer(),
-                      Text(money(r.pricePerSeat),
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                      const Text('/ghế', style: TextStyle(fontSize: 10, color: AppTheme.muted)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(money(r.pricePerSeat),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                          const Text('/ghế', style: TextStyle(fontSize: 10, color: AppTheme.muted)),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),

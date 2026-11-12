@@ -26,8 +26,7 @@ public static class AuthEndpoints
             catch (InvalidOperationException)
             {
                 return Results.Json(new { error = "Bạn đã yêu cầu OTP quá nhiều lần. Thử lại sau 1 giờ." },
-                    statusCode: StatusCodes.Status429TooManyRequests);
-            }
+                    statusCode: StatusCodes.Status429TooManyRequests);            }
         });
 
         group.MapPost("/otp/verify", async (

@@ -179,7 +179,6 @@ class _BookingScreenState extends State<BookingScreen> {
                         ],
                       ),
                     ),
-                    StatusPill(status: booking.status),
                   ],
                 ),
               ),
