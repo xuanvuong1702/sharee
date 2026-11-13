@@ -72,6 +72,8 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
 - **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
 - **Chuyến định kỳ**: lịch chạy theo tuần, tự materialize chuyến cho 14 ngày tới, worker gia hạn mỗi 6 giờ.
 - **Thu nhập tài xế**: tổng hợp booking hoàn thành (VND) và Daily (EUR), màn hình ví trong app.
+- **Theo dõi trực tiếp**: bản đồ OpenStreetMap, vị trí tài xế + khách, route, ETA, trạng thái chuyến;
+  driver chia sẻ GPS (hoặc mô phỏng khi trình duyệt chặn quyền), client cập nhật mỗi 3 giây.
 - **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
 
 ## API chính
@@ -89,6 +91,9 @@ POST /api/trips                       (driver)
 POST /api/trips/recurring             lịch chạy theo tuần
 GET  /api/trips/recurring
 DELETE /api/trips/recurring/{id}      tạm dừng
+GET  /api/trips/{id}/tracking         vị trí tài xế/khách + ETA + route
+POST /api/trips/{id}/location         cập nhật GPS (driver/passenger)
+POST /api/trips/{id}/tracking/status  en_route | arrived | in_progress | completed
 POST /api/trips/{id}/bookings         (Idempotency-Key)
 POST /api/bookings/{id}/pay
 GET  /api/bookings/mine

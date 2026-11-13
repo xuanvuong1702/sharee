@@ -131,3 +131,20 @@ public record EarningItemDto(
 public record EarningsDto(
     int TripEarnings, int CompletedTrips, long DailyEarningsMinor, int DailyValidations,
     IReadOnlyList<EarningItemDto> Recent);
+
+public record LocationUpdateRequest(
+    double Lat, double Lng, double? Heading = null, double? Speed = null, double? Accuracy = null);
+
+public record TrackingStatusRequest(string Status);
+
+public record LivePositionDto(
+    Guid UserId, string FullName, string Role, double Lat, double Lng,
+    double? Heading, double? Speed, DateTimeOffset UpdatedAt);
+
+public record LatLngDto(double Lat, double Lng);
+
+public record TripTrackingDto(
+    Guid TripId, Guid DriverId, string Status, string TrackingStatus, string DriverName, string DriverPhone,
+    VehicleDto Vehicle, StopDto Pickup, StopDto Dropoff, IReadOnlyList<LatLngDto> Route,
+    LivePositionDto? Driver, IReadOnlyList<LivePositionDto> Passengers,
+    int EtaMinutes, double DistanceKm, DateTimeOffset? StartedAt);

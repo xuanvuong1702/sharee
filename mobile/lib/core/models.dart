@@ -550,3 +550,106 @@ class Earnings {
             .toList(),
       );
 }
+
+class LatLngPoint {
+  final double lat;
+  final double lng;
+  const LatLngPoint(this.lat, this.lng);
+  factory LatLngPoint.fromJson(Map<String, dynamic> json) =>
+      LatLngPoint((json['lat'] as num).toDouble(), (json['lng'] as num).toDouble());
+}
+
+class LivePosition {
+  final String userId;
+  final String fullName;
+  final String role;
+  final double lat;
+  final double lng;
+  final double? heading;
+  final double? speed;
+  final DateTime updatedAt;
+
+  const LivePosition({
+    required this.userId,
+    required this.fullName,
+    required this.role,
+    required this.lat,
+    required this.lng,
+    this.heading,
+    this.speed,
+    required this.updatedAt,
+  });
+
+  factory LivePosition.fromJson(Map<String, dynamic> json) => LivePosition(
+        userId: json['userId'] as String,
+        fullName: json['fullName'] as String? ?? '',
+        role: json['role'] as String? ?? '',
+        lat: (json['lat'] as num).toDouble(),
+        lng: (json['lng'] as num).toDouble(),
+        heading: (json['heading'] as num?)?.toDouble(),
+        speed: (json['speed'] as num?)?.toDouble(),
+        updatedAt: DateTime.parse(json['updatedAt'] as String),
+      );
+}
+
+class TripTracking {
+  final String tripId;
+  final String driverId;
+  final String status;
+  final String trackingStatus;
+  final String driverName;
+  final String driverPhone;
+  final Vehicle vehicle;
+  final Stop pickup;
+  final Stop dropoff;
+  final List<LatLngPoint> route;
+  final LivePosition? driver;
+  final List<LivePosition> passengers;
+  final int etaMinutes;
+  final double distanceKm;
+  final DateTime? startedAt;
+
+  const TripTracking({
+    required this.tripId,
+    required this.driverId,
+    required this.status,
+    required this.trackingStatus,
+    required this.driverName,
+    required this.driverPhone,
+    required this.vehicle,
+    required this.pickup,
+    required this.dropoff,
+    required this.route,
+    required this.driver,
+    required this.passengers,
+    required this.etaMinutes,
+    required this.distanceKm,
+    required this.startedAt,
+  });
+
+  factory TripTracking.fromJson(Map<String, dynamic> json) => TripTracking(
+        tripId: json['tripId'] as String,
+        driverId: json['driverId'] as String? ?? '',
+        status: json['status'] as String? ?? '',
+        trackingStatus: json['trackingStatus'] as String? ?? 'scheduled',
+        driverName: json['driverName'] as String? ?? '',
+        driverPhone: json['driverPhone'] as String? ?? '',
+        vehicle: Vehicle.fromJson(json['vehicle'] as Map<String, dynamic>),
+        pickup: Stop.fromJson(json['pickup'] as Map<String, dynamic>),
+        dropoff: Stop.fromJson(json['dropoff'] as Map<String, dynamic>),
+        route: (json['route'] as List<dynamic>? ?? [])
+            .map((e) => LatLngPoint.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        driver: json['driver'] == null
+            ? null
+            : LivePosition.fromJson(json['driver'] as Map<String, dynamic>),
+        passengers: (json['passengers'] as List<dynamic>? ?? [])
+            .map((e) => LivePosition.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        etaMinutes: (json['etaMinutes'] as num?)?.toInt() ?? 0,
+        distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
+        startedAt: json['startedAt'] == null ? null : DateTime.parse(json['startedAt'] as String),
+      );
+
+  bool get active => trackingStatus != 'completed';
+}

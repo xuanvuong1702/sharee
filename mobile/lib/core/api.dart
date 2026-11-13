@@ -156,6 +156,35 @@ class Api {
     return Earnings.fromJson(data);
   }
 
+  Future<TripTracking> tracking(String tripId) async {
+    final data = await _send('GET', '/api/trips/$tripId/tracking') as Map<String, dynamic>;
+    return TripTracking.fromJson(data);
+  }
+
+  Future<TripTracking> sendLocation(
+    String tripId, {
+    required double lat,
+    required double lng,
+    double? heading,
+    double? speed,
+    double? accuracy,
+  }) async {
+    final data = await _send('POST', '/api/trips/$tripId/location', body: {
+      'lat': lat,
+      'lng': lng,
+      'heading': heading,
+      'speed': speed,
+      'accuracy': accuracy,
+    }) as Map<String, dynamic>;
+    return TripTracking.fromJson(data);
+  }
+
+  Future<TripTracking> setTrackingStatus(String tripId, String status) async {
+    final data = await _send('POST', '/api/trips/$tripId/tracking/status',
+        body: {'status': status}) as Map<String, dynamic>;
+    return TripTracking.fromJson(data);
+  }
+
   Future<List<SearchResult>> search({
     required double fromLat,
     required double fromLng,

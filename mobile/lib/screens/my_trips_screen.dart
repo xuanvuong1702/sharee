@@ -7,6 +7,7 @@ import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 import 'booking_screen.dart';
 import 'chat_screen.dart';
+import 'tracking_screen.dart';
 
 class MyTripsScreen extends StatefulWidget {
   const MyTripsScreen({super.key});
@@ -284,6 +285,30 @@ class _BookingCard extends StatelessWidget {
                     Text(booking.driver.fullName,
                         style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600)),
                     const Spacer(),
+                    if (booking.status == 'confirmed')
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).push(
+                            appRoute(TrackingScreen(tripId: booking.tripId))),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primarySoft,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.near_me_rounded, size: 12, color: AppTheme.primary),
+                              SizedBox(width: 3),
+                              Text('Theo dõi',
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 6),
                     const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.mutedLight),
                   ],
                 ),

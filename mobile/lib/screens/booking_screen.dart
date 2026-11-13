@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
+import 'tracking_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   final String bookingId;
@@ -231,6 +232,16 @@ class _BookingScreenState extends State<BookingScreen> {
                   ],
                 ),
               ),
+              if (booking.confirmed || booking.status == 'completed') ...[
+                const SizedBox(height: 12),
+                PrimaryButton(
+                  label: 'Theo dõi trực tiếp',
+                  icon: Icons.near_me_rounded,
+                  onPressed: () => Navigator.of(context).push(
+                    appRoute(TrackingScreen(tripId: booking.tripId)),
+                  ),
+                ),
+              ],
               const SectionHeader('Hành trình'),
               AppCard(
                 padding: const EdgeInsets.all(15),
