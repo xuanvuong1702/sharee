@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/format.dart';
 import '../core/models.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 import 'daily_driver.dart';
 
@@ -20,10 +21,39 @@ class _DailyScreenState extends State<DailyScreen> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Đi chung hằng ngày',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-          bottom: const TabBar(
-            tabs: [Tab(text: 'Tuyến'), Tab(text: 'Vé của tôi'), Tab(text: 'Tài xế')],
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Daily', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              Text('Đi chung hằng ngày, không cần đặt trước',
+                  style: TextStyle(fontSize: 11, color: AppTheme.muted)),
+            ],
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(52),
+            child: Container(
+              height: 40,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: AppTheme.line),
+              ),
+              child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: AppTheme.muted,
+                labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                tabs: const [Tab(text: 'Tuyến'), Tab(text: 'Vé của tôi'), Tab(text: 'Tài xế')],
+              ),
+            ),
           ),
         ),
         body: const TabBarView(
@@ -65,52 +95,147 @@ class _LineListState extends State<_LineList> {
         final lines = snapshot.data ?? [];
         if (lines.isEmpty) return const Center(child: Text('Chưa có tuyến nào'));
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF0B2A6B), Color(0xFF1657E8)]),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            AppCard(
+              gradient: AppTheme.gradient,
+              border: null,
+              padding: const EdgeInsets.all(17),
+              child: Row(
                 children: [
-                  Text('KHÔNG CẦN ĐẶT TRƯỚC',
-                      style: TextStyle(color: Colors.white70, fontSize: 9.5, letterSpacing: 1)),
-                  SizedBox(height: 5),
-                  Text('Quét QR tại trạm, lên xe trong vài phút',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
-                  SizedBox(height: 3),
-                  Text('Tài xế đi làm như bình thường, nhận thêm thu nhập.',
-                      style: TextStyle(color: Colors.white70, fontSize: 10.5)),
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 25),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('KHÔNG CẦN ĐẶT TRƯỚC',
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 8.5,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.w700)),
+                        SizedBox(height: 4),
+                        Text('Tạo vé tại trạm, lên xe trong vài phút',
+                            style: TextStyle(
+                                color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+                        SizedBox(height: 3),
+                        Text('Vé điện tử có hiệu lực 30 phút.',
+                            style: TextStyle(color: Colors.white70, fontSize: 10)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
+            const Text('Tuyến đang chạy',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            const Text('Chọn tuyến và trạm gần bạn nhất',
+                style: TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+            const SizedBox(height: 10),
             for (final line in lines)
-              Card(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  leading: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFEAF0FF), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.route, color: AppTheme.primary, size: 22),
-                  ),
-                  title: Text(line.name,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                  subtitle: Text(
-                      '${line.stopsCount} trạm · ${line.distanceMeters == null ? '—' : (line.distanceMeters! / 1000).toStringAsFixed(1)} km',
-                      style: const TextStyle(fontSize: 10.5)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => LineDetailScreen(lineId: line.id),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 9),
+                child: AppCard(
+                  onTap: () => Navigator.of(context).push(appRoute(
+                    LineDetailScreen(lineId: line.id),
                   )),
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Column(
+                        children: [
+                          Container(
+                            width: 11,
+                            height: 11,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.success, width: 2.5),
+                            ),
+                          ),
+                          Container(width: 2, height: 28, color: AppTheme.line),
+                          Container(
+                            width: 11,
+                            height: 11,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.accent, width: 2.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(line.name,
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 3),
+                            Text(
+                                line.distanceMeters != null && line.distanceMeters! > 0
+                                    ? '${line.stopsCount} trạm · ${(line.distanceMeters! / 1000).toStringAsFixed(1)} km'
+                                    : '${line.stopsCount} trạm',
+                                style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                            const SizedBox(height: 5),
+                            Row(
+                              children: [
+                                const Pill('Vé 30 phút',
+                                    color: AppTheme.primary, background: AppTheme.primarySoft),
+                                const SizedBox(width: 5),
+                                if (line.stops.isNotEmpty)
+                                  Flexible(
+                                    child: Text(
+                                      '${line.stops.first.name.split(',').first} → ${line.stops.last.name.split(',').first}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 9.5, color: AppTheme.muted),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F6FA),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.chevron_right_rounded,
+                            size: 19, color: AppTheme.muted),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+            const SizedBox(height: 10),
+            const SectionHeader('Cách hoạt động', padding: EdgeInsets.only(top: 8, bottom: 8)),
+            AppCard(
+              padding: const EdgeInsets.all(15),
+              child: const Column(
+                children: [
+                  _HowStep(number: '1', title: 'Chọn trạm gần bạn', sub: 'Mỗi tuyến có nhiều trạm dọc đường.'),
+                  Divider(height: 20),
+                  _HowStep(number: '2', title: 'Tạo vé điện tử', sub: 'Vé có hiệu lực 30 phút, không cần chọn giờ.'),
+                  Divider(height: 20),
+                  _HowStep(number: '3', title: 'Đưa mã cho tài xế', sub: 'Tài xế nhập mã 4 số để xác nhận.'),
+                ],
+              ),
+            ),
           ],
         );
       },
@@ -118,8 +243,43 @@ class _LineListState extends State<_LineList> {
   }
 }
 
-class LineDetailScreen extends StatefulWidget {
-  final String lineId;
+class _HowStep extends StatelessWidget {
+  final String number;
+  final String title;
+  final String sub;
+
+  const _HowStep({required this.number, required this.title, required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: const BoxDecoration(color: AppTheme.primarySoft, shape: BoxShape.circle),
+          alignment: Alignment.center,
+          child: Text(number,
+              style: const TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w900, color: AppTheme.primary)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              Text(sub, style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class LineDetailScreen extends StatefulWidget {  final String lineId;
   const LineDetailScreen({super.key, required this.lineId});
 
   @override

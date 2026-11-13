@@ -187,6 +187,23 @@ class Api {
     return data.map((e) => Vehicle.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<Vehicle> createVehicle({
+    required String make,
+    required String model,
+    required String plate,
+    required int seats,
+  }) async {
+    final data = await _send('POST', '/api/vehicles', body: {
+      'make': make,
+      'model': model,
+      'year': 2020,
+      'color': 'Trắng',
+      'plate': plate,
+      'seats': seats,
+    }) as Map<String, dynamic>;
+    return Vehicle.fromJson(data);
+  }
+
   Future<Booking> createBooking({
     required String tripId,
     required int seats,

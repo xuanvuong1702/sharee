@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_state.dart';
 import '../core/format.dart';
-import '../widgets/ui.dart';
+import '../widgets/app_ui.dart';
 import 'chat_screen.dart';
 import 'notifications_screen.dart';
 import 'results_screen.dart';
@@ -41,173 +41,426 @@ class _HomeScreenState extends State<HomeScreen> {
       initialDate: _date,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 60)),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(primary: AppTheme.primary),
+        ),
+        child: child!,
+      ),
     );
     if (value != null) setState(() => _date = value);
   }
 
   void _search() {
     final p = presets[_preset];
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ResultsScreen(
-        fromLabel: p.fromLabel,
-        fromLat: p.fromLat,
-        fromLng: p.fromLng,
-        toLabel: p.toLabel,
-        toLat: p.toLat,
-        toLng: p.toLng,
-        date: _date,
-        seats: _seats,
+    Navigator.of(context).push(appRoute(ResultsScreen(
+      fromLabel: p.fromLabel,
+      fromLat: p.fromLat,
+      fromLng: p.fromLng,
+      toLabel: p.toLabel,
+      toLat: p.toLat,
+      toLng: p.toLng,
+      date: _date,
+      seats: _seats,
+    )));
+  }
+
+  Future<void> _pickRoute() async {
+    await showAppSheet<void>(
+      context,
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Chọn tuyến đường',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 4),
+            const Text('Các tuyến đang có nhiều tài xế hoạt động',
+                style: TextStyle(fontSize: 11.5, color: AppTheme.muted)),
+            const SizedBox(height: 14),
+            for (var i = 0; i < presets.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AppCard(
+                  onTap: () {
+                    setState(() => _preset = i);
+                    Navigator.pop(context);
+                  },
+                  padding: const EdgeInsets.all(14),
+                  border: Border.all(
+                      color: i == _preset ? AppTheme.primary : AppTheme.line,
+                      width: i == _preset ? 1.5 : 1),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: i == _preset ? AppTheme.primarySoft : const Color(0xFFF3F6FA),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: const Icon(Icons.route_rounded, size: 19, color: AppTheme.primary),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(presets[i].name,
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                            const SizedBox(height: 2),
+                            Text('${presets[i].fromLabel} → ${presets[i].toLabel}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                          ],
+                        ),
+                      ),
+                      if (i == _preset)
+                        const Icon(Icons.check_circle_rounded, color: AppTheme.primary, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final user = AppScope.of(context).user;
+    final top = MediaQuery.of(context).padding.top;
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Xin chào, ${user?.fullName.split(' ').last ?? 'bạn'}',
-                style: const TextStyle(fontSize: 13, color: AppTheme.muted, fontWeight: FontWeight.w500)),
-            const Text('Đi đâu hôm nay?',
-                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: AppTheme.ink)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen())),
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ChatThreadsScreen())),
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-          ),
-          const SizedBox(width: 6),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+      body: Stack(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 300 + top,
+              decoration: const BoxDecoration(
+                gradient: AppTheme.gradient,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(34)),
+              ),
+            ),
+          ),
+          ListView(
+            padding: EdgeInsets.fromLTRB(18, top + 14, 18, 28),
+            children: [
+              Row(
                 children: [
-                  for (var i = 0; i < presets.length; i++)
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      (user?.fullName.isNotEmpty == true ? user!.fullName[0] : 'B').toUpperCase(),
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Xin chào, ${user?.fullName.split(' ').first ?? 'bạn'}',
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 2),
+                        const Text('Bạn muốn đi đâu?',
+                            style: TextStyle(
+                                fontSize: 18, color: Colors.white, fontWeight: FontWeight.w900)),
+                      ],
+                    ),
+                  ),
+                  _HeaderIcon(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    onTap: () => Navigator.of(context).push(appRoute(const ChatThreadsScreen())),
+                  ),
+                  const SizedBox(width: 8),
+                  _HeaderIcon(
+                    icon: Icons.notifications_none_rounded,
+                    onTap: () => Navigator.of(context).push(appRoute(const NotificationsScreen())),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              AppCard(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
+                shadow: true,
+                child: Column(
+                  children: [
                     InkWell(
-                      onTap: () => setState(() => _preset = i),
-                      borderRadius: BorderRadius.circular(12),
+                      onTap: _pickRoute,
+                      borderRadius: BorderRadius.circular(14),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         child: Row(
                           children: [
-                            Icon(
-                              i == _preset ? Icons.radio_button_checked : Icons.radio_button_off,
-                              size: 18,
-                              color: i == _preset ? AppTheme.primary : AppTheme.muted,
+                            Column(
+                              children: [
+                                Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppTheme.success, width: 2),
+                                  ),
+                                ),
+                                Container(
+                                  width: 2,
+                                  height: 24,
+                                  margin: const EdgeInsets.symmetric(vertical: 3),
+                                  color: const Color(0xFFD8E2F3),
+                                ),
+                                Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppTheme.accent, width: 2),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(presets[i].name,
-                                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
-                                  const SizedBox(height: 2),
-                                  Text('${presets[i].fromLabel} → ${presets[i].toLabel}',
+                                  Text('Điểm đón',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: AppTheme.muted,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.2)),
+                                  Text(presets[_preset].fromLabel,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                                      style: const TextStyle(
+                                          fontSize: 12.5, fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 9),
+                                  Text('Điểm đến',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: AppTheme.muted,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.2)),
+                                  Text(presets[_preset].toLabel,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 12.5, fontWeight: FontWeight.w700)),
                                 ],
                               ),
+                            ),
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F4F9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.unfold_more_rounded,
+                                  size: 18, color: AppTheme.muted),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  const Divider(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: _pickDate,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Ngày đi',
-                                    style: TextStyle(fontSize: 9.5, color: AppTheme.muted, fontWeight: FontWeight.w700)),
-                                const SizedBox(height: 3),
-                                Text(dayLabel(_date),
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                              ],
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: _pickDate,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Ngày đi',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: AppTheme.muted,
+                                          fontWeight: FontWeight.w700)),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.calendar_today_rounded,
+                                          size: 12, color: AppTheme.primary),
+                                      const SizedBox(width: 5),
+                                      Text(dayLabel(_date),
+                                          style: const TextStyle(
+                                              fontSize: 12.5, fontWeight: FontWeight.w800)),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Container(width: 1, height: 30, color: const Color(0xFFE7ECF3)),
-                      const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Số ghế',
-                              style: TextStyle(fontSize: 9.5, color: AppTheme.muted, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                onPressed: _seats > 1 ? () => setState(() => _seats--) : null,
-                                icon: const Icon(Icons.remove_circle_outline, size: 20),
-                              ),
-                              Text('$_seats', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                onPressed: _seats < 4 ? () => setState(() => _seats++) : null,
-                                icon: const Icon(Icons.add_circle_outline, size: 20),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                        Container(width: 1, height: 30, color: AppTheme.line),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Số ghế',
+                                style: TextStyle(
+                                    fontSize: 9.5,
+                                    color: AppTheme.muted,
+                                    fontWeight: FontWeight.w700)),
+                            Row(
+                              children: [
+                                _SeatButton(
+                                  icon: Icons.remove_rounded,
+                                  enabled: _seats > 1,
+                                  onTap: () => setState(() => _seats--),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text('$_seats',
+                                      style: const TextStyle(
+                                          fontSize: 14, fontWeight: FontWeight.w900)),
+                                ),
+                                _SeatButton(
+                                  icon: Icons.add_rounded,
+                                  enabled: _seats < 4,
+                                  onTap: () => setState(() => _seats++),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    PrimaryButton(
+                      label: 'Tìm chuyến',
+                      icon: Icons.search_rounded,
+                      onPressed: _search,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _DateQuick(
+                    label: 'Hôm nay',
+                    active: _isSameDay(_date, DateTime.now()),
+                    onTap: () => setState(() => _date = DateTime.now()),
                   ),
+                  const SizedBox(width: 8),
+                  _DateQuick(
+                    label: 'Ngày mai',
+                    active: _isSameDay(_date, DateTime.now().add(const Duration(days: 1))),
+                    onTap: () => setState(() => _date = DateTime.now().add(const Duration(days: 1))),
+                  ),
+                  const SizedBox(width: 8),
+                  _DateQuick(label: 'Chọn ngày', active: false, onTap: _pickDate),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: _search,
-            icon: const Icon(Icons.search_rounded),
-            label: const Text('Tìm chuyến'),
-          ),
-          const SectionTitle('Tuyến phổ biến'),
-          Card(
-            child: Column(
-              children: [
-                _popular('Hà Nội → Hải Phòng', 'từ 150.000đ'),
-                const Divider(height: 1),
-                _popular('Hà Nội → Nội Bài', 'từ 90.000đ'),
-                const Divider(height: 1),
-                _popular('TP.HCM → Vũng Tàu', 'từ 180.000đ'),
-              ],
-            ),
-          ),
-          const SectionTitle('Vì sao chọn Sharee?'),
-          Row(
-            children: [
-              Expanded(child: _benefit(Icons.verified_user_outlined, 'Đã xác thực', 'CCCD & GPLX')),
-              const SizedBox(width: 8),
-              Expanded(child: _benefit(Icons.payments_outlined, 'Giá rõ ràng', 'Không phụ phí')),
-              const SizedBox(width: 8),
-              Expanded(child: _benefit(Icons.support_agent, 'Hỗ trợ 24/7', 'Khi cần')),
+              const SectionHeader('Tuyến phổ biến'),
+              SizedBox(
+                height: 126,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  children: [
+                    _PopularCard(
+                      title: 'Hà Nội → Hải Phòng',
+                      subtitle: '2 giờ 30 · 150.000đ',
+                      icon: Icons.directions_car_filled_rounded,
+                      colors: const [Color(0xFF1657E8), Color(0xFF3B82F6)],
+                      onTap: () {
+                        setState(() => _preset = 0);
+                        _search();
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    _PopularCard(
+                      title: 'Hà Nội → Nội Bài',
+                      subtitle: '45 phút · 90.000đ',
+                      icon: Icons.flight_takeoff_rounded,
+                      colors: const [Color(0xFF0B2A6B), Color(0xFF1657E8)],
+                      onTap: () {
+                        setState(() => _preset = 1);
+                        _search();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SectionHeader('Vì sao chọn Sharee?'),
+              Row(
+                children: const [
+                  Expanded(
+                      child: _Benefit(
+                          icon: Icons.verified_user_rounded,
+                          title: 'Đã xác thực',
+                          sub: 'CCCD & GPLX')),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: _Benefit(
+                          icon: Icons.payments_rounded,
+                          title: 'Giá rõ ràng',
+                          sub: 'Không phụ phí')),
+                  SizedBox(width: 8),
+                  Expanded(
+                      child: _Benefit(
+                          icon: Icons.support_agent_rounded,
+                          title: 'Hỗ trợ 24/7',
+                          sub: 'Khi cần')),
+                ],
+              ),
+              const SizedBox(height: 16),
+              AppCard(
+                gradient: const LinearGradient(colors: [Color(0xFF0B2A6B), Color(0xFF1657E8)]),
+                border: null,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: const Icon(Icons.eco_rounded, color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Mỗi chuyến đi là một lựa chọn xanh',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                          SizedBox(height: 3),
+                          Text('Giảm xe cá nhân, giảm phát thải và chia sẻ chi phí.',
+                              style: TextStyle(color: Colors.white70, fontSize: 10.5)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -215,27 +468,177 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _popular(String title, String price) => ListTile(
-        title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-        trailing: Text(price, style: const TextStyle(fontSize: 11.5, color: AppTheme.muted)),
-        onTap: _search,
-      );
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+}
 
-  Widget _benefit(IconData icon, String title, String sub) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE7ECF3)),
+class _HeaderIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _HeaderIcon({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, color: Colors.white, size: 20),
         ),
+      ),
+    );
+  }
+}
+
+class _SeatButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _SeatButton({required this.icon, required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F4F9),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon,
+            size: 15, color: enabled ? AppTheme.ink : AppTheme.mutedLight),
+      ),
+    );
+  }
+}
+
+class _DateQuick extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _DateQuick({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppTheme.ink : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: active ? AppTheme.ink : AppTheme.line),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: active ? Colors.white : AppTheme.muted)),
+      ),
+    );
+  }
+}
+
+class _PopularCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> colors;
+  final VoidCallback onTap;
+
+  const _PopularCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.colors,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 210,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(14),
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 20, color: AppTheme.primary),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
-            Text(sub, style: const TextStyle(fontSize: 9.5, color: AppTheme.muted)),
+            Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 16),
+                ),
+                const Spacer(),
+                const Icon(Icons.arrow_outward_rounded, color: Colors.white70, size: 16),
+              ],
+            ),
+            const Spacer(),
+            Text(title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 3),
+            Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 10.5)),
           ],
         ),
-      );
+      ),
+    );
+  }
+}
+
+class _Benefit extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String sub;
+
+  const _Benefit({required this.icon, required this.title, required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(11),
+      shadow: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySoft,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: AppTheme.primary),
+          ),
+          const SizedBox(height: 8),
+          Text(title, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
+          Text(sub, style: const TextStyle(fontSize: 9.5, color: AppTheme.muted)),
+        ],
+      ),
+    );
+  }
 }

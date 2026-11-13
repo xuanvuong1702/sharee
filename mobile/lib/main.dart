@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -28,6 +29,34 @@ class ShareeApp extends StatelessWidget {
             title: 'Sharee',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
+            builder: (context, child) {
+              if (!kIsWeb) return child!;
+              final media = MediaQuery.of(context);
+              return ColoredBox(
+                color: const Color(0xFF07152C),
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          blurRadius: 40,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: MediaQuery(
+                      data: media.copyWith(
+                        padding: const EdgeInsets.only(top: 20),
+                        viewPadding: const EdgeInsets.only(top: 20),
+                      ),
+                      child: ClipRect(child: child),
+                    ),
+                  ),
+                ),
+              );
+            },
             home: state.user == null ? const LoginScreen() : const HomeShell(),
           );
         },

@@ -3,6 +3,13 @@
 Đồ án học tập được triển khai đầy đủ: **backend ASP.NET Core 10 + PostgreSQL/PostGIS**, **Flutter mobile app**,
 **React admin**, **Docker Compose**, migration/seed tự động, unit test và smoke test end-to-end.
 
+## Giao diện
+
+- Design system riêng: palette navy/electric blue, thang chữ, radius 20–28, shadow mềm, trạng thái màu thống nhất.
+- Mobile-first: app bar gọn, bottom nav nổi 5 tab, sticky CTA, bottom sheet, safe-area và vùng chạm ≥ 44px.
+- Trải nghiệm: skeleton loading, pull-to-refresh, empty state có hành động, transition mượt, haptic feedback.
+- Bản web được đóng khung 480px như một chiếc điện thoại để kiểm chứng UI trên desktop.
+
 ## Chạy trong 1 lệnh
 
 ```bash

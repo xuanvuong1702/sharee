@@ -157,7 +157,13 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    _vehicles = AppScope.of(context).api.vehicles();
+    final api = AppScope.of(context).api;
+    _vehicles = api.vehicles();
+    _vehicles.then((list) {
+      if (mounted && _vehicle == null && list.isNotEmpty) {
+        setState(() => _vehicle = list.first);
+      }
+    });
   }
 
   Future<void> _pickTime() async {
@@ -218,9 +224,6 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
         future: _vehicles,
         builder: (context, snapshot) {
           final vehicles = snapshot.data ?? [];
-          if (snapshot.connectionState == ConnectionState.done && _vehicle == null && vehicles.isNotEmpty) {
-            _vehicle = vehicles.first;
-          }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -254,6 +257,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
                     children: [
                       const Text('Xe', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
                       DropdownButtonFormField<String>(
+                        key: ValueKey(_vehicle?.id ?? 'none'),
                         initialValue: _vehicle?.id,
                         items: vehicles
                             .map((v) => DropdownMenuItem(
