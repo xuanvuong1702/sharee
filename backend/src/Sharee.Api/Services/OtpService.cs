@@ -1,48 +1,117 @@
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using Dapper;
+using Sharee.Api.Infrastructure;
 
 namespace Sharee.Api.Services;
 
-public sealed class OtpService
+public sealed class OtpRateLimitException(int retryAfterSeconds)
+    : Exception($"OTP rate limit, retry in {retryAfterSeconds}s")
 {
-    private sealed record Entry(string Code, DateTimeOffset ExpiresAt, int Attempts);
+    public int RetryAfterSeconds { get; } = Math.Max(1, retryAfterSeconds);
+}
 
-    private readonly ConcurrentDictionary<string, Entry> _codes = new();
-    private readonly ConcurrentDictionary<string, List<DateTimeOffset>> _requests = new();
+public sealed partial class OtpService(Db db, IConfiguration config)
+{
+    private const int MaxAttempts = 5;
+    private static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(5);
 
-    public (string Code, int ExpiresInSeconds) Issue(string phone)
+    public async Task<(string Code, int ExpiresInSeconds)> IssueAsync(
+        string phone, string? ip, CancellationToken ct = default)
     {
         phone = Normalize(phone);
-        var now = DateTimeOffset.UtcNow;
-        var history = _requests.GetOrAdd(phone, _ => new List<DateTimeOffset>());
-        lock (history)
+        if (!PhoneRegex().IsMatch(phone))
+            throw new ArgumentException("Số điện thoại không hợp lệ");
+
+        var cooldown = Math.Max(0, config.GetValue("Auth:OtpResendSeconds", 60));
+        var maxPerHour = Math.Max(1, config.GetValue("Auth:OtpMaxPerHour", 10));
+        await using var conn = await db.OpenAsync(ct);
+
+        if (cooldown > 0)
         {
-            history.RemoveAll(x => x < now.AddHours(-1));
-            if (history.Count >= 20)
-                throw new InvalidOperationException("RATE_LIMIT");
-            history.Add(now);
+            var elapsedSeconds = await conn.ExecuteScalarAsync<double?>("""
+                select extract(epoch from (now() - max(created_at)))
+                from otp_codes where phone = @phone
+                """, new { phone });
+            if (elapsedSeconds is not null && elapsedSeconds.Value < cooldown)
+                throw new OtpRateLimitException(
+                    Math.Max(1, (int)Math.Ceiling(cooldown - elapsedSeconds.Value)));
         }
 
+        var recent = await conn.ExecuteScalarAsync<int>("""
+            select count(*) from otp_codes
+            where phone = @phone and created_at > now() - interval '1 hour'
+            """, new { phone });
+        if (recent >= maxPerHour)
+            throw new OtpRateLimitException(3600);
+
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
-        _codes[phone] = new Entry(code, now.AddMinutes(5), 0);
-        return (code, 300);
+        var hash = Hash(phone, code);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        await conn.ExecuteAsync("""
+            update otp_codes set consumed_at = now()
+            where phone = @phone and consumed_at is null
+            """, new { phone }, tx);
+        await conn.ExecuteAsync("""
+            insert into otp_codes (phone, code_hash, expires_at, request_ip)
+            values (@phone, @hash, now() + @lifetime, @ip)
+            """, new { phone, hash, lifetime = Lifetime, ip }, tx);
+        await tx.CommitAsync(ct);
+        return (code, (int)Lifetime.TotalSeconds);
     }
 
-    public bool Verify(string phone, string code)
+    public async Task<bool> VerifyAsync(string phone, string code, CancellationToken ct = default)
     {
         phone = Normalize(phone);
-        if (!_codes.TryGetValue(phone, out var entry)) return false;
-        if (entry.ExpiresAt < DateTimeOffset.UtcNow) return false;
-        if (entry.Attempts >= 5) return false;
+        if (!PhoneRegex().IsMatch(phone) || string.IsNullOrWhiteSpace(code)) return false;
 
-        if (entry.Code != code.Trim())
+        await using var conn = await db.OpenAsync(ct);
+        var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
+            select id, code_hash, attempts from otp_codes
+            where phone = @phone and consumed_at is null
+              and expires_at > now() and attempts < @maxAttempts
+            order by created_at desc limit 1
+            """, new { phone, maxAttempts = MaxAttempts });
+        if (row is null) return false;
+
+        var expected = Hash(phone, code.Trim());
+        var matches = FixedTimeEquals((string)row.code_hash, expected);
+        if (!matches)
         {
-            _codes[phone] = entry with { Attempts = entry.Attempts + 1 };
+            await conn.ExecuteAsync("""
+                update otp_codes set attempts = attempts + 1 where id = @id
+                """, new { id = (Guid)row.id });
             return false;
         }
 
-        _codes.TryRemove(phone, out _);
-        return true;
+        var affected = await conn.ExecuteAsync("""
+            update otp_codes set consumed_at = now()
+            where id = @id and consumed_at is null
+            """, new { id = (Guid)row.id });
+        return affected > 0;
+    }
+
+    private static bool FixedTimeEquals(string a, string b)
+    {
+        try
+        {
+            return CryptographicOperations.FixedTimeEquals(
+                Convert.FromHexString(a), Convert.FromHexString(b));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string Hash(string phone, string code)
+    {
+        var pepper = config["Auth:OtpPepper"]
+            ?? throw new InvalidOperationException("Auth:OtpPepper chưa được cấu hình");
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(pepper));
+        var bytes = hmac.ComputeHash(Encoding.UTF8.GetBytes($"{phone}:{code}"));
+        return Convert.ToHexString(bytes);
     }
 
     public static string Normalize(string phone)
@@ -53,4 +122,7 @@ public sealed class OtpService
         else if (!digits.StartsWith("+")) digits = "+" + digits;
         return digits;
     }
+
+    [GeneratedRegex(@"^\+[1-9]\d{7,14}$")]
+    private static partial Regex PhoneRegex();
 }

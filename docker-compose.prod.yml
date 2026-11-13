@@ -1,0 +1,102 @@
+name: sharee-prod
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sharee}
+      POSTGRES_USER: ${POSTGRES_USER:-sharee}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - sharee-prod-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sharee} -d ${POSTGRES_DB:-sharee}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    volumes:
+      - sharee-prod-redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      TZ: Asia/Ho_Chi_Minh
+      Logging__Json: "true"
+      ConnectionStrings__Db: "Host=db;Port=5432;Database=${POSTGRES_DB:-sharee};Username=${POSTGRES_USER:-sharee};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false"
+      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
+      Jwt__ExpiryMinutes: "15"
+      Auth__ExposeOtp: "false"
+      Auth__OtpPepper: ${OTP_PEPPER:?OTP_PEPPER is required}
+      Auth__OtpResendSeconds: "60"
+      Auth__OtpMaxPerHour: "10"
+      Sms__Provider: twilio
+      Twilio__AccountSid: ${TWILIO_ACCOUNT_SID:?TWILIO_ACCOUNT_SID is required}
+      Twilio__AuthToken: ${TWILIO_AUTH_TOKEN:?TWILIO_AUTH_TOKEN is required}
+      Twilio__From: ${TWILIO_FROM:?TWILIO_FROM is required}
+      Bootstrap__Token: ${BOOTSTRAP_TOKEN:-}
+      Seed__DemoData: "false"
+      Demo__Mode: "false"
+      Payments__AllowMock: "false"
+      Swagger__Enabled: "false"
+      Cors__AllowedOrigins__0: ${APP_ORIGIN:?APP_ORIGIN is required}
+      Cors__AllowedOrigins__1: ${ADMIN_ORIGIN:?ADMIN_ORIGIN is required}
+      ReverseProxy__TrustForwarded: "true"
+    ports:
+      - "127.0.0.1:8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: ${API_PUBLIC_URL:?API_PUBLIC_URL is required}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3000:80"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+volumes:
+  sharee-prod-pgdata:
+  sharee-prod-redis:

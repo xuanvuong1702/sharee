@@ -2,6 +2,7 @@ services:
   db:
     image: postgis/postgis:16-3.4
     container_name: sharee-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: sharee
       POSTGRES_USER: sharee
@@ -19,6 +20,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: sharee-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     healthcheck:
@@ -32,6 +34,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: sharee-api
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -41,8 +44,18 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Db: Host=db;Port=5432;Database=sharee;Username=sharee;Password=sharee
-      Jwt__Key: sharee-prod-key-change-me-0123456789abcdef
+      ConnectionStrings__Redis: redis:6379,abortConnect=false
+      Jwt__Key: sharee-local-demo-jwt-2f7c9a1e5b8d4c6a0e3f7b9d1c5a8e2f
+      Jwt__ExpiryMinutes: "60"
       Auth__ExposeOtp: "true"
+      Auth__OtpPepper: local-demo-otp-pepper-7a1c4e9b2d6f8a0c
+      Auth__OtpResendSeconds: "0"
+      Auth__OtpMaxPerHour: "50"
+      Sms__Provider: dev
+      Demo__Mode: "true"
+      Seed__DemoData: "true"
+      Payments__AllowMock: "true"
+      Swagger__Enabled: "true"
     ports:
       - "8080:8080"
 
@@ -51,6 +64,7 @@ services:
       context: ./admin
       dockerfile: Dockerfile
     container_name: sharee-admin
+    restart: unless-stopped
     depends_on:
       - api
     ports:
@@ -61,6 +75,7 @@ services:
       context: ./mobile
       dockerfile: Dockerfile
     container_name: sharee-mobile-web
+    restart: unless-stopped
     ports:
       - "8081:80"
 

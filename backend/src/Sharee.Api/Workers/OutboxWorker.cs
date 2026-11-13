@@ -18,12 +18,14 @@ public sealed class OutboxWorker(
             try
             {
                 await using var conn = await db.OpenAsync(stoppingToken);
+                await using var tx = await conn.BeginTransactionAsync(stoppingToken);
                 var events = (await conn.QueryAsync<dynamic>("""
                     select id, type, payload from outbox
                     where processed_at is null and next_attempt_at <= now()
                     order by id
                     limit 50
-                    """)).ToList();
+                    for update skip locked
+                    """, transaction: tx)).ToList();
 
                 foreach (var evt in events)
                 {
@@ -41,7 +43,7 @@ public sealed class OutboxWorker(
 
                         await conn.ExecuteAsync(
                             "update outbox set processed_at = now(), attempts = attempts + 1 where id = @id",
-                            new { id = (long)evt.id });
+                            new { id = (long)evt.id }, tx);
                     }
                     catch (Exception ex)
                     {
@@ -52,10 +54,11 @@ public sealed class OutboxWorker(
                                 last_error = @error,
                                 next_attempt_at = now() + interval '10 seconds'
                             where id = @id
-                            """, new { id = (long)evt.id, error = ex.Message });
+                            """, new { id = (long)evt.id, error = ex.Message }, tx);
                     }
                 }
 
+                await tx.CommitAsync(stoppingToken);
                 if (events.Count > 0)
                     logger.LogInformation("Outbox: processed {Count} events", events.Count);
             }

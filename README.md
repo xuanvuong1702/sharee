@@ -3,6 +3,9 @@
 Đồ án học tập được triển khai đầy đủ: **backend ASP.NET Core 10 + PostgreSQL/PostGIS**, **Flutter mobile app**,
 **React admin**, **Docker Compose**, migration/seed tự động, unit test và smoke test end-to-end.
 
+> Cấu hình trong repo là **demo**, bật OTP dev, seed dữ liệu mẫu và thanh toán mock.
+> Trước khi chạy cho khách thật, đọc [PRODUCTION.md](PRODUCTION.md) và dùng `docker-compose.prod.yml`.
+
 ## Giao diện
 
 - Design system riêng: palette navy/electric blue, thang chữ, radius 20–28, shadow mềm, trạng thái màu thống nhất.
@@ -18,11 +21,13 @@ docker compose up -d --build
 
 | Dịch vụ | URL | Ghi chú |
 |---|---|---|
-| API + Swagger | http://localhost:8080/swagger | REST + SignalR `/hubs/chat` |
+| API + Swagger | http://localhost:8080/swagger | REST + SignalR `/hubs/chat`, `/hubs/notifications` |
 | Admin web | http://localhost:3000 | đăng nhập bằng OTP admin |
 | Mobile web (Flutter) | http://localhost:8081 | bản build web của app Flutter |
 | PostgreSQL/PostGIS | localhost:5432 | user/pass/db: `sharee` |
-| Redis | localhost:6379 | cache/rate-limit (dự phòng) |
+| Redis | localhost:6379 | SignalR backplane + cache |
+
+Health checks: `GET /health/live`, `GET /health/ready` (DB readiness), `GET /health` (tương thích cũ).
 
 > Nếu build mobile web lần đầu: `cd mobile && flutter build web --dart-define=API_BASE_URL=http://localhost:8080`
 > trước khi `docker compose up --build` (Dockerfile copy `build/web`).
@@ -178,9 +183,22 @@ powershell -File scripts/oversell.ps1
 - `oversell.ps1`: bắn 6 request đặt ghế đồng thời, assert không bán quá số ghế (201 = 1, 409 = 5).
 - `node tools/uicheck/realtime-check.mjs`: kiểm tra chat realtime, lịch sử lưu DB và notification realtime.
 
+## Production
+
+```bash
+cp .env.example .env            # điền secrets thật
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+```
+
+- Không seed demo, tắt OTP dev/Swagger/mock payment, DB/Redis không mở port.
+- API/admin bind `127.0.0.1`, đặt sau reverse proxy TLS; bật WebSocket cho `/hubs/*`.
+- Tạo admin đầu tiên bằng `POST /api/auth/bootstrap-admin` + header `X-Bootstrap-Token`,
+  sau đó xoá token.
+- Chi tiết checklist, backup, scale, blocker: [PRODUCTION.md](PRODUCTION.md).
+
 ## Ghi chú
 
-- Đây là **demo học tập**: OTP trả về client, thanh toán mô phỏng, không có KYC/escrow thật.
-- Đổi JWT key và tắt `Auth:ExposeOtp` trước khi dùng thật.
+- Cấu hình mặc định trong repo là **demo học tập**: OTP trả về client, thanh toán mô phỏng.
+- Production tự chặn mock payment, OTP dev, Swagger và seed demo; xem `PRODUCTION.md`.
 - Flutter web gọi API qua `localhost:8080`; đổi bằng `--dart-define=API_BASE_URL=...`.
 - Build Android APK cần Android SDK/CMake có quyền ghi thư mục build; môi trường hiện tại chặn CMake nên chỉ build/verify bản web.

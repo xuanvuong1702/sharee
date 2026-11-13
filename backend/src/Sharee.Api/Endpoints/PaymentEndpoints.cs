@@ -11,8 +11,16 @@ public static class PaymentEndpoints
     {
         app.MapPost("/api/bookings/{id:guid}/pay", async (
             Guid id, HttpContext http, Db db, LedgerService ledger, ReadService read,
-            CancellationToken ct) =>
+            IConfiguration config, CancellationToken ct) =>
         {
+            if (!config.GetValue("Payments:AllowMock", false))
+            {
+                return Results.Json(new
+                {
+                    error = "Cổng thanh toán chưa được cấu hình. Vui lòng liên hệ hỗ trợ."
+                }, statusCode: StatusCodes.Status501NotImplemented);
+            }
+
             var userId = http.User.GetUserId();
             var booking = await read.GetBookingAsync(id, ct);
             if (booking is null) return Results.NotFound();
