@@ -124,3 +124,10 @@ public record CreateRecurringTripRequest(
     Guid VehicleId, PlaceDto Origin, PlaceDto Destination, string DepartureTime,
     int[] Weekdays, int PricePerSeat, short SeatsTotal, string BookingMode,
     bool Luggage, bool PetsAllowed, bool SmokingAllowed, List<CreateStopRequest> Stops);
+
+public record EarningItemDto(
+    string Type, string Title, int Amount, string Currency, DateTimeOffset At);
+
+public record EarningsDto(
+    int TripEarnings, int CompletedTrips, long DailyEarningsMinor, int DailyValidations,
+    IReadOnlyList<EarningItemDto> Recent);

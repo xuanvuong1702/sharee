@@ -500,3 +500,53 @@ class RecurringTrip {
     return sorted.map((d) => d >= 1 && d <= 7 ? names[d - 1] : '').join(' · ');
   }
 }
+
+class EarningItem {
+  final String type;
+  final String title;
+  final int amount;
+  final String currency;
+  final DateTime at;
+
+  const EarningItem({
+    required this.type,
+    required this.title,
+    required this.amount,
+    required this.currency,
+    required this.at,
+  });
+
+  factory EarningItem.fromJson(Map<String, dynamic> json) => EarningItem(
+        type: json['type'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        amount: (json['amount'] as num?)?.toInt() ?? 0,
+        currency: json['currency'] as String? ?? 'VND',
+        at: DateTime.parse(json['at'] as String),
+      );
+}
+
+class Earnings {
+  final int tripEarnings;
+  final int completedTrips;
+  final int dailyEarningsMinor;
+  final int dailyValidations;
+  final List<EarningItem> recent;
+
+  const Earnings({
+    required this.tripEarnings,
+    required this.completedTrips,
+    required this.dailyEarningsMinor,
+    required this.dailyValidations,
+    required this.recent,
+  });
+
+  factory Earnings.fromJson(Map<String, dynamic> json) => Earnings(
+        tripEarnings: (json['tripEarnings'] as num?)?.toInt() ?? 0,
+        completedTrips: (json['completedTrips'] as num?)?.toInt() ?? 0,
+        dailyEarningsMinor: (json['dailyEarningsMinor'] as num?)?.toInt() ?? 0,
+        dailyValidations: (json['dailyValidations'] as num?)?.toInt() ?? 0,
+        recent: (json['recent'] as List<dynamic>? ?? [])
+            .map((e) => EarningItem.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}

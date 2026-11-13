@@ -64,6 +64,7 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
 - **Outbox worker** đánh dấu event đã xử lý; notifications ghi trong cùng transaction.
 - **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
 - **Chuyến định kỳ**: lịch chạy theo tuần, tự materialize chuyến cho 14 ngày tới, worker gia hạn mỗi 6 giờ.
+- **Thu nhập tài xế**: tổng hợp booking hoàn thành (VND) và Daily (EUR), màn hình ví trong app.
 - **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
 
 ## API chính
@@ -74,6 +75,7 @@ POST /api/auth/otp/verify             {phone, code} -> {accessToken, refreshToke
 POST /api/auth/refresh                {refreshToken} -> token mới
 POST /api/auth/logout                 revoke refresh token
 GET  /api/me
+GET  /api/me/earnings                 thu nhập tài xế (chuyến + Daily)
 GET  /api/trips/search?fromLat&fromLng&toLat&toLng&date&seats
 GET  /api/trips/{id}
 POST /api/trips                       (driver)

@@ -58,6 +58,57 @@ public static class UserEndpoints
             Guid id, ReadService read, CancellationToken ct) =>
             Results.Ok(await read.GetReviewsAsync(id, ct))).WithTags("Users");
 
+        app.MapGet("/api/me/earnings", async (
+            HttpContext http, Db db, CancellationToken ct) =>
+        {
+            var driverId = http.User.GetUserId();
+            await using var conn = await db.OpenAsync(ct);
+
+            var trips = await conn.ExecuteScalarAsync<int>(
+                "select coalesce(sum(b.price_total),0) from bookings b join trips t on t.id = b.trip_id where t.driver_id = @driverId and b.status = 'completed'",
+                new { driverId });
+            var completedTrips = await conn.ExecuteScalarAsync<int>(
+                "select count(*) from bookings b join trips t on t.id = b.trip_id where t.driver_id = @driverId and b.status = 'completed'",
+                new { driverId });
+            var daily = await conn.ExecuteScalarAsync<long>(
+                "select coalesce(sum(amount_minor),0) from driver_earnings where driver_id = @driverId",
+                new { driverId });
+            var dailyCount = await conn.ExecuteScalarAsync<int>(
+                "select count(*) from driver_earnings where driver_id = @driverId", new { driverId });
+
+            var recent = new List<EarningItemDto>();
+            var bookings = await conn.QueryAsync<dynamic>("""
+                select b.price_total, b.updated_at, t.origin_label, t.destination_label
+                from bookings b join trips t on t.id = b.trip_id
+                where t.driver_id = @driverId and b.status = 'completed'
+                order by b.updated_at desc limit 10
+                """, new { driverId });
+            foreach (var b in bookings)
+            {
+                recent.Add(new EarningItemDto("trip",
+                    $"{b.origin_label} → {b.destination_label}",
+                    (int)b.price_total, "VND", Time.ToDto((DateTime)b.updated_at)));
+            }
+
+            var validations = await conn.QueryAsync<dynamic>("""
+                select v.amount_minor, v.validated_at, s.name as stop_name
+                from driver_earnings e
+                join trip_validations v on v.id = e.validation_id
+                join e_tickets t on t.id = v.e_ticket_id
+                join line_stops s on s.id = t.stop_id
+                where e.driver_id = @driverId
+                order by v.validated_at desc limit 10
+                """, new { driverId });
+            foreach (var v in validations)
+            {
+                recent.Add(new EarningItemDto("daily", (string)v.stop_name,
+                    (int)(long)v.amount_minor, "EUR", Time.ToDto((DateTime)v.validated_at)));
+            }
+
+            return Results.Ok(new EarningsDto(trips, completedTrips, daily, dailyCount,
+                recent.OrderByDescending(r => r.At).Take(20).ToList()));
+        }).RequireAuthorization().WithTags("Me");
+
         var vehicles = app.MapGroup("/api/vehicles").RequireAuthorization().WithTags("Vehicles");
 
         vehicles.MapGet("", async (HttpContext http, Db db, CancellationToken ct) =>

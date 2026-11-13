@@ -151,6 +151,11 @@ class Api {
     return AppUser.fromJson(data);
   }
 
+  Future<Earnings> earnings() async {
+    final data = await _send('GET', '/api/me/earnings') as Map<String, dynamic>;
+    return Earnings.fromJson(data);
+  }
+
   Future<List<SearchResult>> search({
     required double fromLat,
     required double fromLng,
