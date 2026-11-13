@@ -3,7 +3,8 @@ namespace Sharee.Api.Contracts;
 public record RequestOtpRequest(string Phone);
 public record RequestOtpResponse(int ExpiresInSeconds, string? DevCode);
 public record VerifyOtpRequest(string Phone, string Code);
-public record AuthResponse(string AccessToken, UserDto User);
+public record RefreshRequest(string RefreshToken);
+public record AuthResponse(string AccessToken, string RefreshToken, UserDto User);
 
 public record UserDto(
     Guid Id, string Phone, string FullName, string? Email, string? AvatarUrl,
@@ -94,7 +95,8 @@ public record ServiceWindowDto(int Weekday, string StartTime, string EndTime, in
 public record ETicketDto(
     Guid Id, Guid LineId, string LineName, Guid StopId, string StopName, string Status,
     string Code, string QrToken, DateTimeOffset CreatedAt, DateTimeOffset ExpiresAt,
-    Guid? DriverId, string? DriverName, DateTimeOffset? ValidatedAt, long? AmountMinor);
+    Guid? DriverId, string? DriverName, DateTimeOffset? ValidatedAt, long? AmountMinor,
+    string? PassengerName = null);
 
 public record CreateETicketRequest(Guid LineId, Guid StopId);
 public record ValidateTicketRequest(string Code);

@@ -402,6 +402,7 @@ class ETicket {
   final DateTime expiresAt;
   final String? driverName;
   final int? amountMinor;
+  final String? passengerName;
 
   const ETicket({
     required this.id,
@@ -412,6 +413,7 @@ class ETicket {
     required this.expiresAt,
     this.driverName,
     this.amountMinor,
+    this.passengerName,
   });
 
   factory ETicket.fromJson(Map<String, dynamic> json) => ETicket(
@@ -423,5 +425,35 @@ class ETicket {
         expiresAt: DateTime.parse(json['expiresAt'] as String),
         driverName: json['driverName'] as String?,
         amountMinor: (json['amountMinor'] as num?)?.toInt(),
+        passengerName: json['passengerName'] as String?,
       );
+}
+
+class AppNotification {
+  final String id;
+  final String type;
+  final String title;
+  final String body;
+  final DateTime createdAt;
+  final DateTime? readAt;
+
+  const AppNotification({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.body,
+    required this.createdAt,
+    this.readAt,
+  });
+
+  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
+        id: json['id'] as String,
+        type: json['type'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        body: json['body'] as String? ?? '',
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        readAt: json['readAt'] == null ? null : DateTime.parse(json['readAt'] as String),
+      );
+
+  bool get unread => readAt == null;
 }

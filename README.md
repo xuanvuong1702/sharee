@@ -60,14 +60,18 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
   `UPDATE trips SET seats_available = seats_available - @n WHERE id=@id AND seats_available >= @n`
   trong cùng transaction với insert booking; idempotency key chống đặt trùng.
 - **Sổ cái kép**: mỗi giao dịch có `ledger_transactions` + các dòng D/C cân bằng; hoàn tiền ghi bút toán đảo.
+- **Refresh token** xoay vòng: access token 7 ngày, refresh 30 ngày, revoke khi logout.
 - **Outbox worker** đánh dấu event đã xử lý; notifications ghi trong cùng transaction.
 - **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
+- **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
 
 ## API chính
 
 ```
 POST /api/auth/otp/request            {phone} -> {expiresIn, devCode}
-POST /api/auth/otp/verify             {phone, code} -> {accessToken, user}
+POST /api/auth/otp/verify             {phone, code} -> {accessToken, refreshToken, user}
+POST /api/auth/refresh                {refreshToken} -> token mới
+POST /api/auth/logout                 revoke refresh token
 GET  /api/me
 GET  /api/trips/search?fromLat&fromLng&toLat&toLng&date&seats
 GET  /api/trips/{id}
@@ -85,6 +89,10 @@ GET  /api/daily/lines/{id}
 POST /api/daily/e-tickets
 POST /api/daily/e-tickets/{id}/assign|validate
 GET  /api/daily/my-tickets
+GET  /api/daily/driver/queue
+GET  /api/daily/partner/summary        (admin)
+GET  /api/notifications
+POST /api/notifications/read-all
 GET  /api/admin/dashboard
 GET  /api/admin/verifications
 POST /api/admin/verifications/{id}/approve|reject
@@ -92,6 +100,7 @@ GET  /api/admin/reports
 PATCH /api/admin/reports/{id}?status=resolved
 GET  /api/admin/refunds
 POST /api/admin/refunds/{bookingId}
+GET  /api/admin/audit
 ```
 
 Swagger đầy đủ: http://localhost:8080/swagger
@@ -135,12 +144,15 @@ npm run dev
 dotnet test backend/tests/Sharee.Tests
 cd mobile && flutter test
 powershell -File scripts/smoke.ps1
+powershell -File scripts/oversell.ps1
 ```
 
-Smoke test: đăng nhập OTP → tìm chuyến → đặt 2 ghế → thanh toán → chat → tạo vé Daily → tài xế xác nhận.
+- `smoke.ps1`: đăng nhập OTP → tìm chuyến → đặt 1 ghế → thanh toán → chat → tạo vé Daily → tài xế xác nhận.
+- `oversell.ps1`: bắn 6 request đặt ghế đồng thời, assert không bán quá số ghế (201 = 1, 409 = 5).
 
 ## Ghi chú
 
 - Đây là **demo học tập**: OTP trả về client, thanh toán mô phỏng, không có KYC/escrow thật.
 - Đổi JWT key và tắt `Auth:ExposeOtp` trước khi dùng thật.
 - Flutter web gọi API qua `localhost:8080`; đổi bằng `--dart-define=API_BASE_URL=...`.
+- Build Android APK cần Android SDK/CMake có quyền ghi thư mục build; môi trường hiện tại chặn CMake nên chỉ build/verify bản web.

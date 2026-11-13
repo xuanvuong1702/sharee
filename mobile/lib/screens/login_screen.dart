@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final state = AppScope.of(context);
       final auth = await state.api.verifyOtp(_phone.text.trim(), _otp.text.trim());
-      await state.signIn(auth.token, auth.user);
+      await state.signIn(auth.token, auth.refreshToken, auth.user);
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {

@@ -16,8 +16,9 @@ class ApiException implements Exception {
 
 class AuthResult {
   final String token;
+  final String refreshToken;
   final AppUser user;
-  AuthResult(this.token, this.user);
+  AuthResult(this.token, this.refreshToken, this.user);
 }
 
 class Api {
@@ -32,6 +33,9 @@ class Api {
   }
 
   String? token;
+  String? refreshToken;
+  bool _refreshing = false;
+  void Function(String accessToken, String refreshToken)? onTokensChanged;
   final http.Client _client = http.Client();
 
   Map<String, String> get _headers => {
@@ -48,7 +52,7 @@ class Api {
     );
   }
 
-  Future<dynamic> _send(
+  Future<http.Response> _execute(
     String method,
     String path, {
     Map<String, dynamic>? query,
@@ -58,9 +62,29 @@ class Api {
     final request = http.Request(method, _uri(path, query));
     request.headers.addAll({..._headers, ...?extraHeaders});
     if (body != null) request.body = jsonEncode(body);
-
     final streamed = await _client.send(request).timeout(const Duration(seconds: 20));
-    final response = await http.Response.fromStream(streamed);
+    return http.Response.fromStream(streamed);
+  }
+
+  Future<dynamic> _send(
+    String method,
+    String path, {
+    Map<String, dynamic>? query,
+    Object? body,
+    Map<String, String>? extraHeaders,
+  }) async {
+    var response = await _execute(method, path, query: query, body: body, extraHeaders: extraHeaders);
+
+    if (response.statusCode == 401 &&
+        refreshToken != null &&
+        !path.startsWith('/api/auth/') &&
+        !_refreshing) {
+      final refreshed = await tryRefresh();
+      if (refreshed) {
+        response = await _execute(method, path, query: query, body: body, extraHeaders: extraHeaders);
+      }
+    }
+
     final text = utf8.decode(response.bodyBytes);
     dynamic decoded;
     try {
@@ -78,6 +102,28 @@ class Api {
     return decoded;
   }
 
+  Future<bool> tryRefresh() async {
+    if (refreshToken == null || _refreshing) return false;
+    _refreshing = true;
+    try {
+      final response = await _client.post(
+        _uri('/api/auth/refresh'),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: jsonEncode({'refreshToken': refreshToken}),
+      );
+      if (response.statusCode != 200) return false;
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      token = data['accessToken'] as String;
+      refreshToken = data['refreshToken'] as String;
+      onTokensChanged?.call(token!, refreshToken!);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _refreshing = false;
+    }
+  }
+
   Future<Map<String, dynamic>> requestOtp(String phone) async {
     final data = await _send('POST', '/api/auth/otp/request', body: {'phone': phone});
     return data as Map<String, dynamic>;
@@ -87,7 +133,17 @@ class Api {
     final data = await _send('POST', '/api/auth/otp/verify',
         body: {'phone': phone, 'code': code}) as Map<String, dynamic>;
     token = data['accessToken'] as String;
-    return AuthResult(token!, AppUser.fromJson(data['user'] as Map<String, dynamic>));
+    refreshToken = data['refreshToken'] as String?;
+    return AuthResult(token!, refreshToken ?? '', AppUser.fromJson(data['user'] as Map<String, dynamic>));
+  }
+
+  Future<void> logout() async {
+    final value = refreshToken;
+    if (value == null) return;
+    try {
+      await _client.post(_uri('/api/auth/logout'),
+          headers: {'Content-Type': 'application/json'}, body: jsonEncode({'refreshToken': value}));
+    } catch (_) {}
   }
 
   Future<AppUser> me() async {
@@ -226,6 +282,32 @@ class Api {
   Future<List<ETicket>> myTickets() async {
     final data = await _send('GET', '/api/daily/my-tickets') as List<dynamic>;
     return data.map((e) => ETicket.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<ETicket>> driverQueue() async {
+    final data = await _send('GET', '/api/daily/driver/queue') as List<dynamic>;
+    return data.map((e) => ETicket.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<ETicket> assignTicket(String id) async {
+    final data = await _send('POST', '/api/daily/e-tickets/$id/assign', body: {})
+        as Map<String, dynamic>;
+    return ETicket.fromJson(data);
+  }
+
+  Future<ETicket> validateTicket(String id, String code) async {
+    final data = await _send('POST', '/api/daily/e-tickets/$id/validate',
+        body: {'code': code}) as Map<String, dynamic>;
+    return ETicket.fromJson(data);
+  }
+
+  Future<List<AppNotification>> notifications() async {
+    final data = await _send('GET', '/api/notifications') as List<dynamic>;
+    return data.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> markNotificationsRead() async {
+    await _send('POST', '/api/notifications/read-all', body: {});
   }
 
   Future<int> unreadNotifications() async {

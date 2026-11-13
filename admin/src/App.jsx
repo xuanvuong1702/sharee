@@ -82,6 +82,7 @@ const NAV = [
   ['refunds', 'Hoàn tiền', '↩'],
   ['users', 'Người dùng', '☺'],
   ['trips', 'Chuyến', '⇄'],
+  ['daily', 'Daily', '▤'],
 ];
 
 function App() {
@@ -122,6 +123,7 @@ function App() {
         {tab === 'refunds' && <Refunds token={token} />}
         {tab === 'users' && <Users token={token} />}
         {tab === 'trips' && <Trips token={token} />}
+        {tab === 'daily' && <DailyAdmin token={token} />}
       </main>
     </div>
   );
@@ -324,6 +326,29 @@ function Trips({ token }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </State>
+  );
+}
+
+function DailyAdmin({ token }) {
+  const { data, loading, error } = useLoad(() => api('/api/daily/partner/summary', { token }));
+  const euro = (cents) => `${(Number(cents || 0) / 100).toFixed(2)} €`;
+  return (
+    <State loading={loading} error={error}>
+      <div className="kpis">
+        <Kpi label="Vé hôm nay" value={data?.ticketsToday} />
+        <Kpi label="Lượt xác nhận" value={data?.validationsToday} />
+        <Kpi label="Tổng trợ giá" value={euro(data?.amountMinor)} />
+        <Kpi label="Cost/trip" value={euro(data?.costPerTripMinor)} />
+        <Kpi label="Tuyến hoạt động" value={data?.activeLines} />
+      </div>
+      <div className="card">
+        <h3>Daily mode</h3>
+        <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+          Vé điện tử tạo tại trạm, tài xế nhận và xác nhận bằng mã 4 số.
+          Chi phí mỗi chuyến được tính từ trợ giá theo km và trần tháng của đối tác.
+        </p>
       </div>
     </State>
   );

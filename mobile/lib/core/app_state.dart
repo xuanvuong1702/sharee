@@ -7,30 +7,53 @@ import 'models.dart';
 class AppState extends ChangeNotifier {
   final Api api = Api();
   AppUser? user;
+  String? refreshToken;
   bool ready = false;
 
   Future<void> load() async {
+    api.onTokensChanged = _persistTokens;
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final refresh = prefs.getString('refreshToken');
     if (token != null && token.isNotEmpty) {
       api.token = token;
+      api.refreshToken = refresh;
       try {
         user = await api.me();
       } catch (_) {
-        api.token = null;
-        await prefs.remove('token');
+        if (refresh != null && await api.tryRefresh()) {
+          try {
+            user = await api.me();
+          } catch (_) {
+            api.token = null;
+          }
+        }
+        if (user == null) {
+          api.token = null;
+          await prefs.remove('token');
+        }
       }
     }
     ready = true;
     notifyListeners();
   }
 
-  Future<void> signIn(String token, AppUser value) async {
+  Future<void> signIn(String token, String refresh, AppUser value) async {
     api.token = token;
+    api.refreshToken = refresh;
+    refreshToken = refresh;
     user = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+    await prefs.setString('refreshToken', refresh);
     notifyListeners();
+  }
+
+  Future<void> _persistTokens(String access, String refresh) async {
+    refreshToken = refresh;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', access);
+    await prefs.setString('refreshToken', refresh);
   }
 
   Future<void> refreshUser() async {
@@ -41,10 +64,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    await api.logout();
     api.token = null;
+    api.refreshToken = null;
+    refreshToken = null;
     user = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('refreshToken');
     notifyListeners();
   }
 }

@@ -4,6 +4,7 @@ import '../core/app_state.dart';
 import '../core/format.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
+import 'notifications_screen.dart';
 import 'results_screen.dart';
 
 class RoutePreset {
@@ -75,6 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
           IconButton(
             onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ChatThreadsScreen())),

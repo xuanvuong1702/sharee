@@ -27,6 +27,7 @@ builder.Services.AddSingleton<Db>();
 builder.Services.AddSingleton<Migrator>();
 builder.Services.AddSingleton<OtpService>();
 builder.Services.AddSingleton<TokenService>();
+builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<JwtOptions>();
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<ReadService>();

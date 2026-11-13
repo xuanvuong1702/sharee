@@ -30,8 +30,8 @@ public static class AuthEndpoints
         });
 
         group.MapPost("/otp/verify", async (
-            VerifyOtpRequest request, OtpService otp, TokenService tokens, Db db,
-            CancellationToken ct) =>
+            VerifyOtpRequest request, OtpService otp, TokenService tokens,
+            RefreshTokenService refreshTokens, Db db, CancellationToken ct) =>
         {
             var phone = OtpService.Normalize(request.Phone);
             if (!otp.Verify(phone, request.Code))
@@ -55,7 +55,32 @@ public static class AuthEndpoints
                 return Results.Json(new { error = "Tài khoản đã bị khoá" }, statusCode: 403);
 
             var token = tokens.CreateToken(user.Id, user.Phone, user.FullName, user.Role);
-            return Results.Ok(new AuthResponse(token, user.ToUser()));
+            var refresh = await refreshTokens.IssueAsync(user.Id, ct);
+            return Results.Ok(new AuthResponse(token, refresh, user.ToUser()));
+        });
+
+        group.MapPost("/refresh", async (
+            RefreshRequest request, RefreshTokenService refreshTokens, TokenService tokens,
+            CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return Results.BadRequest(new { error = "Thiếu refresh token" });
+
+            var rotated = await refreshTokens.RotateAsync(request.RefreshToken, ct);
+            if (rotated is null)
+                return Results.Json(new { error = "Refresh token không hợp lệ hoặc đã hết hạn" },
+                    statusCode: StatusCodes.Status401Unauthorized);
+
+            var (user, refresh) = rotated.Value;
+            var access = tokens.CreateToken(user.Id, user.Phone, user.FullName, user.Role);
+            return Results.Ok(new AuthResponse(access, refresh, user.ToUser()));
+        });
+
+        group.MapPost("/logout", async (RefreshRequest request, RefreshTokenService refreshTokens, CancellationToken ct) =>
+        {
+            if (!string.IsNullOrWhiteSpace(request.RefreshToken))
+                await refreshTokens.RevokeAsync(request.RefreshToken, ct);
+            return Results.Ok(new { status = "ok" });
         });
 
         return app;

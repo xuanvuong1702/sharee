@@ -181,6 +181,42 @@ public static class DailyEndpoints
             return Results.Ok(list.Where(x => x is not null));
         }).RequireAuthorization();
 
+        group.MapGet("/driver/queue", async (HttpContext http, Db db, CancellationToken ct) =>
+        {
+            await using var conn = await db.OpenAsync(ct);
+            var ids = (await conn.QueryAsync<Guid>("""
+                select id from e_tickets
+                where status = 'waiting'
+                   or (driver_id = @driverId and status in ('assigned','validated'))
+                order by created_at desc
+                limit 50
+                """, new { driverId = http.User.GetUserId() })).ToList();
+            var list = new List<ETicketDto?>();
+            foreach (var id in ids) list.Add(await GetTicketAsync(conn, id));
+            return Results.Ok(list.Where(x => x is not null));
+        }).RequireAuthorization();
+
+        group.MapGet("/partner/summary", async (Db db, CancellationToken ct) =>
+        {
+            await using var conn = await db.OpenAsync(ct);
+            var summary = new
+            {
+                ticketsToday = await conn.ExecuteScalarAsync<int>(
+                    "select count(*) from e_tickets where created_at >= current_date"),
+                validationsToday = await conn.ExecuteScalarAsync<int>(
+                    "select count(*) from trip_validations where validated_at >= current_date"),
+                amountMinor = await conn.ExecuteScalarAsync<long>(
+                    "select coalesce(sum(amount_minor),0) from trip_validations where validated_at >= current_date"),
+                activeLines = await conn.ExecuteScalarAsync<int>(
+                    "select count(*) from lines where status = 'active'"),
+                costPerTripMinor = await conn.ExecuteScalarAsync<long>("""
+                    select coalesce(avg(amount_minor), 0)::bigint from trip_validations
+                    where validated_at >= current_date
+                    """)
+            };
+            return Results.Ok(summary);
+        }).RequireAuthorization("admin");
+
         return app;
     }
 
@@ -197,11 +233,13 @@ public static class DailyEndpoints
             select t.id, t.line_id, l.name as line_name, t.stop_id, s.name as stop_name,
                    t.status, t.code, t.qr_token, t.created_at, t.expires_at,
                    t.driver_id, d.full_name as driver_name, t.validated_at,
+                   p.full_name as passenger_name,
                    (select amount_minor from trip_validations v where v.e_ticket_id = t.id) as amount_minor
             from e_tickets t
             join lines l on l.id = t.line_id
             join line_stops s on s.id = t.stop_id
             left join users d on d.id = t.driver_id
+            join users p on p.id = t.passenger_id
             where t.id = @id
             """, new { id });
         if (row is null) return null;
@@ -213,6 +251,6 @@ public static class DailyEndpoints
             Time.ToDto((DateTime)row.created_at), Time.ToDto((DateTime)row.expires_at),
             (Guid?)row.driver_id, (string?)row.driver_name,
             row.validated_at is null ? null : Time.ToDto((DateTime)row.validated_at),
-            (long?)row.amount_minor);
+            (long?)row.amount_minor, (string?)row.passenger_name);
     }
 }

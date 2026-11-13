@@ -60,6 +60,8 @@ public static class AdminEndpoints
             await conn.ExecuteAsync(
                 "update users set verified_level = greatest(verified_level, @level) where id = @userId",
                 new { level, userId });
+            await Audit.LogAsync(conn, null, http.User.GetUserId(), "verification.approve",
+                "verification", id.ToString(), new { userId, type });
             return Results.Ok(new { status = "approved" });
         });
 
@@ -72,6 +74,9 @@ public static class AdminEndpoints
                 set status = 'rejected', reviewed_by = @adminId, reviewed_at = now()
                 where id = @id and status = 'pending'
                 """, new { id, adminId = http.User.GetUserId() });
+            if (affected > 0)
+                await Audit.LogAsync(conn, null, http.User.GetUserId(), "verification.reject",
+                    "verification", id.ToString());
             return affected == 0 ? Results.NotFound() : Results.Ok(new { status = "rejected" });
         });
 
@@ -100,6 +105,9 @@ public static class AdminEndpoints
             var affected = await conn.ExecuteAsync("""
                 update reports set status = @status, handled_by = @adminId where id = @id
                 """, new { id, status, adminId = http.User.GetUserId() });
+            if (affected > 0)
+                await Audit.LogAsync(conn, null, http.User.GetUserId(), "report.resolve",
+                    "report", id.ToString(), new { status });
             return affected == 0 ? Results.NotFound() : Results.Ok(new { status });
         });
 
@@ -177,6 +185,8 @@ public static class AdminEndpoints
             await ledger.RecordAsync(conn, tx, "refund", "booking", bookingId,
                 ("escrow", 'D', amount.Value),
                 ("customer_receivable", 'C', amount.Value));
+            await Audit.LogAsync(conn, tx, null, "refund.manual", "booking", bookingId.ToString(),
+                new { amount = amount.Value });
             await tx.CommitAsync(ct);
             return Results.Ok(new { status = "refunded", amount });
         });

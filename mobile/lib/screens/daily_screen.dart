@@ -4,6 +4,7 @@ import '../core/app_state.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../widgets/ui.dart';
+import 'daily_driver.dart';
 
 class DailyScreen extends StatefulWidget {
   const DailyScreen({super.key});
@@ -16,16 +17,17 @@ class _DailyScreenState extends State<DailyScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Đi chung hằng ngày', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          title: const Text('Đi chung hằng ngày',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           bottom: const TabBar(
-            tabs: [Tab(text: 'Tuyến'), Tab(text: 'Vé của tôi')],
+            tabs: [Tab(text: 'Tuyến'), Tab(text: 'Vé của tôi'), Tab(text: 'Tài xế')],
           ),
         ),
         body: const TabBarView(
-          children: [_LineList(), _MyTickets()],
+          children: [_LineList(), _MyTickets(), DriverQueueTab()],
         ),
       ),
     );
@@ -92,12 +94,16 @@ class _LineListState extends State<_LineList> {
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   leading: Container(
-                    width: 42, height: 42,
-                    decoration: BoxDecoration(color: const Color(0xFFEAF0FF), borderRadius: BorderRadius.circular(12)),
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFEAF0FF), borderRadius: BorderRadius.circular(12)),
                     child: const Icon(Icons.route, color: AppTheme.primary, size: 22),
                   ),
-                  title: Text(line.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                  subtitle: Text('${line.stopsCount} trạm · ${line.distanceMeters == null ? '—' : (line.distanceMeters! / 1000).toStringAsFixed(1)} km',
+                  title: Text(line.name,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                  subtitle: Text(
+                      '${line.stopsCount} trạm · ${line.distanceMeters == null ? '—' : (line.distanceMeters! / 1000).toStringAsFixed(1)} km',
                       style: const TextStyle(fontSize: 10.5)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -189,10 +195,12 @@ class _LineDetailScreenState extends State<LineDetailScreen> {
             children: [
               Text(line.name, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
               const SizedBox(height: 4),
-              Text('${line.stopsCount} trạm · ${((line.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · miễn phí cho khách',
+              Text(
+                  '${line.stopsCount} trạm · ${((line.distanceMeters ?? 0) / 1000).toStringAsFixed(1)} km · miễn phí cho khách',
                   style: const TextStyle(fontSize: 11, color: AppTheme.muted)),
               const SizedBox(height: 14),
-              const Text('Chọn trạm lên xe', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+              const Text('Chọn trạm lên xe',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Card(
                 child: Column(
@@ -203,7 +211,8 @@ class _LineDetailScreenState extends State<LineDetailScreen> {
                         groupValue: _stopId,
                         dense: true,
                         onChanged: (value) => setState(() => _stopId = value),
-                        title: Text(stop.name, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                        title: Text(stop.name,
+                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
                         subtitle: Text('Trạm ${stop.seq + 1}', style: const TextStyle(fontSize: 10)),
                       ),
                   ],
@@ -217,7 +226,8 @@ class _LineDetailScreenState extends State<LineDetailScreen> {
               ),
               const SizedBox(height: 8),
               const Text('Vé có hiệu lực 30 phút. Không cần chọn giờ.',
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: AppTheme.muted)),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 10, color: AppTheme.muted)),
             ],
           );
         },
@@ -270,7 +280,8 @@ class _MyTicketsState extends State<_MyTickets> {
                 child: Row(
                   children: [
                     Container(
-                      width: 58, height: 58,
+                      width: 58,
+                      height: 58,
                       decoration: BoxDecoration(
                         color: active ? const Color(0xFFE6F8F0) : const Color(0xFFF3F6FA),
                         borderRadius: BorderRadius.circular(12),
@@ -278,7 +289,8 @@ class _MyTicketsState extends State<_MyTickets> {
                       alignment: Alignment.center,
                       child: Text(t.code,
                           style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
                             color: active ? AppTheme.success : AppTheme.muted,
                             letterSpacing: 1,
                           )),
@@ -288,10 +300,14 @@ class _MyTicketsState extends State<_MyTickets> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(t.stopName, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
-                          Text(t.lineName, style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                          Text(t.stopName,
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                          Text(t.lineName,
+                              style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
                           Text(
-                            active ? 'Hiệu lực đến ${hhmm(t.expiresAt)}' : 'Đã dùng · ${shortDate(t.expiresAt)}',
+                            active
+                                ? 'Hiệu lực đến ${hhmm(t.expiresAt)}'
+                                : 'Đã dùng · ${shortDate(t.expiresAt)}',
                             style: const TextStyle(fontSize: 10, color: AppTheme.muted),
                           ),
                         ],
