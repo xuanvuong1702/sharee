@@ -190,6 +190,7 @@ public sealed class RecurringTripService(Db db)
                 departure.Hour, departure.Minute, 0, DateTimeKind.Unspecified);
             var offsetSpan = VietnamTz.GetUtcOffset(local);
             var departureUtc = new DateTimeOffset(local, offsetSpan).ToUniversalTime();
+            if (departureUtc <= DateTimeOffset.UtcNow) continue;
 
             var tripId = await conn.ExecuteScalarAsync<Guid?>("""
                 insert into trips (driver_id, vehicle_id, origin, destination, origin_label,
