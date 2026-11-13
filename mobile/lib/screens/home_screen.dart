@@ -133,6 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AppScope.of(context).user;
+    final unread = AppScope.of(context).unread;
     final top = MediaQuery.of(context).padding.top;
     return Scaffold(
       body: Stack(
@@ -193,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   _HeaderIcon(
                     icon: Icons.notifications_none_rounded,
+                    badge: unread,
                     onTap: () => Navigator.of(context).push(appRoute(const NotificationsScreen())),
                   ),
                 ],
@@ -475,8 +477,9 @@ class _HomeScreenState extends State<HomeScreen> {
 class _HeaderIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final int badge;
 
-  const _HeaderIcon({required this.icon, required this.onTap});
+  const _HeaderIcon({required this.icon, required this.onTap, this.badge = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +492,12 @@ class _HeaderIcon extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(icon, color: Colors.white, size: 20),
+          child: Badge.count(
+            count: badge,
+            isLabelVisible: badge > 0,
+            backgroundColor: AppTheme.accent,
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
         ),
       ),
     );

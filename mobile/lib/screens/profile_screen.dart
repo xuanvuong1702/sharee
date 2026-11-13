@@ -4,6 +4,7 @@ import '../core/api.dart';
 import '../core/app_state.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
+import 'chat_screen.dart';
 import 'earnings_screen.dart';
 import 'notifications_screen.dart';
 import 'recurring_trips_screen.dart';
@@ -151,6 +152,15 @@ class ProfileScreen extends StatelessWidget {
                       title: 'Thu nhập',
                       subtitle: 'Chuyến đi và Daily',
                       onTap: () => Navigator.of(context).push(appRoute(const EarningsScreen())),
+                    ),
+                    _MenuTile(
+                      icon: Icons.chat_bubble_rounded,
+                      color: const Color(0xFF0B7A75),
+                      background: const Color(0xFFE6F7F5),
+                      title: 'Tin nhắn',
+                      subtitle: 'Trao đổi với tài xế hoặc khách',
+                      onTap: () =>
+                          Navigator.of(context).push(appRoute(const ChatThreadsScreen())),
                     ),
                     _MenuTile(
                       icon: Icons.event_repeat_rounded,

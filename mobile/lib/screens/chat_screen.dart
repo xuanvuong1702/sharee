@@ -17,6 +17,7 @@ class ChatThreadsScreen extends StatefulWidget {
 class _ChatThreadsScreenState extends State<ChatThreadsScreen> {
   late Future<List<ChatThread>> _future;
   bool _started = false;
+  StreamSubscription<ChatMessage>? _sub;
 
   @override
   void didChangeDependencies() {
@@ -24,6 +25,15 @@ class _ChatThreadsScreenState extends State<ChatThreadsScreen> {
     if (_started) return;
     _started = true;
     _load();
+    _sub = AppScope.of(context).realtime.threads.listen((_) {
+      if (mounted) setState(_load);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   void _load() {
@@ -112,13 +122,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scroll = ScrollController();
   List<ChatMessage> _messages = [];
   Timer? _timer;
+  Timer? _readTimer;
+  StreamSubscription<ChatMessage>? _sub;
   bool _sending = false;
   bool _started = false;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _load(silent: true));
+    _timer = Timer.periodic(const Duration(seconds: 12), (_) => _load(silent: true));
   }
 
   @override
@@ -127,14 +139,34 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_started) return;
     _started = true;
     _load();
+    final realtime = AppScope.of(context).realtime;
+    realtime.joinConversation(widget.thread.id);
+    _sub = realtime.messages
+        .where((m) => m.conversationId == widget.thread.id)
+        .listen(_onMessage);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _readTimer?.cancel();
+    _sub?.cancel();
     _controller.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _onMessage(ChatMessage message) {
+    if (_messages.any((m) => m.id == message.id)) return;
+    setState(() {
+      _messages = [..._messages, message]
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    });
+    _jumpToEnd();
+    _readTimer?.cancel();
+    _readTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) _load(silent: true);
+    });
   }
 
   Future<void> _load({bool silent = false}) async {
@@ -160,9 +192,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
     try {
-      await AppScope.of(context).api.sendMessage(widget.thread.id, text);
+      final message = await AppScope.of(context).api.sendMessage(widget.thread.id, text);
       _controller.clear();
-      await _load();
+      _onMessage(message);
       _jumpToEnd();
     } catch (e) {
       if (mounted) showError(context, e);

@@ -315,6 +315,7 @@ class ChatThread {
 
 class ChatMessage {
   final String id;
+  final String conversationId;
   final String senderId;
   final String senderName;
   final String body;
@@ -322,6 +323,7 @@ class ChatMessage {
 
   const ChatMessage({
     required this.id,
+    required this.conversationId,
     required this.senderId,
     required this.senderName,
     required this.body,
@@ -330,6 +332,7 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
         id: json['id'] as String,
+        conversationId: json['conversationId'] as String? ?? '',
         senderId: json['senderId'] as String,
         senderName: json['senderName'] as String? ?? '',
         body: json['body'] as String? ?? '',

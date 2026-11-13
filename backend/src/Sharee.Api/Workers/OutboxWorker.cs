@@ -1,9 +1,15 @@
+using System.Text.Json;
 using Dapper;
+using Microsoft.AspNetCore.SignalR;
+using Sharee.Api.Hubs;
 using Sharee.Api.Infrastructure;
 
 namespace Sharee.Api.Workers;
 
-public sealed class OutboxWorker(Db db, ILogger<OutboxWorker> logger) : BackgroundService
+public sealed class OutboxWorker(
+    Db db,
+    IHubContext<NotificationHub> notifications,
+    ILogger<OutboxWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -12,31 +18,53 @@ public sealed class OutboxWorker(Db db, ILogger<OutboxWorker> logger) : Backgrou
             try
             {
                 await using var conn = await db.OpenAsync(stoppingToken);
-                var ids = (await conn.QueryAsync<long>("""
-                    select id from outbox
+                var events = (await conn.QueryAsync<dynamic>("""
+                    select id, type, payload from outbox
                     where processed_at is null and next_attempt_at <= now()
                     order by id
                     limit 50
                     """)).ToList();
 
-                foreach (var id in ids)
+                foreach (var evt in events)
                 {
-                    // Demo worker: mark as processed. In production this is where push/email
-                    // would be dispatched to a provider.
-                    await conn.ExecuteAsync(
-                        "update outbox set processed_at = now(), attempts = attempts + 1 where id = @id",
-                        new { id });
+                    try
+                    {
+                        if ((string)evt.type == "notification.created")
+                        {
+                            var json = evt.payload is string text ? text : evt.payload.ToString();
+                            using var doc = JsonDocument.Parse(json!);
+                            var payload = doc.RootElement.Clone();
+                            var userId = payload.GetProperty("userId").GetGuid();
+                            await notifications.Clients.Group($"user:{userId}")
+                                .SendAsync("notification", (object)payload, stoppingToken);
+                        }
+
+                        await conn.ExecuteAsync(
+                            "update outbox set processed_at = now(), attempts = attempts + 1 where id = @id",
+                            new { id = (long)evt.id });
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning("Outbox event {Id} failed: {Message}", (long)evt.id, ex.Message);
+                        await conn.ExecuteAsync("""
+                            update outbox
+                            set attempts = attempts + 1,
+                                last_error = @error,
+                                next_attempt_at = now() + interval '10 seconds'
+                            where id = @id
+                            """, new { id = (long)evt.id, error = ex.Message });
+                    }
                 }
 
-                if (ids.Count > 0)
-                    logger.LogInformation("Outbox: processed {Count} events", ids.Count);
+                if (events.Count > 0)
+                    logger.LogInformation("Outbox: processed {Count} events", events.Count);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogWarning("Outbox worker error: {Message}", ex.Message);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
         }
     }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_state.dart';
@@ -16,6 +18,8 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   late Future<List<AppNotification>> _future;
   bool _started = false;
+  final List<AppNotification> _live = [];
+  StreamSubscription<AppNotification>? _sub;
 
   @override
   void didChangeDependencies() {
@@ -23,6 +27,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (_started) return;
     _started = true;
     _load();
+    _sub = AppScope.of(context).realtime.notifications.listen((item) {
+      if (!mounted) return;
+      setState(() {
+        if (!_live.any((n) => n.id == item.id)) _live.insert(0, item);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   void _load() {
@@ -31,8 +47,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAll() async {
     try {
-      await AppScope.of(context).api.markNotificationsRead();
-      setState(_load);
+      await AppScope.of(context).markNotificationsRead();
+      if (!mounted) return;
+      setState(() {
+        _live.clear();
+        _load();
+      });
       if (mounted) showInfo(context, 'Đã đánh dấu tất cả là đã đọc');
     } catch (e) {
       if (mounted) showError(context, e);
@@ -73,7 +93,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               onAction: () => setState(_load),
             );
           }
-          final items = snapshot.data ?? [];
+          final fetched = snapshot.data ?? [];
+          final items = [..._live, ...fetched.where((n) => !_live.any((l) => l.id == n.id))];
           if (items.isEmpty) {
             return const EmptyState(
               icon: Icons.notifications_none_rounded,

@@ -1,14 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
 import 'models.dart';
+import 'realtime.dart';
 
 class AppState extends ChangeNotifier {
   final Api api = Api();
   AppUser? user;
   String? refreshToken;
   bool ready = false;
+  int unread = 0;
+  RealtimeService? _realtime;
+  StreamSubscription<AppNotification>? _notificationSub;
+
+  RealtimeService get realtime => _realtime ??= RealtimeService(api);
 
   Future<void> load() async {
     api.onTokensChanged = _persistTokens;
@@ -36,6 +44,28 @@ class AppState extends ChangeNotifier {
     }
     ready = true;
     notifyListeners();
+    if (user != null) unawaited(_startRealtime());
+  }
+
+  Future<void> _startRealtime() async {
+    if (user == null) return;
+    await realtime.connect();
+    _notificationSub ??= realtime.notifications.listen((_) {
+      unread += 1;
+      notifyListeners();
+    });
+    try {
+      unread = await api.unreadNotifications();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> markNotificationsRead() async {
+    try {
+      await api.markNotificationsRead();
+    } catch (_) {}
+    unread = 0;
+    notifyListeners();
   }
 
   Future<void> signIn(String token, String refresh, AppUser value) async {
@@ -47,6 +77,7 @@ class AppState extends ChangeNotifier {
     await prefs.setString('token', token);
     await prefs.setString('refreshToken', refresh);
     notifyListeners();
+    unawaited(_startRealtime());
   }
 
   Future<void> _persistTokens(String access, String refresh) async {
@@ -65,10 +96,16 @@ class AppState extends ChangeNotifier {
 
   Future<void> signOut() async {
     await api.logout();
+    await _notificationSub?.cancel();
+    _notificationSub = null;
+    final realtimeService = _realtime;
+    _realtime = null;
+    await realtimeService?.dispose();
     api.token = null;
     api.refreshToken = null;
     refreshToken = null;
     user = null;
+    unread = 0;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('refreshToken');

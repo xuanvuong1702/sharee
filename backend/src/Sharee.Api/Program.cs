@@ -150,6 +150,7 @@ app.MapAdminEndpoints();
 app.MapDailyEndpoints();
 app.MapNotificationEndpoints();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Migrate + seed with retry so docker-compose can start api and db together.
 await using (var scope = app.Services.CreateAsyncScope())

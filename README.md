@@ -74,6 +74,8 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
 - **Thu nhập tài xế**: tổng hợp booking hoàn thành (VND) và Daily (EUR), màn hình ví trong app.
 - **Theo dõi trực tiếp**: bản đồ OpenStreetMap, vị trí tài xế + khách, route, ETA, trạng thái chuyến;
   driver chia sẻ GPS (hoặc mô phỏng khi trình duyệt chặn quyền), client cập nhật mỗi 3 giây.
+- **Chat realtime**: SignalR `/hubs/chat`, lịch sử tin nhắn lưu PostgreSQL (tải lại vẫn còn), thread list tự cập nhật.
+- **Notification realtime**: SignalR `/hubs/notifications` + outbox worker, badge số chưa đọc trên trang chủ.
 - **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
 
 ## API chính
@@ -119,6 +121,13 @@ PATCH /api/admin/reports/{id}?status=resolved
 GET  /api/admin/refunds
 POST /api/admin/refunds/{bookingId}
 GET  /api/admin/audit
+```
+
+SignalR hubs (JWT qua `?access_token=`):
+
+```
+/hubs/chat             JoinConversation, SendMessage; events: message, thread
+/hubs/notifications    event: notification (realtime badge/list)
 ```
 
 Swagger đầy đủ: http://localhost:8080/swagger
@@ -167,6 +176,7 @@ powershell -File scripts/oversell.ps1
 
 - `smoke.ps1`: đăng nhập OTP → tìm chuyến → đặt 1 ghế → thanh toán → chat → tạo vé Daily → tài xế xác nhận.
 - `oversell.ps1`: bắn 6 request đặt ghế đồng thời, assert không bán quá số ghế (201 = 1, 409 = 5).
+- `node tools/uicheck/realtime-check.mjs`: kiểm tra chat realtime, lịch sử lưu DB và notification realtime.
 
 ## Ghi chú
 

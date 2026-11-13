@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Dapper;
 using Npgsql;
+using Sharee.Api.Infrastructure;
 
 namespace Sharee.Api.Services;
 
@@ -30,7 +32,7 @@ public static class Pricing
 
 public static class Notifier
 {
-    public static Task NotifyAsync(
+    public static async Task NotifyAsync(
         NpgsqlConnection conn,
         NpgsqlTransaction? tx,
         Guid userId,
@@ -38,9 +40,25 @@ public static class Notifier
         string title,
         string body)
     {
-        return conn.ExecuteAsync("""
+        var row = await conn.QuerySingleAsync<dynamic>("""
             insert into notifications (user_id, type, title, body)
             values (@userId, @type, @title, @body)
+            returning id, user_id, type, title, body, created_at
             """, new { userId, type, title, body }, tx);
+
+        var createdAt = Time.ToDto((DateTime)row.created_at);
+        var payload = JsonSerializer.Serialize(new
+        {
+            id = (Guid)row.id,
+            userId = (Guid)row.user_id,
+            type = (string)row.type,
+            title = (string)row.title,
+            body = (string)row.body,
+            createdAt
+        });
+        await conn.ExecuteAsync("""
+            insert into outbox (aggregate_type, aggregate_id, type, payload)
+            values ('notification', @id, 'notification.created', @payload::jsonb)
+            """, new { id = (Guid)row.id, payload }, tx);
     }
 }
