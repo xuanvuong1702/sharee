@@ -72,7 +72,7 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
   `UPDATE trips SET seats_available = seats_available - @n WHERE id=@id AND seats_available >= @n`
   trong cùng transaction với insert booking; idempotency key chống đặt trùng.
 - **Sổ cái kép**: mỗi giao dịch có `ledger_transactions` + các dòng D/C cân bằng; hoàn tiền ghi bút toán đảo.
-- **Refresh token** xoay vòng: access token 7 ngày, refresh 30 ngày, revoke khi logout.
+- **Refresh token** xoay vòng: access token 60 phút (production 15 phút), refresh 30 ngày, revoke khi logout.
 - **Outbox worker** đánh dấu event đã xử lý; notifications ghi trong cùng transaction.
 - **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
 - **Chuyến định kỳ**: lịch chạy theo tuần, tự materialize chuyến cho 14 ngày tới, worker gia hạn mỗi 6 giờ.
