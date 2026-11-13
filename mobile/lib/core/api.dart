@@ -245,6 +245,21 @@ class Api {
     return Trip.fromJson(data);
   }
 
+  Future<List<RecurringTrip>> recurringTrips() async {
+    final data = await _send('GET', '/api/trips/recurring') as List<dynamic>;
+    return data.map((e) => RecurringTrip.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<RecurringTrip> createRecurringTrip(Map<String, dynamic> body) async {
+    final data = await _send('POST', '/api/trips/recurring', body: body)
+        as Map<String, dynamic>;
+    return RecurringTrip.fromJson(data);
+  }
+
+  Future<void> pauseRecurringTrip(String id) async {
+    await _send('DELETE', '/api/trips/recurring/$id');
+  }
+
   Future<List<ChatThread>> conversations() async {
     final data = await _send('GET', '/api/conversations') as List<dynamic>;
     return data.map((e) => ChatThread.fromJson(e as Map<String, dynamic>)).toList();

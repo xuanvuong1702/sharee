@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/api.dart';
 import '../core/app_state.dart';
 import '../widgets/ui.dart';
+import 'recurring_trips_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -56,6 +57,17 @@ class ProfileScreen extends StatelessWidget {
                             style: const TextStyle(fontSize: 10.5)),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => showInfo(context, 'Chức năng xác minh sẽ mở trong bản cập nhật'),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.event_repeat),
+                        title: const Text('Chuyến định kỳ',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                        subtitle: const Text('Lịch chạy tự động hằng tuần',
+                            style: TextStyle(fontSize: 10.5)),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const RecurringTripsScreen())),
                       ),
                       const Divider(height: 1),
                       ListTile(

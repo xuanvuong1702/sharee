@@ -115,3 +115,12 @@ public record AuditDto(
 
 public record NotificationDto(
     Guid Id, string Type, string Title, string Body, DateTimeOffset CreatedAt, DateTimeOffset? ReadAt);
+
+public record RecurringTripDto(
+    Guid Id, string OriginLabel, string DestinationLabel, string DepartureTime,
+    int[] Weekdays, int PricePerSeat, int SeatsTotal, bool Active, int UpcomingTrips);
+
+public record CreateRecurringTripRequest(
+    Guid VehicleId, PlaceDto Origin, PlaceDto Destination, string DepartureTime,
+    int[] Weekdays, int PricePerSeat, short SeatsTotal, string BookingMode,
+    bool Luggage, bool PetsAllowed, bool SmokingAllowed, List<CreateStopRequest> Stops);

@@ -429,8 +429,7 @@ class ETicket {
       );
 }
 
-class AppNotification {
-  final String id;
+class AppNotification {  final String id;
   final String type;
   final String title;
   final String body;
@@ -456,4 +455,48 @@ class AppNotification {
       );
 
   bool get unread => readAt == null;
+}
+
+class RecurringTrip {
+  final String id;
+  final String originLabel;
+  final String destinationLabel;
+  final String departureTime;
+  final List<int> weekdays;
+  final int pricePerSeat;
+  final int seatsTotal;
+  final bool active;
+  final int upcomingTrips;
+
+  const RecurringTrip({
+    required this.id,
+    required this.originLabel,
+    required this.destinationLabel,
+    required this.departureTime,
+    required this.weekdays,
+    required this.pricePerSeat,
+    required this.seatsTotal,
+    required this.active,
+    required this.upcomingTrips,
+  });
+
+  factory RecurringTrip.fromJson(Map<String, dynamic> json) => RecurringTrip(
+        id: json['id'] as String,
+        originLabel: json['originLabel'] as String? ?? '',
+        destinationLabel: json['destinationLabel'] as String? ?? '',
+        departureTime: json['departureTime'] as String? ?? '',
+        weekdays: (json['weekdays'] as List<dynamic>? ?? [])
+            .map((e) => (e as num).toInt())
+            .toList(),
+        pricePerSeat: (json['pricePerSeat'] as num?)?.toInt() ?? 0,
+        seatsTotal: (json['seatsTotal'] as num?)?.toInt() ?? 0,
+        active: json['active'] as bool? ?? true,
+        upcomingTrips: (json['upcomingTrips'] as num?)?.toInt() ?? 0,
+      );
+
+  String get weekdayLabel {
+    const names = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    final sorted = [...weekdays]..sort();
+    return sorted.map((d) => d >= 1 && d <= 7 ? names[d - 1] : '').join(' · ');
+  }
 }

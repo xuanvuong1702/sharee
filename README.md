@@ -63,6 +63,7 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
 - **Refresh token** xoay vòng: access token 7 ngày, refresh 30 ngày, revoke khi logout.
 - **Outbox worker** đánh dấu event đã xử lý; notifications ghi trong cùng transaction.
 - **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
+- **Chuyến định kỳ**: lịch chạy theo tuần, tự materialize chuyến cho 14 ngày tới, worker gia hạn mỗi 6 giờ.
 - **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
 
 ## API chính
@@ -76,6 +77,9 @@ GET  /api/me
 GET  /api/trips/search?fromLat&fromLng&toLat&toLng&date&seats
 GET  /api/trips/{id}
 POST /api/trips                       (driver)
+POST /api/trips/recurring             lịch chạy theo tuần
+GET  /api/trips/recurring
+DELETE /api/trips/recurring/{id}      tạm dừng
 POST /api/trips/{id}/bookings         (Idempotency-Key)
 POST /api/bookings/{id}/pay
 GET  /api/bookings/mine

@@ -32,6 +32,8 @@ builder.Services.AddSingleton<JwtOptions>();
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<ReadService>();
 builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<RecurringTripService>();
+builder.Services.AddHostedService<RecurringWorker>();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<OutboxWorker>();
@@ -136,6 +138,7 @@ app.MapGet("/health", async (Db db, CancellationToken ct) =>
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapTripEndpoints();
+app.MapRecurringEndpoints();
 app.MapBookingEndpoints();
 app.MapPaymentEndpoints();
 app.MapReviewEndpoints();
