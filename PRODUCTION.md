@@ -1,228 +1,130 @@
-# Đánh giá mức độ sẵn sàng production
+# Đánh giá production — Sharee
 
-Cập nhật: 2026-11-14. Phạm vi: backend, mobile, admin, hạ tầng Docker, bảo mật, vận hành.
+Cập nhật: 2026-11-14. Phạm vi: backend, mobile, thanh toán, push, bản đồ, build Android, hạ tầng.
+Theo yêu cầu, **pháp lý và vận hành production được bỏ qua** trong đánh giá này.
 
 ## Kết luận
 
-**Chưa thể chạy production cho khách hàng thật.** Phần lõi kỹ thuật đã được gia cố để đạt mức
-"production-grade", nhưng còn **5 blocker bên ngoài code**:
+**Đạt mức production-candidate / pilot có kiểm soát, chưa phải production công khai đầy đủ.**
+Toàn bộ luồng kỹ thuật đã có code thật và đã kiểm chứng bằng gateway/FCM giả hoặc môi trường thật ở
+phần có thể. Các điều kiện còn lại chủ yếu là **credentials, cấu hình Firebase/PayOS thật, dung lượng
+map tile, ký số store và kiểm thử tải** — không còn mock trong code production.
 
-1. **Thanh toán thật** — hiện là mock; production đã tự chặn mock (`Payments:AllowMock=false`).
-2. **Push notification nền** — mới có realtime khi app đang mở; chưa có FCM/APNs.
-3. **APK/IPA phát hành** — chưa build & ký được trong môi trường hiện tại.
-4. **Bản đồ** — đang dùng tile OpenStreetMap công cộng, không phù hợp lưu lượng thương mại.
-5. **Pháp lý & vận hành** — đăng ký kinh doanh vận tải, bảo hiểm, eKYC, backup/HA, giám sát 24/7.
+## Ma trận
 
-Nếu chỉ chạy **pilot nội bộ** (ví dụ 20–50 tài khoản, thanh toán chuyển khoản thủ công), hệ thống
-có thể triển khai được sau khi cấu hình secrets, SMS và backup.
-
-## Ma trận đánh giá
-
-| Hạng mục | Trạng thái | Ghi chú |
+| Hạng mục | Trạng thái | Bằng chứng / điều kiện |
 |---|---|---|
-| Build / test / CI | ✅ Sẵn sàng | GitHub Actions build, test, audit dependency, build Docker |
-| Auth OTP | ✅ Sẵn sàng (cần SMS) | OTP lưu DB dạng HMAC-SHA256, hết hạn 5 phút, tối đa 5 lần thử, cooldown/resend, rate limit; adapter Twilio |
-| JWT / refresh | ✅ Sẵn sàng | Access 15–60 phút, refresh 30 ngày, xoay vòng, phát hiện reuse và revoke cả family |
-| Phân quyền | ✅ Sẵn sàng | JWT role + policy admin; kiểm tra participant cho chat/tracking |
-| Đặt ghế / sổ cái | ✅ Sẵn sàng | Atomic seat hold, idempotency, double-entry ledger, test oversell |
-| Chat realtime | ✅ Sẵn sàng | SignalR + Redis backplane, lịch sử PostgreSQL |
-| Notification realtime | ✅ Sẵn sàng | Outbox → SignalR user group, badge |
-| Theo dõi chuyến | ✅ Sẵn sàng | GPS, ETA, route, trạng thái, retention vị trí 24h |
-| Bảo mật HTTP | ✅ Sẵn sàng | Security headers, CORS theo cấu hình, rate limit, body limit, ProblemDetails, correlation ID |
-| Secrets / config | ✅ Sẵn sàng | Không fallback JWT ở production; env bắt buộc; seed demo tắt |
-| Migration | ✅ Sẵn sàng | Advisory lock, seed gating, index bổ sung |
-| Container | ✅ Sẵn sàng | Non-root, healthcheck, restart policy, prod compose |
-| Thanh toán | ⛔ Blocker | Chưa tích hợp cổng thật/webhook/reconciliation |
-| Push nền | ⛔ Blocker | Chưa FCM/APNs |
-| APK/IPA | ⛔ Blocker | Flutter web đã build; APK bị chặn NDK trên máy hiện tại |
-| Bản đồ | ⚠️ Có điều kiện | OSM public tiles; cần Mapbox/Goong/self-host + SLA |
-| eKYC | ⚠️ Có điều kiện | Admin duyệt thủ công; chưa có vendor eKYC/lưu trữ hồ sơ |
-| Giám sát | ⚠️ Có điều kiện | Log JSON/correlation; chưa Prometheus/Grafana/Sentry/alert |
-| Backup / HA | ⚠️ Có điều kiện | Chưa tự động backup; Postgres single-node |
-| Hiệu năng | ⚠️ Chưa chứng minh | Chưa load test/Soak test |
-| Pháp lý | ⛔ Blocker | Giấy phép vận tải, bảo hiểm, điều khoản, privacy |
+| Auth OTP | ✅ | OTP hash HMAC trong DB, rate limit, Twilio adapter; test 429/verify |
+| JWT / refresh | ✅ | Access 60 phút (prod 15), refresh xoay vòng, reuse revoke family |
+| Phân quyền | ✅ | Admin policy, participant checks cho chat/tracking |
+| Đặt ghế / ledger | ✅ | Atomic update, idempotency, oversell test 201=1/409=5 |
+| PayOS | ✅ code, ⚠️ credentials | Tạo link + webhook chữ ký + settlement ledger; test bằng PayOS giả |
+| Hoàn tiền PayOS | ⚠️ | Ledger refund có; **chưa gọi API refund PayOS** |
+| FCM/APNs | ✅ code, ⚠️ credentials | FCM HTTP v1 + APNs ES256; device token API; chưa gửi thật do thiếu Firebase/APNs key |
+| Realtime chat/noti | ✅ | SignalR + Redis backplane; chat persisted; notification badge |
+| Tracking | ✅ | Map, GPS, ETA, trạng thái; OSM demo tiles |
+| Bản đồ | ⚠️ | Tile URL cấu hình được; self-host stack có script; import Việt Nam chưa hoàn tất do dung lượng |
+| Android SDK | ✅ | SDK chuẩn mới tại `C:\Android\sdk`; debug + release APK build thành công |
+| APK release | ✅ ký local | `app-release.apk` ký upload keystore; chưa phát hành store |
+| CI | ✅ | GitHub Actions build/test/audit/Docker |
+| Security headers / CORS / rate limit | ✅ | Kiểm chứng header, CORS, 429 |
+| Migrations | ✅ | Advisory lock, seed gating, 9 migrations |
+| Backup/HA/load test | ⚠️ ngoài phạm vi | Chưa triển khai/đo |
+| Pháp lý / vận hành | — | Bỏ qua theo yêu cầu |
 
-## Đã gia cố trong đợt này
+## Đã triển khai trong đợt này
 
-### Bảo mật
-- OTP chuyển từ RAM sang bảng `otp_codes`, lưu **HMAC-SHA256 + pepper**, không lưu plaintext.
-- Giới hạn: 1 lần gửi/60 giây (cấu hình), 10 lần/giờ, 5 lần nhập sai, hết hạn 5 phút.
-- Adapter SMS: `dev` (log) hoặc **Twilio**; production từ chối provider dev.
-- Rate limiting: global 300 request/phút/IP, auth 20 request/phút.
-- JWT access token mặc định 60 phút (prod compose 15 phút), clock skew 30 giây.
-- Refresh token xoay vòng, phát hiện dùng lại token cũ → revoke toàn bộ family.
-- CORS theo `Cors:AllowedOrigins`, không còn `AllowAnyOrigin`.
-- Security headers: nosniff, DENY frame, no-referrer, Permissions-Policy, COOP; HSTS ở production.
-- Request body tối đa 2 MB; exception handler trả ProblemDetails, không lộ stack trace.
-- Bootstrap admin một lần bằng `X-Bootstrap-Token`, không seed admin mặc định ở production.
-- Mock payment bị chặn ở production (`Payments:AllowMock=false`).
+### 1. PayOS
+- `POST /api/bookings/{id}/payos` tạo payment link, lưu `payments` trạng thái `requires_capture`.
+- Chữ ký tạo link: HMAC-SHA256(`amount&cancelUrl&description&orderCode&returnUrl`).
+- Webhook `POST /api/payments/payos/webhook`:
+  - xác minh chữ ký trên toàn bộ `data` đã sort;
+  - idempotent theo `orderCode`;
+  - xác nhận booking, ghi double-entry ledger, tạo conversation, notification.
+- `GET /api/payments/config` để mobile chọn PayOS/mock.
+- Production chặn mock; thiếu credential PayOS sẽ fail-fast.
+- Đã test end-to-end với PayOS giả: tạo checkout → webhook → booking `confirmed`, payment `succeeded`.
+- Webhook sai chữ ký trả **400**.
 
-### Vận hành
-- `/health/live`, `/health/ready`; Docker healthcheck dùng `/health/ready`.
-- Log có `X-Request-Id` + method/path/status/thời gian.
-- Migration có PostgreSQL advisory lock, bỏ seed khi `Seed:DemoData=false`.
-- Worker bảo trì: huỷ booking hết hạn và trả ghế, xoá OTP/refresh token cũ, xoá vị trí quá 24h,
-  dọn outbox/notification.
-- SignalR Redis backplane để scale nhiều API instance.
-- API image chạy user `app` (non-root), có resource limit trong compose production.
-- CI: build/test/audit dependency, Flutter analyze/test/build web, build Docker.
-- Nâng cấp dependency vá lỗ hổng: Microsoft.OpenApi 2.7.5, SignalR Redis 10.0.15, MessagePack 2.5.303.
+### 2. FCM / APNs
+- Bảng `device_tokens`, API đăng ký/xoá token.
+- `PushService`:
+  - FCM HTTP v1 với service account JWT RS256, cache access token;
+  - APNs HTTP/2 ES256 trực tiếp (tuỳ chọn), raw JOSE signature;
+  - tự xoá token unregistered.
+- Outbox worker gửi SignalR + push sau mỗi notification.
+- Mobile `firebase_core`/`firebase_messaging`, token registration, cấu hình qua dart-defines.
+- Android `POST_NOTIFICATIONS`; iOS `remote-notification` background mode.
+- ⚠️ Chưa gửi thật vì chưa có Firebase project/service account/APNs key.
 
-## Triển khai production
+### 3. Android SDK / APK
+- Cài SDK chuẩn mới tại `C:\Android\sdk` (platform 36, build-tools 36, NDK 28.2, CMake 3.22).
+- `flutter config --android-sdk C:\Android\sdk`; build debug và **release APK thành công**.
+- Gradle signing config đọc `key.properties`; script tạo upload keystore.
+- APK release ký bằng keystore local (không commit keystore/password); bản ký nằm ở
+  `artifacts/sharee-release-signed.apk` (chứng chỉ `CN=Sharee`).
+- Lưu ý: APK hiện build với `API_BASE_URL=http://10.0.2.2:8080`; build store cần HTTPS.
 
-### 1. Chuẩn bị secrets
+### 4. Bản đồ
+- `MapConfig` cho tile URL/attribution/user agent qua dart-define.
+- Hỗ trợ Mapbox/MapTiler/Goong hoặc self-host.
+- `maps/docker-compose.yml` + `scripts/setup-map.ps1` cho tile server OSM Việt Nam.
+- Đã thử import nhưng máy hết dung lượng; script sẵn sàng, cần ≥8GB trống.
+- Demo vẫn dùng OSM public tiles — **không dùng cho production tải cao**.
+
+## Ba vòng rà soát
+
+### Vòng 1 — Bảo mật & thanh toán
+- Phát hiện: OTP plaintext/RAM, JWT 7 ngày, CORS mở, mock payment, refresh reuse.
+- Đã sửa: OTP DB hash + pepper; JWT ngắn; CORS allowlist; PayOS thật; refresh family revoke;
+  rate limit, security headers, body limit, bootstrap admin một lần.
+- Test: OTP hash, 429, webhook signature, reuse 401.
+
+### Vòng 2 — Kiến trúc & vận hành
+- Phát hiện: worker trùng khi scale, booking hết hạn giữ ghế, migration race, container root.
+- Đã sửa: SignalR Redis backplane, outbox `FOR UPDATE SKIP LOCKED`, BookingExpiryWorker 1 phút,
+  MaintenanceWorker retention, advisory lock, non-root image, healthcheck, JSON logs.
+- Test: realtime qua Redis, production-mode DB không seed, Swagger 404.
+
+### Vòng 3 — Sản phẩm & UI
+- PayOS QR sheet, polling trạng thái, fallback mock ở dev.
+- Chat list dạng card, unread badge, route pill; chat realtime.
+- Map attribution cấu hình; trạng thái tracking rõ ràng.
+- APK release + signing scaffold; safe-area/scroll cho sheet thanh toán.
+- Test: `flutter analyze` 0 error, `flutter test` 2/2, APK build.
+
+## Chạy production
 
 ```bash
 cp .env.example .env
-# điền mật khẩu mạnh; KHÔNG commit .env
-openssl rand -base64 48   # JWT_KEY
-openssl rand -base64 24   # OTP_PEPPER
-```
-
-Bắt buộc: `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `JWT_KEY`, `OTP_PEPPER`,
-`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, `APP_ORIGIN`, `ADMIN_ORIGIN`,
-`API_PUBLIC_URL`.
-
-Dùng mật khẩu chỉ gồm chữ/số nếu đặt trực tiếp trong connection string; ký tự `;` có thể phá
-chuỗi kết nối. Với mật khẩu phức tạp, inject qua secret manager và URL-encode.
-
-### 2. Khởi động
-
-```bash
+# điền: DB/Redis password, JWT_KEY, OTP_PEPPER, Twilio, PayOS, FCM, origins
 docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ```
 
-Compose production:
-- Không mở port DB/Redis ra ngoài.
-- API/admin chỉ bind `127.0.0.1`, đặt sau reverse proxy TLS.
-- Không seed dữ liệu demo.
-- Tắt Swagger, mock payment, OTP dev.
+Sau deploy:
+1. `GET /health/ready` trả 200.
+2. Bootstrap admin một lần bằng `X-Bootstrap-Token`, sau đó xoá token.
+3. Cấu hình webhook PayOS trỏ tới `https://api.../api/payments/payos/webhook`.
+4. Upload file Firebase service account, build mobile với FCM dart-defines.
+5. Build APK/AAB bằng keystore thật và API HTTPS.
+6. Chọn tile provider có SLA hoặc self-host tile server.
 
-### 3. TLS + reverse proxy
+## Điều kiện còn lại trước khi mở công khai
 
-Dùng ALB/Nginx/Cloudflare làm TLS termination, forward:
-- `X-Forwarded-For`, `X-Forwarded-Proto`
-- WebSocket upgrade cho `/hubs/*`
-- Giới hạn body, timeout phù hợp.
+1. **PayOS thật**: client id/key/checksum, webhook URL public, test giao dịch nhỏ; bổ sung API refund.
+2. **Firebase/APNs thật**: tạo project, service account, `google-services.json`/`GoogleService-Info.plist`,
+   build và test notification trên thiết bị thật; APNs key nếu dùng trực tiếp.
+3. **Map tiles**: provider key hoặc self-host import đủ dữ liệu; cấu hình attribution/SLA.
+4. **APK/AAB store**: ký bằng keystore production, API HTTPS, Firebase config, test trên thiết bị.
+5. **Kiểm thử tải & backup**: ngoài phạm vi theo yêu cầu, nhưng vẫn là điều kiện vận hành.
+6. **Pháp lý/eKYC**: bỏ qua theo yêu cầu.
 
-Mẫu Nginx:
+## Bằng chứng kiểm thử hiện tại
 
-```nginx
-server {
-  listen 443 ssl http2;
-  server_name api.example.com;
-  client_max_body_size 2m;
-  location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-  location /hubs/ {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_read_timeout 3600s;
-  }
-}
-```
-
-Chỉ bật `ReverseProxy:TrustForwarded=true` khi proxy đáng tin cậy.
-
-### 4. Tạo admin đầu tiên
-
-```bash
-curl -X POST https://api.example.com/api/auth/bootstrap-admin \
-  -H "Content-Type: application/json" \
-  -H "X-Bootstrap-Token: $BOOTSTRAP_TOKEN" \
-  -d '{"phone":"+8490xxxxxxx","fullName":"Admin"}'
-```
-
-Sau đó **xoá `BOOTSTRAP_TOKEN`** khỏi môi trường và restart API.
-
-### 5. Kiểm tra sau deploy
-
-```bash
-curl https://api.example.com/health/live
-curl https://api.example.com/health/ready
-```
-
-Kỳ vọng: `200` và `{"status":"ready","db":true}`.
-
-## Backup & khôi phục
-
-```bash
-# backup hằng ngày
-docker compose -f docker-compose.prod.yml exec -T db \
-  pg_dump -U sharee -Fc sharee > backup-$(date +%F).dump
-
-# restore vào DB mới
-pg_restore -d sharee backup-2026-11-14.dump
-```
-
-Yêu cầu tối thiểu:
-- Backup tự động hằng ngày, giữ 14–30 ngày, lưu ngoài máy chủ.
-- Diễn tập restore mỗi quý.
-- Redis bật AOF (compose production đã bật).
-- DB production nên dùng managed Postgres/PostGIS có PITR.
-
-## Giám sát đề xuất
-
-- Uptime: `/health/ready` từ 2 region.
-- Log: tập trung (Loki/ELK), alert theo `X-Request-Id` khi lỗi 5xx.
-- Metrics: request rate/latency/5xx, DB pool, Redis, SignalR connections, booking failures.
-- Tracing: OpenTelemetry cho API + Npgsql + Redis.
-- Alert: payment failures, outbox backlog, booking expiry, migration failure, disk > 80%.
-
-## Scale
-
-- API stateless; chạy nhiều replica sau load balancer.
-- SignalR dùng Redis backplane; không cần sticky session.
-- Postgres: connection pool mỗi instance; theo dõi `max_connections`.
-- Redis: dùng managed/HA cho production.
-- Outbox worker dùng `FOR UPDATE SKIP LOCKED`; booking expiry dùng CTE nguyên tử; recurring trip có
-  unique index chống trùng. Có thể chạy nhiều replica, nhưng nên tách worker service riêng khi tải cao
-  để API không bị ảnh hưởng.
-
-## Blockers cần xử lý trước khi mở cho khách thật
-
-### 1. Thanh toán
-- Tích hợp VNPay/MoMo/Stripe; tạo payment intent, webhook có chữ ký, idempotency.
-- Đối soát tự động với ledger; hoàn tiền qua API provider.
-- Hiện `POST /api/bookings/{id}/pay` trả **501** ở production vì mock bị tắt.
-
-### 2. Push notification
-- FCM (Android) + APNs (iOS), lưu device token, gửi khi app đóng.
-- Hiện chỉ realtime khi app mở.
-
-### 3. Phát hành mobile
-- Build APK/AAB release, ký keystore, upload store; bản hiện tại bị chặn NDK trên máy dev.
-- Cấu hình `API_BASE_URL` HTTPS, không dùng cleartext.
-
-### 4. Bản đồ
-- OSM public tile không cam kết SLA và hạn chế thương mại.
-- Dùng Mapbox/Goong/self-host tiles, cấu hình attribution và API key.
-
-### 5. eKYC & pháp lý
-- Vendor eKYC, lưu hồ sơ mã hoá, quy trình xoá dữ liệu.
-- Điều khoản, chính sách riêng tư, bảo hiểm chuyến đi, tuân thủ quy định vận tải.
-
-### 6. Vận hành
-- Backup tự động + restore test.
-- Monitoring/alerting 24/7.
-- Load test mục tiêu (ví dụ 500 RPS tìm chuyến, 50 booking/s).
-- Diễn tập sự cố DB/Redis.
-
-## Tiêu chí sign-off production
-
-- [ ] Không còn mock payment; webhook + đối soát chạy thật.
-- [ ] SMS OTP hoạt động với số thật, không lộ mã.
-- [ ] APK/IPA đã ký và test trên thiết bị thật.
-- [ ] Backup/restore đã diễn tập.
-- [ ] Monitoring + alert 5xx/latency/DB/Redis.
-- [ ] Load test đạt SLO.
-- [ ] eKYC + pháp lý hoàn tất.
-- [ ] Bản đồ có SLA.
-- [ ] Push notification nền.
-- [ ] Worker scale-out an toàn.
+- `dotnet test`: 6/6 pass; `flutter test`: 2/2 pass.
+- PayOS fake gateway: checkout + webhook + settlement pass; sai chữ ký 400.
+- FCM device register: DB ghi nhận token; push disabled khi thiếu credential.
+- Production-mode fresh DB: 0 users/trips, Swagger 404, health ready.
+- APK debug/release build thành công; release ký cert `CN=Sharee`.
+- Dependency audit: 0 lỗ hổng.
+- Admin CSP hoạt động; API security headers và CORS allowlist đã kiểm tra.

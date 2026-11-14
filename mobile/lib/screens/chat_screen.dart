@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/format.dart';
 import '../core/models.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 
 class ChatThreadsScreen extends StatefulWidget {
@@ -43,65 +44,124 @@ class _ChatThreadsScreenState extends State<ChatThreadsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tin nhắn')),
+      appBar: AppBar(
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tin nhắn', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+            Text('Trao đổi với tài xế và khách',
+                style: TextStyle(fontSize: 11, color: AppTheme.muted)),
+          ],
+        ),
+      ),
       body: FutureBuilder<List<ChatThread>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: const [
+                Skeleton(height: 78, radius: 18),
+                SizedBox(height: 9),
+                Skeleton(height: 78, radius: 18),
+                SizedBox(height: 9),
+                Skeleton(height: 78, radius: 18),
+              ],
+            );
           }
           if (snapshot.hasError) {
-            return Center(child: Text('${snapshot.error}'));
+            return EmptyState(
+              icon: Icons.cloud_off_rounded,
+              title: 'Không tải được hội thoại',
+              message: '${snapshot.error}',
+              actionLabel: 'Thử lại',
+              onAction: () => setState(_load),
+            );
           }
           final threads = snapshot.data ?? [];
           if (threads.isEmpty) {
-            return const Center(child: Text('Chưa có hội thoại nào'));
+            return const EmptyState(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: 'Chưa có hội thoại nào',
+              message: 'Sau khi đặt chuyến, bạn có thể nhắn tin trực tiếp với tài xế.',
+            );
           }
-          return ListView.separated(
-            itemCount: threads.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final t = threads[index];
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                leading: AvatarCircle(name: t.other.fullName),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(t.other.fullName,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                    ),
-                    Text(t.lastAt == null ? '' : hhmm(t.lastAt!),
-                        style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
-                  ],
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(t.lastMessage ?? 'Bắt đầu trò chuyện',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11.5, color: AppTheme.muted)),
-                    const SizedBox(height: 2),
-                    Text('${t.originLabel} → ${t.destinationLabel}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 9.5, color: AppTheme.primary)),
-                  ],
-                ),
-                trailing: t.unread > 0
-                    ? Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
-                        child: Text('${t.unread}',
-                            style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800)),
-                      )
-                    : null,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ChatScreen(thread: t),
-                )),
-              );
-            },
+          return RefreshIndicator(
+            color: AppTheme.primary,
+            onRefresh: () async => setState(_load),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+              itemCount: threads.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 9),
+              itemBuilder: (context, index) {
+                final t = threads[index];
+                return AppCard(
+                  padding: const EdgeInsets.all(13),
+                  onTap: () => Navigator.of(context).push(appRoute(ChatScreen(thread: t))),
+                  child: Row(
+                    children: [
+                      AvatarCircle(name: t.other.fullName, size: 46),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(t.other.fullName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontSize: 13, fontWeight: FontWeight.w800)),
+                                ),
+                                if (t.lastAt != null)
+                                  Text(hhmm(t.lastAt!),
+                                      style: const TextStyle(
+                                          fontSize: 9.5, color: AppTheme.muted)),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(t.lastMessage ?? 'Bắt đầu trò chuyện',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: t.unread > 0 ? AppTheme.ink : AppTheme.muted,
+                                    fontWeight:
+                                        t.unread > 0 ? FontWeight.w600 : FontWeight.w500)),
+                            const SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Pill('${t.originLabel.split(',').first} → ${t.destinationLabel.split(',').first}',
+                                      color: AppTheme.primary,
+                                      background: AppTheme.primarySoft),
+                                ),
+                                const Spacer(),
+                                if (t.unread > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary,
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: Text('${t.unread}',
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w900)),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

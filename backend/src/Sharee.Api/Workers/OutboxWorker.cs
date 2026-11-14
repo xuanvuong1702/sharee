@@ -3,12 +3,14 @@ using Dapper;
 using Microsoft.AspNetCore.SignalR;
 using Sharee.Api.Hubs;
 using Sharee.Api.Infrastructure;
+using Sharee.Api.Services;
 
 namespace Sharee.Api.Workers;
 
 public sealed class OutboxWorker(
     Db db,
     IHubContext<NotificationHub> notifications,
+    PushService push,
     ILogger<OutboxWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,6 +41,20 @@ public sealed class OutboxWorker(
                             var userId = payload.GetProperty("userId").GetGuid();
                             await notifications.Clients.Group($"user:{userId}")
                                 .SendAsync("notification", (object)payload, stoppingToken);
+                            try
+                            {
+                                var title = payload.TryGetProperty("title", out System.Text.Json.JsonElement t)
+                                    ? t.GetString() ?? "" : "";
+                                var body = payload.TryGetProperty("body", out System.Text.Json.JsonElement b)
+                                    ? b.GetString() ?? "" : "";
+                                var type = payload.TryGetProperty("type", out System.Text.Json.JsonElement ty)
+                                    ? ty.GetString() ?? "" : "";
+                                await push.SendAsync(userId, title, body, new { type }, stoppingToken);
+                            }
+                            catch (Exception pushEx)
+                            {
+                                logger.LogWarning("Push delivery failed: {Message}", pushEx.Message);
+                            }
                         }
 
                         await conn.ExecuteAsync(

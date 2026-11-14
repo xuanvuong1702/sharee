@@ -183,6 +183,51 @@ powershell -File scripts/oversell.ps1
 - `oversell.ps1`: bắn 6 request đặt ghế đồng thời, assert không bán quá số ghế (201 = 1, 409 = 5).
 - `node tools/uicheck/realtime-check.mjs`: kiểm tra chat realtime, lịch sử lưu DB và notification realtime.
 
+## Thanh toán PayOS
+
+- Mobile gọi `POST /api/bookings/{id}/payos`, nhận `checkoutUrl` + QR, mở PayOS và poll trạng thái booking.
+- Webhook `POST /api/payments/payos/webhook` xác minh HMAC-SHA256, chốt booking + ledger idempotent.
+- Bật production:
+
+```env
+Payments__Provider=payos
+PayOS__Enabled=true
+PayOS__ClientId=...
+PayOS__ApiKey=...
+PayOS__ChecksumKey=...
+PayOS__ReturnUrl=https://app.example.com/payment/return
+PayOS__CancelUrl=https://app.example.com/payment/cancel
+```
+
+- Demo dùng mock; production tự chặn mock.
+- Kiểm thử gateway giả: `node tools/uicheck/payos-check.mjs`.
+
+## Push FCM / APNs
+
+- Backend: FCM HTTP v1 + APNs HTTP/2, device token API, outbox gửi push sau notification.
+- Mobile: `firebase_core` + `firebase_messaging`, token tự đăng ký sau đăng nhập.
+- Cấu hình mobile:
+
+```bash
+flutter build apk --release \
+  --dart-define=API_BASE_URL=https://api.example.com \
+  --dart-define=FIREBASE_API_KEY=... \
+  --dart-define=FIREBASE_APP_ID=... \
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=... \
+  --dart-define=FIREBASE_PROJECT_ID=...
+```
+
+- Backend: `Push__Fcm__ProjectId`, service account JSON (hoặc file trong container), APNs key nếu dùng trực tiếp.
+- Chi tiết: [PRODUCTION.md](PRODUCTION.md).
+
+## Bản đồ & APK
+
+- Tile URL cấu hình: `--dart-define=MAP_TILE_URL=... --dart-define=MAP_ATTRIBUTION=...`.
+- Self-host OSM: [maps/README.md](maps/README.md), chạy `scripts/setup-map.ps1`.
+- APK release: `cd mobile && flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com`.
+- Keystore: `scripts/create-keystore.ps1`; `key.properties` và keystore không commit.
+- Android SDK chuẩn: `flutter config --android-sdk C:\Android\sdk`.
+
 ## Production
 
 ```bash
@@ -198,7 +243,10 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 
 ## Ghi chú
 
-- Cấu hình mặc định trong repo là **demo học tập**: OTP trả về client, thanh toán mô phỏng.
+- Cấu hình mặc định trong repo là **demo**: OTP trả về client, thanh toán mock.
 - Production tự chặn mock payment, OTP dev, Swagger và seed demo; xem `PRODUCTION.md`.
 - Flutter web gọi API qua `localhost:8080`; đổi bằng `--dart-define=API_BASE_URL=...`.
-- Build Android APK cần Android SDK/CMake có quyền ghi thư mục build; môi trường hiện tại chặn CMake nên chỉ build/verify bản web.
+- Android SDK chuẩn đã cấu hình tại `C:\Android\sdk`; APK build tại
+  `mobile/build/app/outputs/flutter-apk/`, bản ký sẵn trong `artifacts/sharee-release-signed.apk`.
+- Build APK store: tạo keystore bằng `scripts/create-keystore.ps1`, rồi
+  `flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com`.

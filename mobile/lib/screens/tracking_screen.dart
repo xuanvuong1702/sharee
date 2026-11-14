@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../core/app_state.dart';
 import '../core/format.dart';
+import '../core/map_config.dart';
 import '../core/models.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
@@ -294,8 +295,8 @@ class _TrackingScreenState extends State<TrackingScreen> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'vn.sharee.mobile',
+                  urlTemplate: MapConfig.tileUrl,
+                  userAgentPackageName: MapConfig.userAgent,
                   maxZoom: 19,
                 ),
                 if (d.route.length > 1)
@@ -404,8 +405,8 @@ class _TrackingScreenState extends State<TrackingScreen> {
                   color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(5),
                 ),
-                child: const Text('© OpenStreetMap',
-                    style: TextStyle(fontSize: 7.5, color: AppTheme.muted)),
+                child: Text(MapConfig.attribution,
+                    style: const TextStyle(fontSize: 7.5, color: AppTheme.muted)),
               ),
             ),
             Positioned(

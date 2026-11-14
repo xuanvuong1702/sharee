@@ -598,8 +598,7 @@ class LivePosition {
 class TripTracking {
   final String tripId;
   final String driverId;
-  final String status;
-  final String trackingStatus;
+  final String status;  final String trackingStatus;
   final String driverName;
   final String driverPhone;
   final Vehicle vehicle;
@@ -655,4 +654,48 @@ class TripTracking {
       );
 
   bool get active => trackingStatus != 'completed';
+}
+
+class PaymentConfig {
+  final String provider;
+  final bool enabled;
+
+  const PaymentConfig({required this.provider, required this.enabled});
+
+  factory PaymentConfig.fromJson(Map<String, dynamic> json) => PaymentConfig(
+        provider: json['provider'] as String? ?? 'mock',
+        enabled: json['enabled'] as bool? ?? false,
+      );
+
+  bool get isPayOs => provider == 'payos';
+}
+
+class PayOsCheckout {
+  final int orderCode;
+  final int amount;
+  final String description;
+  final String checkoutUrl;
+  final String qrCode;
+  final String paymentLinkId;
+  final DateTime expiresAt;
+
+  const PayOsCheckout({
+    required this.orderCode,
+    required this.amount,
+    required this.description,
+    required this.checkoutUrl,
+    required this.qrCode,
+    required this.paymentLinkId,
+    required this.expiresAt,
+  });
+
+  factory PayOsCheckout.fromJson(Map<String, dynamic> json) => PayOsCheckout(
+        orderCode: (json['orderCode'] as num?)?.toInt() ?? 0,
+        amount: (json['amount'] as num?)?.toInt() ?? 0,
+        description: json['description'] as String? ?? '',
+        checkoutUrl: json['checkoutUrl'] as String? ?? '',
+        qrCode: json['qrCode'] as String? ?? '',
+        paymentLinkId: json['paymentLinkId'] as String? ?? '',
+        expiresAt: DateTime.parse(json['expiresAt'] as String),
+      );
 }

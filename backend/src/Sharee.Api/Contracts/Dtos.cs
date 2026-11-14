@@ -4,6 +4,7 @@ public record RequestOtpRequest(string Phone);
 public record RequestOtpResponse(int ExpiresInSeconds, string? DevCode);
 public record VerifyOtpRequest(string Phone, string Code);
 public record BootstrapAdminRequest(string Phone, string? FullName = null);
+public record RegisterDeviceRequest(string Token, string Platform);
 public record RefreshRequest(string RefreshToken);
 public record AuthResponse(string AccessToken, string RefreshToken, UserDto User);
 

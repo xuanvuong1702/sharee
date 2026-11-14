@@ -156,6 +156,10 @@ class Api {
     return Earnings.fromJson(data);
   }
 
+  Future<void> registerDevice(String token, String platform) async {
+    await _send('POST', '/api/me/devices', body: {'token': token, 'platform': platform});
+  }
+
   Future<TripTracking> tracking(String tripId) async {
     final data = await _send('GET', '/api/trips/$tripId/tracking') as Map<String, dynamic>;
     return TripTracking.fromJson(data);
@@ -252,6 +256,17 @@ class Api {
     final data = await _send('POST', '/api/bookings/$bookingId/pay', body: {})
         as Map<String, dynamic>;
     return Booking.fromJson(data);
+  }
+
+  Future<PaymentConfig> paymentConfig() async {
+    final data = await _send('GET', '/api/payments/config') as Map<String, dynamic>;
+    return PaymentConfig.fromJson(data);
+  }
+
+  Future<PayOsCheckout> createPayOsPayment(String bookingId) async {
+    final data = await _send('POST', '/api/bookings/$bookingId/payos', body: {})
+        as Map<String, dynamic>;
+    return PayOsCheckout.fromJson(data);
   }
 
   Future<Booking> booking(String id) async {

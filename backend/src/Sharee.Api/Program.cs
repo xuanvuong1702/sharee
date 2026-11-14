@@ -70,10 +70,35 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddProblemDetails();
 builder.Services.AddResponseCompression(o => o.EnableForHttps = true);
 builder.Services.AddHttpClient("twilio", c => c.Timeout = TimeSpan.FromSeconds(10));
+builder.Services.AddHttpClient("payos", c => c.Timeout = TimeSpan.FromSeconds(15));
+
+var paymentProvider = config["Payments:Provider"] ?? "mock";
+var payos = config.GetSection("PayOS").Get<PayOsOptions>() ?? new PayOsOptions();
+builder.Services.AddSingleton(payos);
+builder.Services.AddScoped<PayOsService>();
+builder.Services.AddScoped<PaymentSettlementService>();
+if (isProduction && paymentProvider.Equals("payos", StringComparison.OrdinalIgnoreCase))
+{
+    if (!payos.Enabled || string.IsNullOrWhiteSpace(payos.ClientId)
+        || string.IsNullOrWhiteSpace(payos.ApiKey) || string.IsNullOrWhiteSpace(payos.ChecksumKey))
+        throw new InvalidOperationException("PayOS is enabled but credentials are incomplete");
+}
+
+var push = config.GetSection("Push").Get<PushOptions>() ?? new PushOptions();
+builder.Services.AddSingleton(push);
+builder.Services.AddHttpClient("push", c => c.Timeout = TimeSpan.FromSeconds(10));
+builder.Services.AddSingleton<PushService>();
+if (isProduction && push.Enabled && !push.Fcm.Enabled && !push.Apns.Enabled)
+    throw new InvalidOperationException("Push is enabled but no FCM/APNs credentials are configured");
 
 var smsProvider = config["Sms:Provider"] ?? "dev";
 if (isProduction && smsProvider.Equals("dev", StringComparison.OrdinalIgnoreCase) && !demoMode)
     throw new InvalidOperationException("Sms:Provider=dev is not allowed in production");
+if (isProduction && smsProvider.Equals("twilio", StringComparison.OrdinalIgnoreCase)
+    && (string.IsNullOrWhiteSpace(config["Twilio:AccountSid"])
+        || string.IsNullOrWhiteSpace(config["Twilio:AuthToken"])
+        || string.IsNullOrWhiteSpace(config["Twilio:From"])))
+    throw new InvalidOperationException("Twilio SMS credentials are incomplete");
 builder.Services.AddSingleton<ISmsSender>(sp =>
     smsProvider.Equals("twilio", StringComparison.OrdinalIgnoreCase)
         ? ActivatorUtilities.CreateInstance<TwilioSmsSender>(sp)
@@ -278,6 +303,7 @@ app.MapRecurringEndpoints();
 app.MapTrackingEndpoints();
 app.MapBookingEndpoints();
 app.MapPaymentEndpoints();
+app.MapPayOsEndpoints();
 app.MapReviewEndpoints();
 app.MapReportEndpoints();
 app.MapChatEndpoints();

@@ -25,4 +25,14 @@ admin/preview.png
 mobile/preview.png
 
 mobile/android/.kotlin/
+mobile/android/key.properties
+mobile/android/keystore/
+*.jks
+*.keystore
+
+# Local build artifacts / map extracts
+artifacts/
+maps/*.pbf
+maps/data/
+
 *.salive

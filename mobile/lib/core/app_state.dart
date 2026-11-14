@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
 import 'models.dart';
+import 'push_service.dart';
 import 'realtime.dart';
 
 class AppState extends ChangeNotifier {
@@ -50,6 +51,7 @@ class AppState extends ChangeNotifier {
   Future<void> _startRealtime() async {
     if (user == null) return;
     await realtime.connect();
+    unawaited(PushService.instance.init(api));
     _notificationSub ??= realtime.notifications.listen((_) {
       unread += 1;
       notifyListeners();

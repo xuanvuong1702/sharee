@@ -58,6 +58,41 @@ public static class UserEndpoints
             Guid id, ReadService read, CancellationToken ct) =>
             Results.Ok(await read.GetReviewsAsync(id, ct))).WithTags("Users");
 
+        app.MapPost("/api/me/devices", async (
+            RegisterDeviceRequest request, HttpContext http, Db db, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.Token) || request.Token.Length > 4096)
+                return Results.BadRequest(new { error = "Device token không hợp lệ" });
+            if (request.Platform is not ("android" or "ios" or "web"))
+                return Results.BadRequest(new { error = "Platform không hợp lệ" });
+
+            await using var conn = await db.OpenAsync(ct);
+            await conn.ExecuteAsync("""
+                insert into device_tokens (user_id, token, platform)
+                values (@userId, @token, @platform)
+                on conflict (token) do update set
+                    user_id = excluded.user_id,
+                    platform = excluded.platform,
+                    updated_at = now()
+                """, new
+            {
+                userId = http.User.GetUserId(),
+                token = request.Token.Trim(),
+                request.Platform
+            });
+            return Results.Ok(new { status = "registered" });
+        }).RequireAuthorization().WithTags("Me");
+
+        app.MapDelete("/api/me/devices", async (
+            string token, HttpContext http, Db db, CancellationToken ct) =>
+        {
+            await using var conn = await db.OpenAsync(ct);
+            await conn.ExecuteAsync(
+                "delete from device_tokens where token = @token and user_id = @userId",
+                new { token, userId = http.User.GetUserId() });
+            return Results.Ok(new { status = "removed" });
+        }).RequireAuthorization().WithTags("Me");
+
         app.MapGet("/api/me/earnings", async (
             HttpContext http, Db db, CancellationToken ct) =>
         {

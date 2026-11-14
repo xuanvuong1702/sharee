@@ -13,6 +13,14 @@ public static class PaymentEndpoints
             Guid id, HttpContext http, Db db, LedgerService ledger, ReadService read,
             IConfiguration config, CancellationToken ct) =>
         {
+            if ((config["Payments:Provider"] ?? "mock").Equals("payos", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Conflict(new
+                {
+                    error = "Vui lòng thanh toán qua PayOS",
+                    checkout = $"/api/bookings/{id}/payos"
+                });
+            }
             if (!config.GetValue("Payments:AllowMock", false))
             {
                 return Results.Json(new

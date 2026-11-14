@@ -1,0 +1,4 @@
+storePassword=change-me
+keyPassword=change-me
+keyAlias=sharee
+storeFile=../keystore/sharee-upload.jks

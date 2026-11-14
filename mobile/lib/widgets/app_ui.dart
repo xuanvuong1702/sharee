@@ -163,8 +163,7 @@ class Pill extends StatelessWidget {
             Icon(icon, size: 11, color: fg),
             const SizedBox(width: 3),
           ],
-          Text(text, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg)),
-        ],
+          Text(text, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg)),        ],
       ),
     );
   }

@@ -70,10 +70,23 @@ services:
       Seed__DemoData: "false"
       Demo__Mode: "false"
       Payments__AllowMock: "false"
+      Payments__Provider: payos
+      PayOS__Enabled: "true"
+      PayOS__ClientId: ${PAYOS_CLIENT_ID:?PAYOS_CLIENT_ID is required}
+      PayOS__ApiKey: ${PAYOS_API_KEY:?PAYOS_API_KEY is required}
+      PayOS__ChecksumKey: ${PAYOS_CHECKSUM_KEY:?PAYOS_CHECKSUM_KEY is required}
+      PayOS__ReturnUrl: ${PAYOS_RETURN_URL:?PAYOS_RETURN_URL is required}
+      PayOS__CancelUrl: ${PAYOS_CANCEL_URL:?PAYOS_CANCEL_URL is required}
+      Push__Enabled: "true"
+      Push__Fcm__ProjectId: ${FCM_PROJECT_ID:?FCM_PROJECT_ID is required}
+      Push__Fcm__ServiceAccountJson: /run/secrets/firebase.json
+      Push__Apns__Enabled: "false"
       Swagger__Enabled: "false"
       Cors__AllowedOrigins__0: ${APP_ORIGIN:?APP_ORIGIN is required}
       Cors__AllowedOrigins__1: ${ADMIN_ORIGIN:?ADMIN_ORIGIN is required}
       ReverseProxy__TrustForwarded: "true"
+    volumes:
+      - ${FCM_CREDENTIALS_FILE:?FCM_CREDENTIALS_FILE is required}:/run/secrets/firebase.json:ro
     ports:
       - "127.0.0.1:8080:8080"
     deploy:

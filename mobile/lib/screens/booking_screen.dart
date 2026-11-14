@@ -4,6 +4,7 @@ import '../core/app_state.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/payos_sheet.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
 import 'tracking_screen.dart';
@@ -20,6 +21,7 @@ class _BookingScreenState extends State<BookingScreen> {
   late Future<Booking> _future;
   bool _started = false;
   bool _busy = false;
+  String _paymentProvider = 'mock';
 
   @override
   void didChangeDependencies() {
@@ -27,6 +29,14 @@ class _BookingScreenState extends State<BookingScreen> {
     if (_started) return;
     _started = true;
     _load();
+    _loadPaymentConfig();
+  }
+
+  Future<void> _loadPaymentConfig() async {
+    try {
+      final config = await AppScope.of(context).api.paymentConfig();
+      if (mounted) setState(() => _paymentProvider = config.provider);
+    } catch (_) {}
   }
 
   void _load() {
@@ -34,11 +44,35 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _pay() async {
+    if (_paymentProvider == 'payos') {
+      await _payWithPayOs();
+      return;
+    }
     setState(() => _busy = true);
     try {
       await AppScope.of(context).api.pay(widget.bookingId);
       setState(_load);
       if (mounted) showInfo(context, 'Thanh toán thành công');
+    } catch (e) {
+      if (mounted) showError(context, e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _payWithPayOs() async {
+    setState(() => _busy = true);
+    try {
+      final api = AppScope.of(context).api;
+      final checkout = await api.createPayOsPayment(widget.bookingId);
+      if (!mounted) return;
+      final paid = await showAppSheet<bool>(
+        context,
+        PayOsSheet(api: api, bookingId: widget.bookingId, checkout: checkout),
+      );
+      if (!mounted) return;
+      setState(_load);
+      if (paid == true) showInfo(context, 'Thanh toán PayOS thành công');
     } catch (e) {
       if (mounted) showError(context, e);
     } finally {
@@ -433,7 +467,9 @@ class _BookingScreenState extends State<BookingScreen> {
             child: SafeArea(
               top: false,
               child: PrimaryButton(
-                label: 'Thanh toán ${money(booking.priceTotal)}',
+                label: _paymentProvider == 'payos'
+                    ? 'Thanh toán PayOS · ${money(booking.priceTotal)}'
+                    : 'Thanh toán ${money(booking.priceTotal)}',
                 icon: Icons.lock_rounded,
                 loading: _busy,
                 onPressed: _pay,

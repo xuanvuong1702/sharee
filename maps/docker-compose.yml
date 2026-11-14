@@ -1,0 +1,14 @@
+services:
+  tile-server:
+    image: overv/openstreetmap-tile-server:2.3.0
+    container_name: sharee-tiles
+    restart: unless-stopped
+    environment:
+      THREADS: 4
+      OSM2PGSQL_EXTRA_ARGS: --flat-nodes /data/nodes.cache
+    volumes:
+      - ./data:/data/database
+      - ./vietnam-latest.osm.pbf:/data/region.osm.pbf:ro
+    ports:
+      - "8082:80"
+    shm_size: "1gb"
