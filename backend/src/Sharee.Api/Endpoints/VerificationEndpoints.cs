@@ -13,7 +13,7 @@ public static partial class VerificationEndpoints
     [GeneratedRegex(@"^\d{9}$|^\d{12}$")]
     private static partial Regex IdNumberRegex();
 
-    [GeneratedRegex(@"^[A-Za-z0-9]{6,20}$")]
+    [GeneratedRegex(@"^[A-Za-z0-9.\- ]{5,24}$")]
     private static partial Regex VehicleRegistrationRegex();
 
     public static IEndpointRouteBuilder MapVerificationEndpoints(this IEndpointRouteBuilder app)
