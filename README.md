@@ -47,7 +47,6 @@ Seed sẵn 4 chuyến Hà Nội → Hải Phòng/Nội Bài (ngày mai, giờ Vi
 (Bến Thành – Suối Tiên, 6 trạm), báo cáo và hồ sơ chờ duyệt.
 
 > Tài xế demo phải hoàn tất xác thực trong app trước khi đăng chuyến/nhận booking.
-> Hồ sơ của Minh Hằng đang chờ admin duyệt để thử luồng review.
 
 ## Kiến trúc
 
