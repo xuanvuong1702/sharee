@@ -98,6 +98,23 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
   admin: `GET /api/admin/verifications`, `GET /api/admin/verifications/{userId}`, duyệt/từ chối/tạm dừng.
 - Lưu trữ: `Storage__VerificationRoot` (Docker volume `sharee-verifications:/data/verifications`), phải backup cùng DB.
 
+## Escrow, khiếu nại & uy tín
+
+- **Escrow**: mỗi booking có `escrow_holds` với số tiền, phương thức và trạng thái
+  `held → released/refunded`, hoặc `disputed` khi có khiếu nại. Tiền chỉ giải ngân khi tài xế hoàn tất và không có khiếu nại mở.
+- **Phương thức**: chuyển khoản ngân hàng, ví điện tử qua PayOS, hoặc tiền mặt khi lên xe.
+  Tiền mặt yêu cầu khách đã KYC cấp ≥2; escrow ghi `cash_pending` và đóng khi hoàn tất.
+- **Khiếu nại**: một khiếu nại mở/booking; tiền escrow bị khóa (`disputed`).
+  Hai bên tải bằng chứng ảnh/PDF (tối đa 10 MB), admin xem cả hai phía và quyết định
+  `release` hoặc `refund`. Hoàn tất chuyến bị chặn khi còn khiếu nại mở.
+- **Uy tín**: `GET /api/me/reputation` và `/api/users/{id}/reputation` trả điểm 0–100,
+  hạng `new/bronze/silver/gold/elite`, tỷ lệ hoàn thành, số đơn, đánh giá và huy hiệu KYC/tài xế.
+- Điểm = 50% đánh giá + 35% tỷ lệ hoàn thành + 15% số giao dịch (tối đa ở 20 đơn).
+- Lưu bằng chứng khiếu nại tại `Storage:AppealRoot` (volume `sharee-appeals:/data/appeals`); backup cùng DB.
+- API: `GET /api/bookings/{id}/escrow`, `POST /api/bookings/{id}/payment-method`,
+  `POST /api/bookings/{id}/appeals`, `POST /api/appeals/{id}/evidence`;
+  admin: `GET /api/admin/appeals`, `POST /api/admin/appeals/{id}/resolve`.
+
 ## API chính
 
 ```

@@ -81,6 +81,14 @@ map tile, ký số store và kiểm thử tải** — không còn mock trong cod
 - Hồ sơ hết hạn tự hạ cấp qua maintenance worker; hồ sơ cũ thiếu dữ liệu phải xác thực lại.
 - Cần backup volume `sharee-prod-verification` cùng PostgreSQL.
 
+### 6. Escrow, khiếu nại, thanh toán, uy tín
+- `escrow_holds` khóa tiền theo booking; giải ngân khi hoàn tất, hoàn khi huỷ/theo phán quyết admin.
+- Khiếu nại mở sẽ chuyển escrow sang `disputed`, chặn hoàn tất và giải ngân; admin xem bằng chứng hai bên.
+- Phương thức: bank/wallet qua PayOS, cash (yêu cầu KYC cấp ≥2); cash dùng `cash_pending`.
+- Điểm uy tín 0–100 từ đánh giá, tỷ lệ hoàn thành, số đơn; hạng new → elite.
+- Bằng chứng lưu volume `sharee-prod-appeals`; backup cùng DB và verification.
+- Trước production: bật escrow holdback/worker thời gian giữ tiền nếu muốn khiếu nại sau khi hoàn tất.
+
 ## Ba vòng rà soát
 
 ### Vòng 1 — Bảo mật & thanh toán

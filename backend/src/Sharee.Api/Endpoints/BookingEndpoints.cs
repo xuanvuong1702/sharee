@@ -253,8 +253,13 @@ public static class BookingEndpoints
             var booking = await read.GetBookingAsync(id, ct);
             if (booking is null) return Results.NotFound();
             if (booking.Driver.Id != http.User.GetUserId()) return Results.Forbid();
-
             await using var conn = await db.OpenAsync(ct);
+            if (!await DriverVerification.IsApprovedAsync(conn, booking.Driver.Id, ct))
+                return Results.Json(new
+                {
+                    error = "Tài xế chưa được xác thực nên không thể hoàn tất chuyến.",
+                    verificationRequired = true
+                }, statusCode: StatusCodes.Status403Forbidden);
             await using var tx = await conn.BeginTransactionAsync(ct);
             var affected = await conn.ExecuteAsync("""
                 update bookings set status = 'completed', updated_at = now()
