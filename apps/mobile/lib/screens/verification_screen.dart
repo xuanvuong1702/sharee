@@ -92,7 +92,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
         : '${parsed.year.toString().padLeft(4, '0')}-${parsed.month.toString().padLeft(2, '0')}-${parsed.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _save({bool silent = false}) async {
+  Future<bool> _save({bool silent = false}) async {
     setState(() {
       _saving = true;
       _error = null;
@@ -110,7 +110,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             vehicleRegistration: _registration.text.trim(),
             insuranceExpiry: _dateToIso(_insuranceExpiry.text),
           );
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _info = info;
         _saving = false;
@@ -120,12 +120,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
           const SnackBar(content: Text('Đã lưu thông tin xác thực')),
         );
       }
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _saving = false;
         _error = '$e';
       });
+      return false;
     }
   }
 
@@ -167,7 +169,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
       _error = null;
     });
     try {
-      await _save(silent: true);
+      final saved = await _save(silent: true);
+      if (!saved) {
+        if (mounted) setState(() => _saving = false);
+        return;
+      }
       final info = await AppScope.of(context).api.submitVerification();
       if (!mounted) return;
       setState(() {

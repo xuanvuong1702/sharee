@@ -73,6 +73,14 @@ map tile, ký số store và kiểm thử tải** — không còn mock trong cod
 - Đã thử import nhưng máy hết dung lượng; script sẵn sàng, cần ≥8GB trống.
 - Demo vẫn dùng OSM public tiles — **không dùng cho production tải cao**.
 
+### 5. Xác thực tài xế nghiêm ngặt
+- Hồ sơ 7 giấy tờ: CCCD 2 mặt, GPLX 2 mặt, đăng ký xe, bảo hiểm, selfie.
+- Upload multipart giới hạn 10 MB, kiểm tra magic bytes, lưu volume private; admin tải qua API có auth.
+- Chặn đăng chuyến/chuyến định kỳ/nhận booking/vé Daily nếu chưa duyệt cấp 3.
+- Duyệt thủ công trên admin, kiểm tra trùng CCCD/GPLX, hạn giấy tờ, tuổi; từ chối bắt buộc lý do.
+- Hồ sơ hết hạn tự hạ cấp qua maintenance worker; hồ sơ cũ thiếu dữ liệu phải xác thực lại.
+- Cần backup volume `sharee-prod-verification` cùng PostgreSQL.
+
 ## Ba vòng rà soát
 
 ### Vòng 1 — Bảo mật & thanh toán

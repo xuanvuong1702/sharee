@@ -59,12 +59,22 @@ public sealed class MaintenanceWorker(Db db, ILogger<MaintenanceWorker> logger) 
                     where read_at is not null and created_at < now() - interval '90 days'
                     """, transaction: tx);
 
+                var verifications = await conn.ExecuteAsync("""
+                    update users
+                    set verification_status = 'expired',
+                        verified_level = 1,
+                        verification_rejection_reason = 'Giấy tờ xác thực đã hết hạn, vui lòng gửi lại hồ sơ.'
+                    where verification_status = 'approved'
+                      and verification_expires_at is not null
+                      and verification_expires_at < now()
+                    """, transaction: tx);
+
                 await tx.CommitAsync(stoppingToken);
-                if (expired + tokens + otps + locations + outbox + notifications > 0)
+                if (expired + tokens + otps + locations + outbox + notifications + verifications > 0)
                 {
                     logger.LogInformation(
-                        "Maintenance: expiredBookings={Expired}, tokens={Tokens}, otps={Otps}, locations={Locations}, outbox={Outbox}, notifications={Notifications}",
-                        expired, tokens, otps, locations, outbox, notifications);
+                        "Maintenance: expiredBookings={Expired}, tokens={Tokens}, otps={Otps}, locations={Locations}, outbox={Outbox}, notifications={Notifications}, verifications={Verifications}",
+                        expired, tokens, otps, locations, outbox, notifications, verifications);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

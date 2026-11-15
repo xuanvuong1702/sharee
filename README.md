@@ -46,6 +46,9 @@ OTP được trả về trong response (`devCode`) khi `Auth:ExposeOtp=true` (m�
 Seed sẵn 4 chuyến Hà Nội → Hải Phòng/Nội Bài (ngày mai, giờ Việt Nam), 1 tuyến Daily ở TP.HCM
 (Bến Thành – Suối Tiên, 6 trạm), báo cáo và hồ sơ chờ duyệt.
 
+> Tài xế demo phải hoàn tất xác thực trong app trước khi đăng chuyến/nhận booking.
+> Hồ sơ của Minh Hằng đang chờ admin duyệt để thử luồng review.
+
 ## Kiến trúc
 
 ```text
@@ -82,6 +85,19 @@ React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
 - **Chat realtime**: SignalR `/hubs/chat`, lịch sử tin nhắn lưu PostgreSQL (tải lại vẫn còn), thread list tự cập nhật.
 - **Notification realtime**: SignalR `/hubs/notifications` + outbox worker, badge số chưa đọc trên trang chủ.
 - **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
+
+## Xác thực tài xế
+
+- Tài khoản mới ở cấp 1 (đã xác thực số điện thoại). Muốn đăng chuyến/nhận booking phải được duyệt lên **cấp 3**.
+- Hồ sơ bắt buộc: CCCD mặt trước/sau, GPLX mặt trước/sau, đăng ký xe, bảo hiểm xe và ảnh selfie.
+- Ảnh/PDF tối đa 10 MB, kiểm tra magic bytes (JPEG/PNG/PDF), lưu ngoài web root, chỉ admin có quyền tải.
+- Kiểm tra trùng số CCCD/GPLX, tuổi 18–80, giấy tờ còn hạn, ngày duyệt không vượt hạn giấy tờ.
+- Tài xế chưa duyệt bị chặn tại API khi: đăng chuyến, tạo chuyến định kỳ, nhận booking, nhận/validate vé Daily.
+- Admin duyệt/từ chối/tạm dừng, bắt buộc lý do khi từ chối; worker tự chuyển hồ sơ hết hạn sang `expired` và hạ cấp.
+- Hồ sơ đã duyệt không sửa được; bị từ chối có thể sửa và gửi lại.
+- API: `GET/PUT /api/me/verification`, `POST /api/me/verification/documents/{type}`, `POST /api/me/verification/submit`;
+  admin: `GET /api/admin/verifications`, `GET /api/admin/verifications/{userId}`, duyệt/từ chối/tạm dừng.
+- Lưu trữ: `Storage__VerificationRoot` (Docker volume `sharee-verifications:/data/verifications`), phải backup cùng DB.
 
 ## API chính
 

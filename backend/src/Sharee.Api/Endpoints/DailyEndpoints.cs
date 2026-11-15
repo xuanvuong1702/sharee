@@ -103,10 +103,14 @@ public static class DailyEndpoints
             Guid id, HttpContext http, Db db, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
+            var driverId = http.User.GetUserId();
+            if (!await DriverVerification.IsApprovedAsync(conn, driverId, ct))
+                return Results.Json(new { error = "Tài xế chưa được xác thực." },
+                    statusCode: StatusCodes.Status403Forbidden);
             var affected = await conn.ExecuteAsync("""
                 update e_tickets set driver_id = @driverId, status = 'assigned', assigned_at = now()
                 where id = @id and status = 'waiting' and driver_id is null
-                """, new { id, driverId = http.User.GetUserId() });
+                """, new { id, driverId });
             if (affected == 0) return Results.Conflict(new { error = "Vé đã có tài xế hoặc không còn chờ" });
             return Results.Ok(await GetTicketAsync(conn, id));
         }).RequireAuthorization();
@@ -116,6 +120,10 @@ public static class DailyEndpoints
             CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
+            var driverId = http.User.GetUserId();
+            if (!await DriverVerification.IsApprovedAsync(conn, driverId, ct))
+                return Results.Json(new { error = "Tài xế chưa được xác thực." },
+                    statusCode: StatusCodes.Status403Forbidden);
             await using var tx = await conn.BeginTransactionAsync(ct);
             var ticket = await conn.QuerySingleOrDefaultAsync<dynamic>("""
                 select id, passenger_id, driver_id, code, status, stop_id, line_id
@@ -127,7 +135,6 @@ public static class DailyEndpoints
                 return Results.NotFound();
             }
 
-            Guid driverId = http.User.GetUserId();
             if ((Guid?)ticket.driver_id != driverId)
             {
                 await tx.RollbackAsync(ct);
