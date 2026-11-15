@@ -120,12 +120,12 @@ jobs:
           flutter build apk --release "${ARGS[@]}"
           flutter build appbundle --release "${ARGS[@]}"
 
-          mkdir -p ../dist
+          mkdir -p ../../dist
           cp build/app/outputs/flutter-apk/app-release.apk \
-             "../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.apk"
+             "../../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.apk"
           cp build/app/outputs/bundle/release/app-release.aab \
-             "../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.aab"
-          echo "$VERSION" > ../dist/VERSION
+             "../../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.aab"
+          echo "$VERSION" > ../../dist/VERSION
 
       - uses: actions/upload-artifact@v4
         with:
@@ -247,8 +247,8 @@ jobs:
           rm -rf Payload
           mkdir Payload
           cp -R build/ios/iphoneos/Runner.app Payload/Runner.app
-          mkdir -p ../dist
-          zip -qry "../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}-unsigned.ipa" Payload
+          mkdir -p ../../dist
+          zip -qry "../../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}-unsigned.ipa" Payload
 
       - name: Collect signed IPA
         if: steps.signing.outputs.signed == 'true' && steps.signed_build.outcome == 'success'
@@ -256,9 +256,9 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="${APP_VERSION:-1.0.0}"; fi
-          mkdir -p ../dist
+          mkdir -p ../../dist
           IPA=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
-          cp "$IPA" "../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.ipa"
+          cp "$IPA" "../../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.ipa"
 
       - name: Upload to TestFlight
         if: steps.signing.outputs.signed == 'true' && steps.signed_build.outcome == 'success' && env.APPSTORE_KEY_ID != '' && env.IOS_EXPORT_METHOD == 'app-store'
