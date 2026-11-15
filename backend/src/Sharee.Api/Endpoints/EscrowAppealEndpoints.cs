@@ -111,6 +111,10 @@ public static class EscrowAppealEndpoints
             if (booking is null) return Results.NotFound();
             if ((string)booking.status is not ("confirmed" or "completed"))
                 return Results.Conflict(new { error = "Chỉ có thể khiếu nại chuyến đã xác nhận/hoàn thành" });
+            var escrowStatus = await conn.ExecuteScalarAsync<string>(
+                "select status from escrow_holds where booking_id = @id", new { id });
+            if (escrowStatus is not ("held" or "cash_pending" or "disputed"))
+                return Results.Conflict(new { error = "Chuyến đã được giải ngân, không thể mở khiếu nại" });
             var isPassenger = (Guid)booking.passenger_id == userId;
             var against = isPassenger ? (Guid)booking.driver_id : (Guid)booking.passenger_id;
             var existing = await conn.ExecuteScalarAsync<Guid?>(
@@ -186,7 +190,7 @@ public static class EscrowAppealEndpoints
                 """, new
             {
                 appealId, userId, stored.OriginalName, stored.StoredPath,
-                stored.MimeType, stored.SizeBytes, stored.Sha256
+                stored.MimeType, size = stored.SizeBytes, sha = stored.Sha256
             });
             return Results.Ok(new { id = evidenceId, originalName = stored.OriginalName });
         }).DisableAntiforgery();
