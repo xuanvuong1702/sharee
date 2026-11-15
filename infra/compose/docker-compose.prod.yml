@@ -41,7 +41,7 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
@@ -84,6 +84,7 @@ services:
       Swagger__Enabled: "false"
       Cors__AllowedOrigins__0: ${APP_ORIGIN:?APP_ORIGIN is required}
       Cors__AllowedOrigins__1: ${ADMIN_ORIGIN:?ADMIN_ORIGIN is required}
+      Cors__AllowedOrigins__2: ${WEB_ORIGIN:?WEB_ORIGIN is required}
       ReverseProxy__TrustForwarded: "true"
     volumes:
       - ${FCM_CREDENTIALS_FILE:?FCM_CREDENTIALS_FILE is required}:/run/secrets/firebase.json:ro
@@ -96,7 +97,7 @@ services:
 
   admin:
     build:
-      context: ./admin
+      context: ../../apps/admin
       dockerfile: Dockerfile
       args:
         VITE_API_BASE: ${API_PUBLIC_URL:?API_PUBLIC_URL is required}
@@ -110,6 +111,23 @@ services:
         limits:
           memory: 256m
 
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${API_PUBLIC_URL:?API_PUBLIC_URL is required}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:8083:80"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
 volumes:
   sharee-prod-pgdata:
   sharee-prod-redis:
+

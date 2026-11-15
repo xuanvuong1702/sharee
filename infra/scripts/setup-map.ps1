@@ -3,8 +3,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = Split-Path -Parent $PSScriptRoot
-$mapDir = Join-Path $root "maps"
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$mapDir = Join-Path $root "infra\maps"
 $dataDir = Join-Path $mapDir "data"
 $pbf = Join-Path $mapDir "$Region-latest.osm.pbf"
 

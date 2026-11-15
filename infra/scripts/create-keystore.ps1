@@ -3,8 +3,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$root = Split-Path -Parent $PSScriptRoot
-$android = Join-Path $root "mobile\android"
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$android = Join-Path $root "apps\mobile\android"
 $keystoreDir = Join-Path $android "keystore"
 $keystore = Join-Path $keystoreDir "sharee-upload.jks"
 $properties = Join-Path $android "key.properties"

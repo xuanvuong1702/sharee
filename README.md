@@ -1,105 +1,105 @@
-# Sharee — ứng dụng đi chung xe (BlaBlaCar-style) + chế độ Daily
+# Sharee â€” á»©ng dá»¥ng Ä‘i chung xe (BlaBlaCar-style) + cháº¿ Ä‘á»™ Daily
 
-Đồ án học tập được triển khai đầy đủ: **backend ASP.NET Core 10 + PostgreSQL/PostGIS**, **Flutter mobile app**,
-**React admin**, **Docker Compose**, migration/seed tự động, unit test và smoke test end-to-end.
+Äá»“ Ã¡n há»c táº­p Ä‘Æ°á»£c triá»ƒn khai Ä‘áº§y Ä‘á»§: **backend ASP.NET Core 10 + PostgreSQL/PostGIS**, **Flutter mobile app**,
+**React admin**, **Docker Compose**, migration/seed tá»± Ä‘á»™ng, unit test vÃ  smoke test end-to-end.
 
-> Cấu hình trong repo là **demo**, bật OTP dev, seed dữ liệu mẫu và thanh toán mock.
-> Trước khi chạy cho khách thật, đọc [PRODUCTION.md](PRODUCTION.md) và dùng `docker-compose.prod.yml`.
+> Cáº¥u hÃ¬nh trong repo lÃ  **demo**, báº­t OTP dev, seed dá»¯ liá»‡u máº«u vÃ  thanh toÃ¡n mock.
+> TrÆ°á»›c khi cháº¡y cho khÃ¡ch tháº­t, Ä‘á»c [PRODUCTION.md](PRODUCTION.md) vÃ  dÃ¹ng `infra/compose/docker-compose.prod.yml`.
 
-## Giao diện
+## Giao diá»‡n
 
-- Design system riêng: palette navy/electric blue, thang chữ, radius 20–28, shadow mềm, trạng thái màu thống nhất.
-- Mobile-first: app bar gọn, bottom nav nổi 5 tab, sticky CTA, bottom sheet, safe-area và vùng chạm ≥ 44px.
-- Trải nghiệm: skeleton loading, pull-to-refresh, empty state có hành động, transition mượt, haptic feedback.
-- Bản web được đóng khung 480px như một chiếc điện thoại để kiểm chứng UI trên desktop.
+- Design system riÃªng: palette navy/electric blue, thang chá»¯, radius 20â€“28, shadow má»m, tráº¡ng thÃ¡i mÃ u thá»‘ng nháº¥t.
+- Mobile-first: app bar gá»n, bottom nav ná»•i 5 tab, sticky CTA, bottom sheet, safe-area vÃ  vÃ¹ng cháº¡m â‰¥ 44px.
+- Tráº£i nghiá»‡m: skeleton loading, pull-to-refresh, empty state cÃ³ hÃ nh Ä‘á»™ng, transition mÆ°á»£t, haptic feedback.
+- Báº£n web Ä‘Æ°á»£c Ä‘Ã³ng khung 480px nhÆ° má»™t chiáº¿c Ä‘iá»‡n thoáº¡i Ä‘á»ƒ kiá»ƒm chá»©ng UI trÃªn desktop.
 
-## Chạy trong 1 lệnh
+## Cháº¡y trong 1 lá»‡nh
 
 ```bash
 docker compose up -d --build
 ```
 
-| Dịch vụ | URL | Ghi chú |
+| Dá»‹ch vá»¥ | URL | Ghi chÃº |
 |---|---|---|
 | API + Swagger | http://localhost:8080/swagger | REST + SignalR `/hubs/chat`, `/hubs/notifications` |
-| Admin web | http://localhost:3000 | đăng nhập bằng OTP admin |
-| Mobile web (Flutter) | http://localhost:8081 | bản build web của app Flutter |
+| Admin web | http://localhost:3000 | Ä‘Äƒng nháº­p báº±ng OTP admin |
+| Mobile web (Flutter) | http://localhost:8081 | báº£n build web cá»§a app Flutter |
 | PostgreSQL/PostGIS | localhost:5432 | user/pass/db: `sharee` |
 | Redis | localhost:6379 | SignalR backplane + cache |
 
-Health checks: `GET /health/live`, `GET /health/ready` (DB readiness), `GET /health` (tương thích cũ).
+Health checks: `GET /health/live`, `GET /health/ready` (DB readiness), `GET /health` (tÆ°Æ¡ng thÃ­ch cÅ©).
 
-> Nếu build mobile web lần đầu: `cd mobile && flutter build web --dart-define=API_BASE_URL=http://localhost:8080`
-> trước khi `docker compose up --build` (Dockerfile copy `build/web`).
+> Náº¿u build mobile web láº§n Ä‘áº§u: `cd apps/mobile && flutter build web --dart-define=API_BASE_URL=http://localhost:8080`
+> trÆ°á»›c khi `docker compose up --build` (Dockerfile copy `build/web`).
 
-## Tài khoản demo
+## TÃ i khoáº£n demo
 
-OTP được trả về trong response (`devCode`) khi `Auth:ExposeOtp=true` (mặc định trong demo).
+OTP Ä‘Æ°á»£c tráº£ vá» trong response (`devCode`) khi `Auth:ExposeOtp=true` (máº·c Ä‘á»‹nh trong demo).
 
-| Vai trò | Số điện thoại |
+| Vai trÃ² | Sá»‘ Ä‘iá»‡n thoáº¡i |
 |---|---|
 | Admin | `+84900000001` |
-| Hành khách | `+84912345678` (Minh) |
-| Tài xế | `+84912000001` (Trung Kiên) |
-| Tài xế | `+84912000002` (Minh Hằng) |
+| HÃ nh khÃ¡ch | `+84912345678` (Minh) |
+| TÃ i xáº¿ | `+84912000001` (Trung KiÃªn) |
+| TÃ i xáº¿ | `+84912000002` (Minh Háº±ng) |
 
-Seed sẵn 4 chuyến Hà Nội → Hải Phòng/Nội Bài (ngày mai, giờ Việt Nam), 1 tuyến Daily ở TP.HCM
-(Bến Thành – Suối Tiên, 6 trạm), báo cáo và hồ sơ chờ duyệt.
+Seed sáºµn 4 chuyáº¿n HÃ  Ná»™i â†’ Háº£i PhÃ²ng/Ná»™i BÃ i (ngÃ y mai, giá» Viá»‡t Nam), 1 tuyáº¿n Daily á»Ÿ TP.HCM
+(Báº¿n ThÃ nh â€“ Suá»‘i TiÃªn, 6 tráº¡m), bÃ¡o cÃ¡o vÃ  há»“ sÆ¡ chá» duyá»‡t.
 
-## Kiến trúc
+## Kiáº¿n trÃºc
 
 ```text
-Flutter app ──┐
-React admin ──┼── HTTP/JSON ──▶ ASP.NET Core minimal API
-              │                  ├─ Auth (OTP + JWT)
-              │                  ├─ Trips / Search (PostGIS)
-              │                  ├─ Bookings (atomic seat hold)
-              │                  ├─ Payments + double-entry ledger
-              │                  ├─ Chat (REST + SignalR)
-              │                  ├─ Reviews / Reports / Admin
-              │                  └─ Daily (lines, e-tickets, validations)
-              │                        │
-              │                  PostgreSQL + PostGIS
-              │                  Redis (optional)
-              └───────────────── SignalR /hubs/chat
+Flutter app â”€â”€â”
+React admin â”€â”€â”¼â”€â”€ HTTP/JSON â”€â”€â–¶ ASP.NET Core minimal API
+              â”‚                  â”œâ”€ Auth (OTP + JWT)
+              â”‚                  â”œâ”€ Trips / Search (PostGIS)
+              â”‚                  â”œâ”€ Bookings (atomic seat hold)
+              â”‚                  â”œâ”€ Payments + double-entry ledger
+              â”‚                  â”œâ”€ Chat (REST + SignalR)
+              â”‚                  â”œâ”€ Reviews / Reports / Admin
+              â”‚                  â””â”€ Daily (lines, e-tickets, validations)
+              â”‚                        â”‚
+              â”‚                  PostgreSQL + PostGIS
+              â”‚                  Redis (optional)
+              â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ SignalR /hubs/chat
 ```
 
-### Quyết định kỹ thuật
+### Quyáº¿t Ä‘á»‹nh ká»¹ thuáº­t
 
-- **PostGIS** cho tìm chuyến theo stop: `ST_DWithin` trên `trip_stops.location`, ghép cặp stop
-  `pickup.seq < dropoff.seq`; giá chặng = `price_from_origin(drop) - price_from_origin(pick)`.
-- **Giữ ghế nguyên tử**:
+- **PostGIS** cho tÃ¬m chuyáº¿n theo stop: `ST_DWithin` trÃªn `trip_stops.location`, ghÃ©p cáº·p stop
+  `pickup.seq < dropoff.seq`; giÃ¡ cháº·ng = `price_from_origin(drop) - price_from_origin(pick)`.
+- **Giá»¯ gháº¿ nguyÃªn tá»­**:
   `UPDATE trips SET seats_available = seats_available - @n WHERE id=@id AND seats_available >= @n`
-  trong cùng transaction với insert booking; idempotency key chống đặt trùng.
-- **Sổ cái kép**: mỗi giao dịch có `ledger_transactions` + các dòng D/C cân bằng; hoàn tiền ghi bút toán đảo.
-- **Refresh token** xoay vòng: access token 60 phút (production 15 phút), refresh 30 ngày, revoke khi logout.
-- **Outbox worker** đánh dấu event đã xử lý; notifications ghi trong cùng transaction.
-- **Daily**: tuyến + trạm + QR/e-ticket 30 phút; tài xế nhận vé, xác nhận bằng mã 4 số; trợ giá theo km.
-- **Chuyến định kỳ**: lịch chạy theo tuần, tự materialize chuyến cho 14 ngày tới, worker gia hạn mỗi 6 giờ.
-- **Thu nhập tài xế**: tổng hợp booking hoàn thành (VND) và Daily (EUR), màn hình ví trong app.
-- **Theo dõi trực tiếp**: bản đồ OpenStreetMap, vị trí tài xế + khách, route, ETA, trạng thái chuyến;
-  driver chia sẻ GPS (hoặc mô phỏng khi trình duyệt chặn quyền), client cập nhật mỗi 3 giây.
-- **Chat realtime**: SignalR `/hubs/chat`, lịch sử tin nhắn lưu PostgreSQL (tải lại vẫn còn), thread list tự cập nhật.
-- **Notification realtime**: SignalR `/hubs/notifications` + outbox worker, badge số chưa đọc trên trang chủ.
-- **Audit log** cho duyệt hồ sơ, xử lý báo cáo và hoàn tiền thủ công.
+  trong cÃ¹ng transaction vá»›i insert booking; idempotency key chá»‘ng Ä‘áº·t trÃ¹ng.
+- **Sá»• cÃ¡i kÃ©p**: má»—i giao dá»‹ch cÃ³ `ledger_transactions` + cÃ¡c dÃ²ng D/C cÃ¢n báº±ng; hoÃ n tiá»n ghi bÃºt toÃ¡n Ä‘áº£o.
+- **Refresh token** xoay vÃ²ng: access token 60 phÃºt (production 15 phÃºt), refresh 30 ngÃ y, revoke khi logout.
+- **Outbox worker** Ä‘Ã¡nh dáº¥u event Ä‘Ã£ xá»­ lÃ½; notifications ghi trong cÃ¹ng transaction.
+- **Daily**: tuyáº¿n + tráº¡m + QR/e-ticket 30 phÃºt; tÃ i xáº¿ nháº­n vÃ©, xÃ¡c nháº­n báº±ng mÃ£ 4 sá»‘; trá»£ giÃ¡ theo km.
+- **Chuyáº¿n Ä‘á»‹nh ká»³**: lá»‹ch cháº¡y theo tuáº§n, tá»± materialize chuyáº¿n cho 14 ngÃ y tá»›i, worker gia háº¡n má»—i 6 giá».
+- **Thu nháº­p tÃ i xáº¿**: tá»•ng há»£p booking hoÃ n thÃ nh (VND) vÃ  Daily (EUR), mÃ n hÃ¬nh vÃ­ trong app.
+- **Theo dÃµi trá»±c tiáº¿p**: báº£n Ä‘á»“ OpenStreetMap, vá»‹ trÃ­ tÃ i xáº¿ + khÃ¡ch, route, ETA, tráº¡ng thÃ¡i chuyáº¿n;
+  driver chia sáº» GPS (hoáº·c mÃ´ phá»ng khi trÃ¬nh duyá»‡t cháº·n quyá»n), client cáº­p nháº­t má»—i 3 giÃ¢y.
+- **Chat realtime**: SignalR `/hubs/chat`, lá»‹ch sá»­ tin nháº¯n lÆ°u PostgreSQL (táº£i láº¡i váº«n cÃ²n), thread list tá»± cáº­p nháº­t.
+- **Notification realtime**: SignalR `/hubs/notifications` + outbox worker, badge sá»‘ chÆ°a Ä‘á»c trÃªn trang chá»§.
+- **Audit log** cho duyá»‡t há»“ sÆ¡, xá»­ lÃ½ bÃ¡o cÃ¡o vÃ  hoÃ n tiá»n thá»§ cÃ´ng.
 
-## API chính
+## API chÃ­nh
 
 ```
 POST /api/auth/otp/request            {phone} -> {expiresIn, devCode}
 POST /api/auth/otp/verify             {phone, code} -> {accessToken, refreshToken, user}
-POST /api/auth/refresh                {refreshToken} -> token mới
+POST /api/auth/refresh                {refreshToken} -> token má»›i
 POST /api/auth/logout                 revoke refresh token
 GET  /api/me
-GET  /api/me/earnings                 thu nhập tài xế (chuyến + Daily)
+GET  /api/me/earnings                 thu nháº­p tÃ i xáº¿ (chuyáº¿n + Daily)
 GET  /api/trips/search?fromLat&fromLng&toLat&toLng&date&seats
 GET  /api/trips/{id}
 POST /api/trips                       (driver)
-POST /api/trips/recurring             lịch chạy theo tuần
+POST /api/trips/recurring             lá»‹ch cháº¡y theo tuáº§n
 GET  /api/trips/recurring
-DELETE /api/trips/recurring/{id}      tạm dừng
-GET  /api/trips/{id}/tracking         vị trí tài xế/khách + ETA + route
-POST /api/trips/{id}/location         cập nhật GPS (driver/passenger)
+DELETE /api/trips/recurring/{id}      táº¡m dá»«ng
+GET  /api/trips/{id}/tracking         vá»‹ trÃ­ tÃ i xáº¿/khÃ¡ch + ETA + route
+POST /api/trips/{id}/location         cáº­p nháº­t GPS (driver/passenger)
 POST /api/trips/{id}/tracking/status  en_route | arrived | in_progress | completed
 POST /api/trips/{id}/bookings         (Idempotency-Key)
 POST /api/bookings/{id}/pay
@@ -135,59 +135,73 @@ SignalR hubs (JWT qua `?access_token=`):
 /hubs/notifications    event: notification (realtime badge/list)
 ```
 
-Swagger đầy đủ: http://localhost:8080/swagger
+Swagger Ä‘áº§y Ä‘á»§: http://localhost:8080/swagger
 
-## Cấu trúc repo
+## Cáº¥u trÃºc repo
 
 ```
 backend/
   src/Sharee.Api/          API, endpoints, services, migrations (embedded SQL)
-  tests/Sharee.Tests/      unit test pricing/refund
-mobile/                    Flutter app (Android/iOS/web)
-admin/                     React + Vite admin
-docker-compose.yml
-scripts/smoke.ps1          smoke test end-to-end
+  tests/Sharee.Tests/      unit tests
+apps/
+  mobile/                  Flutter Android/iOS + mobile web
+  web/                     Next.js consumer web (static export)
+  admin/                   React + Vite admin
+packages/
+  ui/                      React UI primitives
+  api-client/              typed API client
+  design-tokens/           colors, spacing, typography
+infra/
+  compose/                 docker compose stacks
+  nginx/                   reverse proxy/TLS notes
+infra/scripts/smoke.ps1          smoke test end-to-end
 ```
 
-## Phát triển
+## PhÃ¡t triá»ƒn
 
 ```bash
-# Backend (cần Postgres/Redis từ compose)
+# Backend (cáº§n Postgres/Redis tá»« compose)
 dotnet run --project backend/src/Sharee.Api
 
 # Flutter
-cd mobile
+cd apps/mobile
 flutter pub get
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8080
 
-# Flutter Android (emulator dùng 10.0.2.2)
+# Flutter Android (emulator dÃ¹ng 10.0.2.2)
 flutter build apk --dart-define=API_BASE_URL=http://10.0.2.2:8080
-# APK: mobile/build/app/outputs/flutter-apk/app-debug.apk
+# APK: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
 
 # Admin
-cd admin
+cd apps/admin
 npm install
 npm run dev
+
+# Next.js web
+cd apps/web
+npm install
+npm run dev -- --port 3002
+# build static: npm run build
 ```
 
-## Kiểm thử
+## Kiá»ƒm thá»­
 
 ```bash
 dotnet test backend/tests/Sharee.Tests
-cd mobile && flutter test
-powershell -File scripts/smoke.ps1
-powershell -File scripts/oversell.ps1
+cd apps/mobile && flutter test
+powershell -File infra/scripts/smoke.ps1
+powershell -File infra/scripts/oversell.ps1
 ```
 
-- `smoke.ps1`: đăng nhập OTP → tìm chuyến → đặt 1 ghế → thanh toán → chat → tạo vé Daily → tài xế xác nhận.
-- `oversell.ps1`: bắn 6 request đặt ghế đồng thời, assert không bán quá số ghế (201 = 1, 409 = 5).
-- `node tools/uicheck/realtime-check.mjs`: kiểm tra chat realtime, lịch sử lưu DB và notification realtime.
+- `smoke.ps1`: Ä‘Äƒng nháº­p OTP â†’ tÃ¬m chuyáº¿n â†’ Ä‘áº·t 1 gháº¿ â†’ thanh toÃ¡n â†’ chat â†’ táº¡o vÃ© Daily â†’ tÃ i xáº¿ xÃ¡c nháº­n.
+- `oversell.ps1`: báº¯n 6 request Ä‘áº·t gháº¿ Ä‘á»“ng thá»i, assert khÃ´ng bÃ¡n quÃ¡ sá»‘ gháº¿ (201 = 1, 409 = 5).
+- `node tools/uicheck/realtime-check.mjs`: kiá»ƒm tra chat realtime, lá»‹ch sá»­ lÆ°u DB vÃ  notification realtime.
 
-## Thanh toán PayOS
+## Thanh toÃ¡n PayOS
 
-- Mobile gọi `POST /api/bookings/{id}/payos`, nhận `checkoutUrl` + QR, mở PayOS và poll trạng thái booking.
-- Webhook `POST /api/payments/payos/webhook` xác minh HMAC-SHA256, chốt booking + ledger idempotent.
-- Bật production:
+- Mobile gá»i `POST /api/bookings/{id}/payos`, nháº­n `checkoutUrl` + QR, má»Ÿ PayOS vÃ  poll tráº¡ng thÃ¡i booking.
+- Webhook `POST /api/payments/payos/webhook` xÃ¡c minh HMAC-SHA256, chá»‘t booking + ledger idempotent.
+- Báº­t production:
 
 ```env
 Payments__Provider=payos
@@ -199,20 +213,20 @@ PayOS__ReturnUrl=https://app.example.com/payment/return
 PayOS__CancelUrl=https://app.example.com/payment/cancel
 ```
 
-- Demo dùng mock; production tự chặn mock.
-- Kiểm thử gateway giả: `node tools/uicheck/payos-check.mjs`.
+- Demo dÃ¹ng mock; production tá»± cháº·n mock.
+- Kiá»ƒm thá»­ gateway giáº£: `node tools/uicheck/payos-check.mjs`.
 
-## Tip / donate cho tài xế
+## Tip / donate cho tÃ i xáº¿
 
-- Tài xế cấu hình **BIN ngân hàng + số tài khoản + tên chủ tài khoản** trong Hồ sơ → **Nhận tip**.
-- QR được sinh trực tiếp theo chuẩn **VietQR/NAPAS 247**, không phụ thuộc dịch vụ ảnh QR bên thứ ba.
-- Hành khách có thể tip sau khi chuyến **hoàn thành**:
-  - **Chuyển khoản/QR**: tài xế nhận thông báo, khách báo đã chuyển, tài xế xác nhận;
-  - **Tiền mặt**: ghi nhận ngay và thông báo cho tài xế.
-- Thông báo realtime qua SignalR + push (nếu cấu hình FCM/APNs).
-- Thu nhập tip hiển thị trong **Thu nhập** và **Tip đã nhận**.
+- TÃ i xáº¿ cáº¥u hÃ¬nh **BIN ngÃ¢n hÃ ng + sá»‘ tÃ i khoáº£n + tÃªn chá»§ tÃ i khoáº£n** trong Há»“ sÆ¡ â†’ **Nháº­n tip**.
+- QR Ä‘Æ°á»£c sinh trá»±c tiáº¿p theo chuáº©n **VietQR/NAPAS 247**, khÃ´ng phá»¥ thuá»™c dá»‹ch vá»¥ áº£nh QR bÃªn thá»© ba.
+- HÃ nh khÃ¡ch cÃ³ thá»ƒ tip sau khi chuyáº¿n **hoÃ n thÃ nh**:
+  - **Chuyá»ƒn khoáº£n/QR**: tÃ i xáº¿ nháº­n thÃ´ng bÃ¡o, khÃ¡ch bÃ¡o Ä‘Ã£ chuyá»ƒn, tÃ i xáº¿ xÃ¡c nháº­n;
+  - **Tiá»n máº·t**: ghi nháº­n ngay vÃ  thÃ´ng bÃ¡o cho tÃ i xáº¿.
+- ThÃ´ng bÃ¡o realtime qua SignalR + push (náº¿u cáº¥u hÃ¬nh FCM/APNs).
+- Thu nháº­p tip hiá»ƒn thá»‹ trong **Thu nháº­p** vÃ  **Tip Ä‘Ã£ nháº­n**.
 
-API chính:
+API chÃ­nh:
 ```text
 GET  /api/me/tip-account
 PUT  /api/me/tip-account
@@ -224,14 +238,14 @@ POST /api/tips/{id}/cancel
 GET  /api/me/tips
 ```
 
-Tip chuyển khoản/tiền mặt đi **trực tiếp** giữa khách và tài xế, Sharee chỉ ghi nhận và thông báo.
-Muốn thu tiền qua nền tảng (PayOS) thì cần bổ sung luồng thanh toán/đối soát riêng.
+Tip chuyá»ƒn khoáº£n/tiá»n máº·t Ä‘i **trá»±c tiáº¿p** giá»¯a khÃ¡ch vÃ  tÃ i xáº¿, Sharee chá»‰ ghi nháº­n vÃ  thÃ´ng bÃ¡o.
+Muá»‘n thu tiá»n qua ná»n táº£ng (PayOS) thÃ¬ cáº§n bá»• sung luá»“ng thanh toÃ¡n/Ä‘á»‘i soÃ¡t riÃªng.
 
 ## Push FCM / APNs
 
-- Backend: FCM HTTP v1 + APNs HTTP/2, device token API, outbox gửi push sau notification.
-- Mobile: `firebase_core` + `firebase_messaging`, token tự đăng ký sau đăng nhập.
-- Cấu hình mobile:
+- Backend: FCM HTTP v1 + APNs HTTP/2, device token API, outbox gá»­i push sau notification.
+- Mobile: `firebase_core` + `firebase_messaging`, token tá»± Ä‘Äƒng kÃ½ sau Ä‘Äƒng nháº­p.
+- Cáº¥u hÃ¬nh mobile:
 
 ```bash
 flutter build apk --release \
@@ -242,72 +256,71 @@ flutter build apk --release \
   --dart-define=FIREBASE_PROJECT_ID=...
 ```
 
-- Backend: `Push__Fcm__ProjectId`, service account JSON (hoặc file trong container), APNs key nếu dùng trực tiếp.
-- Chi tiết: [PRODUCTION.md](PRODUCTION.md).
+- Backend: `Push__Fcm__ProjectId`, service account JSON (hoáº·c file trong container), APNs key náº¿u dÃ¹ng trá»±c tiáº¿p.
+- Chi tiáº¿t: [PRODUCTION.md](PRODUCTION.md).
 
-## Ba bản triển khai
+## Bốn bản triển khai
 
-| Bản | Build | Docker |
+| Bản | Build | Docker / port |
 |---|---|---|
-| **Web mobile** | `flutter build web --release --dart-define=WEB_MODE=mobile` | `mobile/Dockerfile` |
-| **Web full (desktop)** | `flutter build web --release --dart-define=WEB_MODE=full` | `mobile/FullWeb.Dockerfile` |
-| **Admin** | React/Vite | `admin/Dockerfile` |
+| **Web người dùng (Next.js)** | `cd apps/web && npm run build` | `apps/web/Static.Dockerfile` · `8083` |
+| **Web mobile (Flutter)** | `--dart-define=WEB_MODE=mobile` | `apps/mobile/Dockerfile` · `8081` |
+| **Web full Flutter (legacy)** | `--dart-define=WEB_MODE=full` | `apps/mobile/FullWeb.Dockerfile` · `8082` |
+| **Admin** | React/Vite | `apps/admin/Dockerfile` · `3000` |
 | **App** | APK/AAB/IPA từ GitHub Release | — |
 
-Web mobile giữ khung điện thoại 480px; web full dùng sidebar desktop, hero, tìm chuyến và grid tuyến.
-Build web full:
+Next.js web build tĩnh:
 
 ```bash
-cd mobile
-flutter build web --release \
-  --dart-define=WEB_MODE=full \
-  --dart-define=API_BASE_URL=https://api.example.com
-rm -rf build/full_web && cp -R build/web build/full_web
-docker build -f FullWeb.Dockerfile -t sharee-full-web .
+cd apps/web
+NEXT_PUBLIC_API_URL=https://api.example.com npm run build
+# output: apps/web/out
+docker build -f apps/web/Static.Dockerfile -t sharee-web .
 ```
 
-APK mới nhất: [GitHub Releases](https://github.com/xuanvuong1702/sharee/releases/latest).
+Web mobile giữ khung điện thoại; Next.js web là bản desktop/web chính.
 
-## Bản đồ & APK
+## Báº£n Ä‘á»“ & APK
 
-- Tile URL cấu hình: `--dart-define=MAP_TILE_URL=... --dart-define=MAP_ATTRIBUTION=...`.
-- Self-host OSM: [maps/README.md](maps/README.md), chạy `scripts/setup-map.ps1`.
-- APK release: `cd mobile && flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com`.
-- Keystore: `scripts/create-keystore.ps1`; `key.properties` và keystore không commit.
-- Android SDK chuẩn: `flutter config --android-sdk C:\Android\sdk`.
+- Tile URL cáº¥u hÃ¬nh: `--dart-define=MAP_TILE_URL=... --dart-define=MAP_ATTRIBUTION=...`.
+- Self-host OSM: [infra/maps/README.md](infra/maps/README.md), cháº¡y `infra/scripts/setup-map.ps1`.
+- APK release: `cd apps/mobile && flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com`.
+- Keystore: `infra/scripts/create-keystore.ps1`; `key.properties` vÃ  keystore khÃ´ng commit.
+- Android SDK chuáº©n: `flutter config --android-sdk C:\Android\sdk`.
 
 ## Auto release Android + iOS
 
-Workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) build APK/AAB/IPA và tạo GitHub Release khi push tag:
+Workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) build APK/AAB/IPA vÃ  táº¡o GitHub Release khi push tag:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Cần secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
-`ANDROID_KEY_PASSWORD`; iOS/TestFlight và Firebase là tuỳ chọn. Hướng dẫn:
+Cáº§n secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+`ANDROID_KEY_PASSWORD`; iOS/TestFlight vÃ  Firebase lÃ  tuá»³ chá»n. HÆ°á»›ng dáº«n:
 [RELEASE.md](RELEASE.md).
 
 ## Production
 
 ```bash
-cp .env.example .env            # điền secrets thật
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+cp .env.example .env            # Ä‘iá»n secrets tháº­t
+docker compose -f infra/compose/docker-compose.prod.yml --env-file .env up -d --build
 ```
 
-- Không seed demo, tắt OTP dev/Swagger/mock payment, DB/Redis không mở port.
-- API/admin bind `127.0.0.1`, đặt sau reverse proxy TLS; bật WebSocket cho `/hubs/*`.
-- Tạo admin đầu tiên bằng `POST /api/auth/bootstrap-admin` + header `X-Bootstrap-Token`,
-  sau đó xoá token.
-- Chi tiết checklist, backup, scale, blocker: [PRODUCTION.md](PRODUCTION.md).
+- KhÃ´ng seed demo, táº¯t OTP dev/Swagger/mock payment, DB/Redis khÃ´ng má»Ÿ port.
+- API/admin bind `127.0.0.1`, Ä‘áº·t sau reverse proxy TLS; báº­t WebSocket cho `/hubs/*`.
+- Táº¡o admin Ä‘áº§u tiÃªn báº±ng `POST /api/auth/bootstrap-admin` + header `X-Bootstrap-Token`,
+  sau Ä‘Ã³ xoÃ¡ token.
+- Chi tiáº¿t checklist, backup, scale, blocker: [PRODUCTION.md](PRODUCTION.md).
 
-## Ghi chú
+## Ghi chÃº
 
-- Cấu hình mặc định trong repo là **demo**: OTP trả về client, thanh toán mock.
-- Production tự chặn mock payment, OTP dev, Swagger và seed demo; xem `PRODUCTION.md`.
-- Flutter web gọi API qua `localhost:8080`; đổi bằng `--dart-define=API_BASE_URL=...`.
-- Android SDK chuẩn đã cấu hình tại `C:\Android\sdk`; APK build tại
-  `mobile/build/app/outputs/flutter-apk/`, bản ký sẵn trong `artifacts/sharee-release-signed.apk`.
-- Build APK store: tạo keystore bằng `scripts/create-keystore.ps1`, rồi
+- Cáº¥u hÃ¬nh máº·c Ä‘á»‹nh trong repo lÃ  **demo**: OTP tráº£ vá» client, thanh toÃ¡n mock.
+- Production tá»± cháº·n mock payment, OTP dev, Swagger vÃ  seed demo; xem `PRODUCTION.md`.
+- Flutter web gá»i API qua `localhost:8080`; Ä‘á»•i báº±ng `--dart-define=API_BASE_URL=...`.
+- Android SDK chuáº©n Ä‘Ã£ cáº¥u hÃ¬nh táº¡i `C:\Android\sdk`; APK build táº¡i
+  `apps/mobile/build/app/outputs/flutter-apk/`, báº£n kÃ½ sáºµn trong `artifacts/sharee-release-signed.apk`.
+- Build APK store: táº¡o keystore báº±ng `infra/scripts/create-keystore.ps1`, rá»“i
   `flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com`.
+

@@ -69,7 +69,7 @@ map tile, ký số store và kiểm thử tải** — không còn mock trong cod
 ### 4. Bản đồ
 - `MapConfig` cho tile URL/attribution/user agent qua dart-define.
 - Hỗ trợ Mapbox/MapTiler/Goong hoặc self-host.
-- `maps/docker-compose.yml` + `scripts/setup-map.ps1` cho tile server OSM Việt Nam.
+- `infra/maps/docker-compose.yml` + `infra/scripts/setup-map.ps1` cho tile server OSM Việt Nam.
 - Đã thử import nhưng máy hết dung lượng; script sẵn sàng, cần ≥8GB trống.
 - Demo vẫn dùng OSM public tiles — **không dùng cho production tải cao**.
 
@@ -99,7 +99,7 @@ map tile, ký số store và kiểm thử tải** — không còn mock trong cod
 ```bash
 cp .env.example .env
 # điền: DB/Redis password, JWT_KEY, OTP_PEPPER, Twilio, PayOS, FCM, origins
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+docker compose -f infra/compose/docker-compose.prod.yml --env-file .env up -d --build
 ```
 
 Sau deploy:

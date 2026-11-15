@@ -1,4 +1,4 @@
-name: release
+﻿name: release
 
 on:
   push:
@@ -76,9 +76,9 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          mkdir -p mobile/android/keystore
-          echo "$KEYSTORE" | base64 --decode > mobile/android/keystore/release.jks
-          cat > mobile/android/key.properties <<EOF
+          mkdir -p apps/mobile/android/keystore
+          echo "$KEYSTORE" | base64 --decode > apps/mobile/android/keystore/release.jks
+          cat > apps/mobile/android/key.properties <<EOF
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
@@ -89,10 +89,10 @@ jobs:
         if: ${{ env.GOOGLE_SERVICES_JSON_BASE64 != '' }}
         env:
           GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
-        run: echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > mobile/android/app/google-services.json
+        run: echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > apps/mobile/android/app/google-services.json
 
       - name: Build APK and AAB
-        working-directory: mobile
+        working-directory: apps/mobile
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
@@ -172,7 +172,7 @@ jobs:
         if: ${{ env.GOOGLE_SERVICE_INFO_PLIST_BASE64 != '' }}
         env:
           GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
-        run: echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > mobile/ios/Runner/GoogleService-Info.plist
+        run: echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > apps/mobile/ios/Runner/GoogleService-Info.plist
 
       - name: Detect signing
         id: signing
@@ -213,7 +213,7 @@ jobs:
         id: signed_build
         if: steps.signing.outputs.signed == 'true'
         continue-on-error: true
-        working-directory: mobile
+        working-directory: apps/mobile
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="${APP_VERSION:-1.0.0}"; fi
@@ -239,7 +239,7 @@ jobs:
 
       - name: Build unsigned iOS app
         if: steps.signing.outputs.signed != 'true' || steps.signed_build.outcome == 'failure'
-        working-directory: mobile
+        working-directory: apps/mobile
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="${APP_VERSION:-1.0.0}"; fi
@@ -252,7 +252,7 @@ jobs:
 
       - name: Collect signed IPA
         if: steps.signing.outputs.signed == 'true' && steps.signed_build.outcome == 'success'
-        working-directory: mobile
+        working-directory: apps/mobile
         run: |
           set -euo pipefail
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then VERSION="${GITHUB_REF_NAME#v}"; else VERSION="${APP_VERSION:-1.0.0}"; fi
@@ -292,3 +292,4 @@ jobs:
           files: dist/*
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
+

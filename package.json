@@ -1,0 +1,12 @@
+{
+  "name": "sharee",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sharee monorepo: ASP.NET Core API, Flutter mobile, Next.js web, React admin",
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "dev:admin": "npm --prefix apps/admin run dev",
+    "build:admin": "npm --prefix apps/admin run build"
+  }
+}

@@ -31,7 +31,7 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile
     container_name: sharee-api
     restart: unless-stopped
@@ -61,7 +61,7 @@ services:
 
   admin:
     build:
-      context: ./admin
+      context: ../../apps/admin
       dockerfile: Dockerfile
     container_name: sharee-admin
     restart: unless-stopped
@@ -72,12 +72,26 @@ services:
 
   mobile-web:
     build:
-      context: ./mobile
+      context: ../../apps/mobile
       dockerfile: Dockerfile
     container_name: sharee-mobile-web
     restart: unless-stopped
     ports:
       - "8081:80"
 
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    container_name: sharee-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8083:80"
+
 volumes:
   sharee-pgdata:
+

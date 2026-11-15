@@ -23,7 +23,7 @@ Yêu cầu: Docker, ~5–8 GB dung lượng, RAM ≥ 4 GB.
 
 ```powershell
 # PowerShell, từ thư mục repo
-./scripts/setup-map.ps1
+./infra/scripts/setup-map.ps1
 ```
 
 Script tải `vietnam-latest.osm.pbf` từ Geofabrik, import vào tile server (lần đầu 10–20 phút),
