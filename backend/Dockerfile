@@ -11,6 +11,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build --chown=app:app /app/publish .
+RUN mkdir -p /data/verifications && chown -R app:app /data
 USER app
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080

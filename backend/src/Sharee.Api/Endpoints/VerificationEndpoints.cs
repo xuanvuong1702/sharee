@@ -269,11 +269,13 @@ public static partial class VerificationEndpoints
             if (VerificationTypes.RequiredForDriver.Any(t => !docs.Contains(t)))
                 return Results.Conflict(new { error = "Hồ sơ chưa đủ giấy tờ bắt buộc" });
 
-            var maxExpiry = new[]
-            {
-                ToDateOnly(user.id_expiry), ToDateOnly(user.license_expiry),
-                ToDateOnly(user.insurance_expiry)
-            }.Where(d => d is not null).Select(d => d!.Value).Min();
+            var expiries = new List<DateOnly>();
+            if (ToDateOnly(user.id_expiry) is { } idExp) expiries.Add(idExp);
+            if (ToDateOnly(user.license_expiry) is { } licExp) expiries.Add(licExp);
+            if (ToDateOnly(user.insurance_expiry) is { } insExp) expiries.Add(insExp);
+            if (expiries.Count == 0)
+                return Results.BadRequest(new { error = "Thiếu ngày hết hạn giấy tờ" });
+            var maxExpiry = expiries.Min();
             DateOnly expires = request.ExpiresAt ?? maxExpiry;
             if (expires <= DateOnly.FromDateTime(DateTime.UtcNow))
                 return Results.BadRequest(new { error = "Ngày hết hạn xác thực phải ở tương lai" });
