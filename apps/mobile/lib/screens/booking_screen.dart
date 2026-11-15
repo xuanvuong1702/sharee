@@ -8,6 +8,7 @@ import '../widgets/payos_sheet.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
 import 'appeal_screen.dart';
+import 'reputation_screen.dart';
 import 'tracking_screen.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -387,6 +388,17 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                         ),
                         const Icon(Icons.verified_rounded, size: 17, color: AppTheme.success),
+                        const SizedBox(width: 4),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            appRoute(ReputationScreen(userId: booking.driver.id)),
+                          ),
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(0, 30),
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                          ),
+                          child: const Text('Uy tín', style: TextStyle(fontSize: 10.5)),
+                        ),
                       ],
                     ),
                   ],

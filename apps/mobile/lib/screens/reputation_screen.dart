@@ -5,7 +5,8 @@ import '../core/models.dart';
 import '../widgets/app_ui.dart';
 
 class ReputationScreen extends StatefulWidget {
-  const ReputationScreen({super.key});
+  final String? userId;
+  const ReputationScreen({super.key, this.userId});
 
   @override
   State<ReputationScreen> createState() => _ReputationScreenState();
@@ -23,7 +24,10 @@ class _ReputationScreenState extends State<ReputationScreen> {
 
   Future<void> _load() async {
     try {
-      final info = await AppScope.of(context).api.reputation();
+      final api = AppScope.of(context).api;
+      final info = widget.userId == null
+          ? await api.reputation()
+          : await api.userReputation(widget.userId!);
       if (mounted) setState(() => _info = info);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
@@ -33,7 +37,7 @@ class _ReputationScreenState extends State<ReputationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chỉ số uy tín')),
+      appBar: AppBar(title: Text(widget.userId == null ? 'Chỉ số uy tín' : 'Uy tín tài xế')),
       body: _error != null
           ? Center(child: Text(_error!, style: const TextStyle(color: AppTheme.danger)))
           : _info == null

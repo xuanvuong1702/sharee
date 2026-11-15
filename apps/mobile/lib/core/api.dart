@@ -459,6 +459,11 @@ class Api {
     return ReputationInfo.fromJson(data);
   }
 
+  Future<ReputationInfo> userReputation(String userId) async {
+    final data = await _send('GET', '/api/users/$userId/reputation') as Map<String, dynamic>;
+    return ReputationInfo.fromJson(data);
+  }
+
   Future<void> cancelBooking(String id) async {
     await _send('POST', '/api/bookings/$id/cancel', body: {});
   }
