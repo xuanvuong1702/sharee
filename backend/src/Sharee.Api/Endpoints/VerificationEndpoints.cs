@@ -137,7 +137,7 @@ public static partial class VerificationEndpoints
                 "select id, type, original_name, mime_type, size_bytes, created_at from verification_documents where user_id = @userId and type = @type",
                 new { userId, type });
             return Results.Ok(MapDocument(doc));
-        });
+        }).DisableAntiforgery();
 
         me.MapDelete("/documents/{type}", async (
             string type, HttpContext http, Db db, VerificationStorage storage, CancellationToken ct) =>
