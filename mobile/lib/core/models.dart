@@ -533,6 +533,9 @@ class Earnings {
   final int completedTrips;
   final int dailyEarningsMinor;
   final int dailyValidations;
+  final int tipEarnings;
+  final int tipCount;
+  final int pendingTips;
   final List<EarningItem> recent;
 
   const Earnings({
@@ -541,6 +544,9 @@ class Earnings {
     required this.dailyEarningsMinor,
     required this.dailyValidations,
     required this.recent,
+    this.tipEarnings = 0,
+    this.tipCount = 0,
+    this.pendingTips = 0,
   });
 
   factory Earnings.fromJson(Map<String, dynamic> json) => Earnings(
@@ -548,6 +554,9 @@ class Earnings {
         completedTrips: (json['completedTrips'] as num?)?.toInt() ?? 0,
         dailyEarningsMinor: (json['dailyEarningsMinor'] as num?)?.toInt() ?? 0,
         dailyValidations: (json['dailyValidations'] as num?)?.toInt() ?? 0,
+        tipEarnings: (json['tipEarnings'] as num?)?.toInt() ?? 0,
+        tipCount: (json['tipCount'] as num?)?.toInt() ?? 0,
+        pendingTips: (json['pendingTips'] as num?)?.toInt() ?? 0,
         recent: (json['recent'] as List<dynamic>? ?? [])
             .map((e) => EarningItem.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -697,5 +706,139 @@ class PayOsCheckout {
         qrCode: json['qrCode'] as String? ?? '',
         paymentLinkId: json['paymentLinkId'] as String? ?? '',
         expiresAt: DateTime.parse(json['expiresAt'] as String),
+      );
+}
+
+class TipAccount {
+  final String driverId;
+  final String bankBin;
+  final String bankName;
+  final String accountNumber;
+  final String accountName;
+  final String qrPayload;
+
+  const TipAccount({
+    required this.driverId,
+    required this.bankBin,
+    required this.bankName,
+    required this.accountNumber,
+    required this.accountName,
+    required this.qrPayload,
+  });
+
+  factory TipAccount.fromJson(Map<String, dynamic> json) => TipAccount(
+        driverId: json['driverId'] as String? ?? '',
+        bankBin: json['bankBin'] as String? ?? '',
+        bankName: json['bankName'] as String? ?? '',
+        accountNumber: json['accountNumber'] as String? ?? '',
+        accountName: json['accountName'] as String? ?? '',
+        qrPayload: json['qrPayload'] as String? ?? '',
+      );
+}
+
+class DriverTip {
+  final String id;
+  final String bookingId;
+  final String tripId;
+  final String passengerName;
+  final String driverName;
+  final int amount;
+  final String? message;
+  final String method;
+  final String status;
+  final DateTime createdAt;
+  final DateTime? sentAt;
+  final DateTime? confirmedAt;
+
+  const DriverTip({
+    required this.id,
+    required this.bookingId,
+    required this.tripId,
+    required this.passengerName,
+    required this.driverName,
+    required this.amount,
+    required this.message,
+    required this.method,
+    required this.status,
+    required this.createdAt,
+    required this.sentAt,
+    required this.confirmedAt,
+  });
+
+  factory DriverTip.fromJson(Map<String, dynamic> json) => DriverTip(
+        id: json['id'] as String,
+        bookingId: json['bookingId'] as String? ?? '',
+        tripId: json['tripId'] as String? ?? '',
+        passengerName: json['passengerName'] as String? ?? '',
+        driverName: json['driverName'] as String? ?? '',
+        amount: (json['amount'] as num?)?.toInt() ?? 0,
+        message: json['message'] as String?,
+        method: json['method'] as String? ?? 'bank_transfer',
+        status: json['status'] as String? ?? 'pending',
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        sentAt: json['sentAt'] == null ? null : DateTime.parse(json['sentAt'] as String),
+        confirmedAt:
+            json['confirmedAt'] == null ? null : DateTime.parse(json['confirmedAt'] as String),
+      );
+
+  bool get pending => status == 'pending';
+  bool get confirmed => status == 'confirmed';
+  String get methodLabel => method == 'cash' ? 'Ti?n m?t' : 'Chuy?n kho?n QR';
+}
+
+class BookingTipInfo {
+  final TipAccount? account;
+  final DriverTip? existing;
+  final String? qrPayload;
+
+  const BookingTipInfo({required this.account, required this.existing, this.qrPayload});
+
+  factory BookingTipInfo.fromJson(Map<String, dynamic> json) => BookingTipInfo(
+        account: json['account'] == null
+            ? null
+            : TipAccount.fromJson(json['account'] as Map<String, dynamic>),
+        existing: json['existingTip'] == null
+            ? null
+            : DriverTip.fromJson(json['existingTip'] as Map<String, dynamic>),
+        qrPayload: json['qrPayload'] as String?,
+      );
+}
+
+class CreateTipResult {
+  final DriverTip tip;
+  final TipAccount? account;
+  final String? qrPayload;
+
+  const CreateTipResult({required this.tip, required this.account, required this.qrPayload});
+
+  factory CreateTipResult.fromJson(Map<String, dynamic> json) => CreateTipResult(
+        tip: DriverTip.fromJson(json['tip'] as Map<String, dynamic>),
+        account: json['account'] == null
+            ? null
+            : TipAccount.fromJson(json['account'] as Map<String, dynamic>),
+        qrPayload: json['qrPayload'] as String?,
+      );
+}
+
+class TipSummary {
+  final int totalConfirmed;
+  final int countConfirmed;
+  final int countPending;
+  final List<DriverTip> recent;
+
+  const TipSummary({
+    required this.totalConfirmed,
+    required this.countConfirmed,
+    required this.countPending,
+    required this.recent,
+  });
+
+  factory TipSummary.fromJson(Map<String, dynamic> json) => TipSummary(
+        totalConfirmed: (json['totalConfirmed'] as num?)?.toInt() ?? 0,
+        countConfirmed: (json['countConfirmed'] as num?)?.toInt() ?? 0,
+        countPending: (json['countPending'] as num?)?.toInt() ?? 0,
+        recent: (json['recent'] as List<dynamic>? ?? [])
+            .map((e) => DriverTip.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 }

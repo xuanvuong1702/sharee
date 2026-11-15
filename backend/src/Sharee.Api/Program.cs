@@ -304,6 +304,7 @@ app.MapTrackingEndpoints();
 app.MapBookingEndpoints();
 app.MapPaymentEndpoints();
 app.MapPayOsEndpoints();
+app.MapTipEndpoints();
 app.MapReviewEndpoints();
 app.MapReportEndpoints();
 app.MapChatEndpoints();

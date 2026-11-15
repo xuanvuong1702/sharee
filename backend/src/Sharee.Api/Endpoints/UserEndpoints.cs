@@ -110,6 +110,15 @@ public static class UserEndpoints
                 new { driverId });
             var dailyCount = await conn.ExecuteScalarAsync<int>(
                 "select count(*) from driver_earnings where driver_id = @driverId", new { driverId });
+            var tipEarnings = await conn.ExecuteScalarAsync<int>(
+                "select coalesce(sum(amount),0) from tips where driver_id = @driverId and status = 'confirmed'",
+                new { driverId });
+            var tipCount = await conn.ExecuteScalarAsync<int>(
+                "select count(*) from tips where driver_id = @driverId and status = 'confirmed'",
+                new { driverId });
+            var pendingTips = await conn.ExecuteScalarAsync<int>(
+                "select count(*) from tips where driver_id = @driverId and status = 'pending'",
+                new { driverId });
 
             var recent = new List<EarningItemDto>();
             var bookings = await conn.QueryAsync<dynamic>("""
@@ -140,8 +149,22 @@ public static class UserEndpoints
                     (int)(long)v.amount_minor, "EUR", Time.ToDto((DateTime)v.validated_at)));
             }
 
+            var tips = await conn.QueryAsync<dynamic>("""
+                select t.amount, t.confirmed_at, t.created_at, p.full_name as passenger_name
+                from tips t join users p on p.id = t.passenger_id
+                where t.driver_id = @driverId and t.status = 'confirmed'
+                order by coalesce(t.confirmed_at, t.created_at) desc limit 10
+                """, new { driverId });
+            foreach (var tip in tips)
+            {
+                var at = tip.confirmed_at is DateTime confirmed ? confirmed : (DateTime)tip.created_at;
+                recent.Add(new EarningItemDto("tip", $"Tip từ {tip.passenger_name}",
+                    (int)tip.amount, "VND", Time.ToDto(at)));
+            }
+
             return Results.Ok(new EarningsDto(trips, completedTrips, daily, dailyCount,
-                recent.OrderByDescending(r => r.At).Take(20).ToList()));
+                recent.OrderByDescending(r => r.At).Take(20).ToList(),
+                tipEarnings, tipCount, pendingTips));
         }).RequireAuthorization().WithTags("Me");
 
         var vehicles = app.MapGroup("/api/vehicles").RequireAuthorization().WithTags("Vehicles");

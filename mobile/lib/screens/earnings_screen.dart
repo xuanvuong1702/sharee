@@ -4,6 +4,7 @@ import '../core/app_state.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../widgets/ui.dart';
+import 'tip_account_screen.dart';
 
 class EarningsScreen extends StatefulWidget {
   const EarningsScreen({super.key});
@@ -56,24 +57,77 @@ class _EarningsScreenState extends State<EarningsScreen> {
                     const SizedBox(height: 3),
                     Text('${data.completedTrips} chuyến đã hoàn thành',
                         style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.route, color: Colors.white, size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Daily: ${(data.dailyEarningsMinor / 100).toStringAsFixed(2)} € · ${data.dailyValidations} lượt',
-                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.favorite_rounded, color: Color(0xFFFFC46B), size: 18),
+                                const SizedBox(width: 7),
+                                Expanded(
+                                  child: Text(
+                                    'Tip: ${money(data.tipEarnings)} · ${data.tipCount} lần',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    if (data.pendingTips > 0) ...[
+                      const SizedBox(height: 7),
+                      Text('${data.pendingTips} tip đang chờ bạn xác nhận',
+                          style: const TextStyle(color: Color(0xFFFFD9A0), fontSize: 10)),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.route, color: Colors.white, size: 18),
+                                const SizedBox(width: 7),
+                                Expanded(
+                                  child: Text(
+                                    'Daily: ${(data.dailyEarningsMinor / 100).toStringAsFixed(2)} € · ${data.dailyValidations} lượt',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const TipAccountScreen())),
+                        icon: const Icon(Icons.qr_code_2_rounded, size: 17),
+                        label: const Text('Tài khoản nhận tip'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+                        ),
                       ),
                     ),
                   ],
@@ -98,7 +152,11 @@ class _EarningsScreenState extends State<EarningsScreen> {
                             radius: 18,
                             backgroundColor: const Color(0xFFEAF0FF),
                             child: Icon(
-                              data.recent[i].type == 'daily' ? Icons.route : Icons.directions_car,
+                              data.recent[i].type == 'daily'
+                                  ? Icons.route
+                                  : data.recent[i].type == 'tip'
+                                      ? Icons.favorite_rounded
+                                      : Icons.directions_car,
                               size: 18,
                               color: AppTheme.primary,
                             ),
@@ -108,7 +166,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
                           subtitle: Text(
-                            '${shortDate(data.recent[i].at)} · ${data.recent[i].type == 'daily' ? 'Daily' : 'Chuyến đi'}',
+                            '${shortDate(data.recent[i].at)} · ${data.recent[i].type == 'daily' ? 'Daily' : data.recent[i].type == 'tip' ? 'Tip' : 'Chuyến đi'}',
                             style: const TextStyle(fontSize: 10.5, color: AppTheme.muted),
                           ),
                           trailing: Text(

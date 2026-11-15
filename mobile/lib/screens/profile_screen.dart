@@ -8,6 +8,8 @@ import 'chat_screen.dart';
 import 'earnings_screen.dart';
 import 'notifications_screen.dart';
 import 'recurring_trips_screen.dart';
+import 'tip_account_screen.dart';
+import 'tips_received_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -152,6 +154,24 @@ class ProfileScreen extends StatelessWidget {
                       title: 'Thu nhập',
                       subtitle: 'Chuyến đi và Daily',
                       onTap: () => Navigator.of(context).push(appRoute(const EarningsScreen())),
+                    ),
+                    _MenuTile(
+                      icon: Icons.qr_code_2_rounded,
+                      color: const Color(0xFFB42318),
+                      background: const Color(0xFFFFE4E0),
+                      title: 'Nhận tip',
+                      subtitle: 'Cài tài khoản và QR nhận tip',
+                      onTap: () =>
+                          Navigator.of(context).push(appRoute(const TipAccountScreen())),
+                    ),
+                    _MenuTile(
+                      icon: Icons.favorite_rounded,
+                      color: const Color(0xFFE04B3A),
+                      background: const Color(0xFFFFF0EC),
+                      title: 'Tip đã nhận',
+                      subtitle: 'Xác nhận tip chuyển khoản',
+                      onTap: () =>
+                          Navigator.of(context).push(appRoute(const TipsReceivedScreen())),
                     ),
                     _MenuTile(
                       icon: Icons.chat_bubble_rounded,

@@ -279,6 +279,69 @@ class Api {
     return data.map((e) => Booking.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  Future<TipAccount?> tipAccount() async {
+    final data = await _send('GET', '/api/me/tip-account');
+    return data == null ? null : TipAccount.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<TipAccount> saveTipAccount({
+    required String bankBin,
+    String? bankName,
+    required String accountNumber,
+    required String accountName,
+  }) async {
+    final data = await _send('PUT', '/api/me/tip-account', body: {
+      'bankBin': bankBin,
+      'bankName': bankName ?? '',
+      'accountNumber': accountNumber,
+      'accountName': accountName,
+    }) as Map<String, dynamic>;
+    return TipAccount.fromJson(data);
+  }
+
+  Future<BookingTipInfo> bookingTipInfo(String bookingId) async {
+    final data = await _send('GET', '/api/bookings/$bookingId/tip-info') as Map<String, dynamic>;
+    return BookingTipInfo.fromJson(data);
+  }
+
+  Future<CreateTipResult> createTip(
+    String bookingId, {
+    required int amount,
+    required String method,
+    String? message,
+  }) async {
+    final data = await _send('POST', '/api/bookings/$bookingId/tips', body: {
+      'amount': amount,
+      'method': method,
+      'message': message,
+    }) as Map<String, dynamic>;
+    return CreateTipResult.fromJson(data);
+  }
+
+  Future<List<DriverTip>> bookingTips(String bookingId) async {
+    final data = await _send('GET', '/api/bookings/$bookingId/tips') as List<dynamic>;
+    return data.map((e) => DriverTip.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<DriverTip> tipSent(String tipId) async {
+    final data = await _send('POST', '/api/tips/$tipId/sent', body: {}) as Map<String, dynamic>;
+    return DriverTip.fromJson(data);
+  }
+
+  Future<DriverTip> confirmTip(String tipId) async {
+    final data = await _send('POST', '/api/tips/$tipId/confirm', body: {}) as Map<String, dynamic>;
+    return DriverTip.fromJson(data);
+  }
+
+  Future<void> cancelTip(String tipId) async {
+    await _send('POST', '/api/tips/$tipId/cancel', body: {});
+  }
+
+  Future<TipSummary> receivedTips() async {
+    final data = await _send('GET', '/api/me/tips') as Map<String, dynamic>;
+    return TipSummary.fromJson(data);
+  }
+
   Future<void> cancelBooking(String id) async {
     await _send('POST', '/api/bookings/$id/cancel', body: {});
   }

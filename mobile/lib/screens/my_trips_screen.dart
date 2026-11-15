@@ -8,6 +8,7 @@ import '../widgets/ui.dart';
 import 'booking_screen.dart';
 import 'chat_screen.dart';
 import 'tracking_screen.dart';
+import 'tip_screen.dart';
 
 class MyTripsScreen extends StatefulWidget {
   const MyTripsScreen({super.key});
@@ -245,6 +246,8 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final me = AppScope.of(context).user?.id;
+    final canTip = booking.status == 'completed' && booking.passenger.id == me;
     return AppCard(
       onTap: () => Navigator.of(context).push(appRoute(BookingScreen(bookingId: booking.id))),
       padding: const EdgeInsets.all(14),
@@ -312,6 +315,34 @@ class _BookingCard extends StatelessWidget {
                     const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.mutedLight),
                   ],
                 ),
+                if (canTip) ...[
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(appRoute(TipScreen(
+                      bookingId: booking.id,
+                      driverName: booking.driver.fullName,
+                    ))),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF0EC),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.favorite_rounded, size: 12, color: Color(0xFFE04B3A)),
+                          SizedBox(width: 4),
+                          Text('Tip tài xế',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFFE04B3A))),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

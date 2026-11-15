@@ -132,7 +132,30 @@ public record EarningItemDto(
 
 public record EarningsDto(
     int TripEarnings, int CompletedTrips, long DailyEarningsMinor, int DailyValidations,
-    IReadOnlyList<EarningItemDto> Recent);
+    IReadOnlyList<EarningItemDto> Recent,
+    int TipEarnings = 0, int TipCount = 0, int PendingTips = 0);
+
+public record TipAccountDto(
+    Guid DriverId, string BankBin, string BankName, string AccountNumber,
+    string AccountName, string QrPayload);
+
+public record SetTipAccountRequest(
+    string BankBin, string? BankName, string AccountNumber, string AccountName);
+
+public record CreateTipRequest(int Amount, string? Message, string Method);
+
+public record TipDto(
+    Guid Id, Guid BookingId, Guid TripId, string PassengerName, string DriverName,
+    int Amount, string? Message, string Method, string Status,
+    DateTimeOffset CreatedAt, DateTimeOffset? SentAt, DateTimeOffset? ConfirmedAt);
+
+public record BookingTipInfoDto(TipAccountDto? Account, TipDto? ExistingTip, string? QrPayload);
+
+public record CreateTipResponse(TipDto Tip, TipAccountDto? Account, string? QrPayload);
+
+public record TipSummaryDto(
+    int TotalConfirmed, int CountConfirmed, int CountPending,
+    IReadOnlyList<TipDto> Recent);
 
 public record LocationUpdateRequest(
     double Lat, double Lng, double? Heading = null, double? Speed = null, double? Accuracy = null);
