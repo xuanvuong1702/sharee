@@ -245,6 +245,29 @@ flutter build apk --release \
 - Backend: `Push__Fcm__ProjectId`, service account JSON (hoặc file trong container), APNs key nếu dùng trực tiếp.
 - Chi tiết: [PRODUCTION.md](PRODUCTION.md).
 
+## Ba bản triển khai
+
+| Bản | Build | Docker |
+|---|---|---|
+| **Web mobile** | `flutter build web --release --dart-define=WEB_MODE=mobile` | `mobile/Dockerfile` |
+| **Web full (desktop)** | `flutter build web --release --dart-define=WEB_MODE=full` | `mobile/FullWeb.Dockerfile` |
+| **Admin** | React/Vite | `admin/Dockerfile` |
+| **App** | APK/AAB/IPA từ GitHub Release | — |
+
+Web mobile giữ khung điện thoại 480px; web full dùng sidebar desktop, hero, tìm chuyến và grid tuyến.
+Build web full:
+
+```bash
+cd mobile
+flutter build web --release \
+  --dart-define=WEB_MODE=full \
+  --dart-define=API_BASE_URL=https://api.example.com
+rm -rf build/full_web && cp -R build/web build/full_web
+docker build -f FullWeb.Dockerfile -t sharee-full-web .
+```
+
+APK mới nhất: [GitHub Releases](https://github.com/xuanvuong1702/sharee/releases/latest).
+
 ## Bản đồ & APK
 
 - Tile URL cấu hình: `--dart-define=MAP_TILE_URL=... --dart-define=MAP_ATTRIBUTION=...`.

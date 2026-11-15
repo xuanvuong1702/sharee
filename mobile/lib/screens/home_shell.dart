@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../core/app_state.dart';
 import 'daily_screen.dart';
+import 'desktop_sidebar.dart';
+import 'full_web_home_screen.dart';
 import 'home_screen.dart';
 import 'my_trips_screen.dart';
 import 'profile_screen.dart';
@@ -28,6 +30,39 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final desktop = MediaQuery.sizeOf(context).width >= 1000;
+    final screens = desktop
+        ? <Widget>[
+            FullWebHomeScreen(onPublish: () => _select(2)),
+            const MyTripsScreen(),
+            const PublishScreen(),
+            const DailyScreen(),
+            const ProfileScreen(),
+          ]
+        : _screens;
+
+    if (desktop) {
+      return Scaffold(
+        backgroundColor: AppTheme.bg,
+        body: Row(
+          children: [
+            DesktopSidebar(index: _index, onSelect: _select),
+            Expanded(
+              child: Container(
+                color: AppTheme.bg,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: _index == 0 ? 1240 : 920),
+                    child: IndexedStack(index: _index, children: screens),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: Container(

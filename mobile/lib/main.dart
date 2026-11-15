@@ -6,6 +6,8 @@ import 'core/app_state.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
 
+const _webMode = String.fromEnvironment('WEB_MODE', defaultValue: 'mobile');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('vi', null);
@@ -31,6 +33,9 @@ class ShareeApp extends StatelessWidget {
             theme: AppTheme.light,
             builder: (context, child) {
               if (!kIsWeb) return child!;
+              if (_webMode == 'full') {
+                return ColoredBox(color: AppTheme.bg, child: child!);
+              }
               final media = MediaQuery.of(context);
               return ColoredBox(
                 color: const Color(0xFF07152C),

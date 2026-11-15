@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../core/api.dart';
 import '../core/app_state.dart';
@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
     final state = AppScope.of(context);
     final user = state.user;
     if (user == null) {
-      return const Scaffold(body: Center(child: Text('Chưa đăng nhập')));
+      return const Scaffold(body: Center(child: Text('ChÆ°a Ä‘Äƒng nháº­p')));
     }
     final top = MediaQuery.of(context).padding.top;
     return Scaffold(
@@ -36,7 +36,7 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Text('Tài khoản',
+                    const Text('TÃ i khoáº£n',
                         style: TextStyle(
                             color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
                     const Spacer(),
@@ -50,7 +50,7 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           const Icon(Icons.verified_user_rounded, color: Colors.white, size: 13),
                           const SizedBox(width: 4),
-                          Text(user.verifiedLevel >= 2 ? 'Đã xác thực' : 'Cơ bản',
+                          Text(user.verifiedLevel >= 2 ? 'ÄÃ£ xÃ¡c thá»±c' : 'CÆ¡ báº£n',
                               style: const TextStyle(
                                   color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
                         ],
@@ -97,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
                               const Icon(Icons.star_rounded, color: Color(0xFFFFC46B), size: 14),
                               const SizedBox(width: 3),
                               Text(
-                                '${user.ratingAvg.toStringAsFixed(1)} · ${user.ratingCount} đánh giá',
+                                '${user.ratingAvg.toStringAsFixed(1)} Â· ${user.ratingCount} Ä‘Ã¡nh giÃ¡',
                                 style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
                               ),
@@ -108,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () =>
-                          showInfo(context, 'Chức năng chỉnh sửa hồ sơ sẽ mở trong bản cập nhật'),
+                          showInfo(context, 'Chá»©c nÄƒng chá»‰nh sá»­a há»“ sÆ¡ sáº½ má»Ÿ trong báº£n cáº­p nháº­t'),
                       icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white.withValues(alpha: 0.14),
@@ -127,13 +127,13 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 child: Row(
                   children: [
-                    _Stat(value: '★ ${user.ratingAvg.toStringAsFixed(1)}', label: 'Đánh giá'),
+                    _Stat(value: 'â˜… ${user.ratingAvg.toStringAsFixed(1)}', label: 'ÄÃ¡nh giÃ¡'),
                     const _StatDivider(),
-                    _Stat(value: '${user.ratingCount}', label: 'Chuyến đi'),
+                    _Stat(value: '${user.ratingCount}', label: 'Chuyáº¿n Ä‘i'),
                     const _StatDivider(),
                     _Stat(
-                        value: 'Cấp ${user.verifiedLevel}',
-                        label: 'Xác thực'),
+                        value: 'Cáº¥p ${user.verifiedLevel}',
+                        label: 'XÃ¡c thá»±c'),
                   ],
                 ),
               ),
@@ -145,22 +145,22 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Group(
-                  title: 'Hoạt động',
+                  title: 'Hoáº¡t Ä‘á»™ng',
                   children: [
                     _MenuTile(
                       icon: Icons.account_balance_wallet_rounded,
                       color: AppTheme.success,
                       background: AppTheme.successSoft,
-                      title: 'Thu nhập',
-                      subtitle: 'Chuyến đi và Daily',
+                      title: 'Thu nháº­p',
+                      subtitle: 'Chuyáº¿n Ä‘i vÃ  Daily',
                       onTap: () => Navigator.of(context).push(appRoute(const EarningsScreen())),
                     ),
                     _MenuTile(
                       icon: Icons.qr_code_2_rounded,
                       color: const Color(0xFFB42318),
                       background: const Color(0xFFFFE4E0),
-                      title: 'Nhận tip',
-                      subtitle: 'Cài tài khoản và QR nhận tip',
+                      title: 'Nháº­n tip',
+                      subtitle: 'CÃ i tÃ i khoáº£n vÃ  QR nháº­n tip',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const TipAccountScreen())),
                     ),
@@ -168,8 +168,8 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.favorite_rounded,
                       color: const Color(0xFFE04B3A),
                       background: const Color(0xFFFFF0EC),
-                      title: 'Tip đã nhận',
-                      subtitle: 'Xác nhận tip chuyển khoản',
+                      title: 'Tip Ä‘Ã£ nháº­n',
+                      subtitle: 'XÃ¡c nháº­n tip chuyá»ƒn khoáº£n',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const TipsReceivedScreen())),
                     ),
@@ -177,8 +177,8 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.chat_bubble_rounded,
                       color: const Color(0xFF0B7A75),
                       background: const Color(0xFFE6F7F5),
-                      title: 'Tin nhắn',
-                      subtitle: 'Trao đổi với tài xế hoặc khách',
+                      title: 'Tin nháº¯n',
+                      subtitle: 'Trao Ä‘á»•i vá»›i tÃ i xáº¿ hoáº·c khÃ¡ch',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const ChatThreadsScreen())),
                     ),
@@ -186,8 +186,8 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.event_repeat_rounded,
                       color: AppTheme.primary,
                       background: AppTheme.primarySoft,
-                      title: 'Chuyến định kỳ',
-                      subtitle: 'Lịch chạy tự động hằng tuần',
+                      title: 'Chuyáº¿n Ä‘á»‹nh ká»³',
+                      subtitle: 'Lá»‹ch cháº¡y tá»± Ä‘á»™ng háº±ng tuáº§n',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const RecurringTripsScreen())),
                     ),
@@ -195,30 +195,30 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.directions_car_rounded,
                       color: const Color(0xFFB45309),
                       background: const Color(0xFFFFF3E0),
-                      title: 'Xe của tôi',
-                      subtitle: 'Quản lý xe và biển số',
-                      onTap: () => showInfo(context, 'Xem xe trong tab Đăng chuyến'),
+                      title: 'Xe cá»§a tÃ´i',
+                      subtitle: 'Quáº£n lÃ½ xe vÃ  biá»ƒn sá»‘',
+                      onTap: () => showInfo(context, 'Xem xe trong tab ÄÄƒng chuyáº¿n'),
                     ),
                   ],
                 ),
                 _Group(
-                  title: 'Tài khoản',
+                  title: 'TÃ i khoáº£n',
                   children: [
                     _MenuTile(
                       icon: Icons.verified_user_rounded,
                       color: const Color(0xFF7C3AED),
                       background: const Color(0xFFF3E8FF),
-                      title: 'Xác minh danh tính',
-                      subtitle: 'Cấp ${user.verifiedLevel}/3 · CCCD, GPLX',
+                      title: 'XÃ¡c minh danh tÃ­nh',
+                      subtitle: 'Cáº¥p ${user.verifiedLevel}/3 Â· CCCD, GPLX',
                       onTap: () =>
-                          showInfo(context, 'Chức năng xác minh sẽ mở trong bản cập nhật'),
+                          showInfo(context, 'Chá»©c nÄƒng xÃ¡c minh sáº½ má»Ÿ trong báº£n cáº­p nháº­t'),
                     ),
                     _MenuTile(
                       icon: Icons.notifications_rounded,
                       color: AppTheme.primary,
                       background: AppTheme.primarySoft,
-                      title: 'Thông báo',
-                      subtitle: 'Cập nhật chuyến đi và ưu đãi',
+                      title: 'ThÃ´ng bÃ¡o',
+                      subtitle: 'Cáº­p nháº­t chuyáº¿n Ä‘i vÃ  Æ°u Ä‘Ã£i',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const NotificationsScreen())),
                     ),
@@ -226,9 +226,9 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.support_agent_rounded,
                       color: AppTheme.success,
                       background: AppTheme.successSoft,
-                      title: 'Trợ giúp',
+                      title: 'Trá»£ giÃºp',
                       subtitle: 'support@sharee.vn',
-                      onTap: () => showInfo(context, 'Hỗ trợ: support@sharee.vn'),
+                      onTap: () => showInfo(context, 'Há»— trá»£: support@sharee.vn'),
                     ),
                   ],
                 ),
@@ -244,7 +244,7 @@ class ProfileScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Kết nối API',
+                            const Text('Káº¿t ná»‘i API',
                                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
                             Text(Api.baseUrl,
                                 style: const TextStyle(fontSize: 9.5, color: AppTheme.muted)),
@@ -260,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: state.signOut,
                     icon: const Icon(Icons.logout_rounded, size: 18),
-                    label: const Text('Đăng xuất'),
+                    label: const Text('ÄÄƒng xuáº¥t'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.danger,
                       side: const BorderSide(color: Color(0xFFF6C9CB)),
@@ -269,7 +269,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Center(
-                  child: Text('Sharee 1.0.0 · made for learning',
+                  child: Text('Sharee 1.0.0 Â· made for learning',
                       style: TextStyle(fontSize: 9.5, color: AppTheme.mutedLight)),
                 ),
                 const SizedBox(height: 20),
