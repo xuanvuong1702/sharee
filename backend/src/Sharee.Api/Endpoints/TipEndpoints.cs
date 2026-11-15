@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Dapper;
+using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using Sharee.Api.Contracts;
 using Sharee.Api.Infrastructure;
@@ -123,7 +124,7 @@ public static partial class TipEndpoints
         });
 
         group.MapPost("/bookings/{id:guid}/tips", async (
-            Guid id, CreateTipRequest request, HttpContext http, Db db, CancellationToken ct) =>
+            Guid id, [FromBody] CreateTipRequest request, HttpContext http, Db db, CancellationToken ct) =>
         {
             var userId = http.User.GetUserId();
             var method = (request.Method ?? "").Trim().ToLowerInvariant();
