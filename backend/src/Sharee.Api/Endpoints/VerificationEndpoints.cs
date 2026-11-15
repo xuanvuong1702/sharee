@@ -211,7 +211,7 @@ public static partial class VerificationEndpoints
                        u.verification_expires_at,
                        (select count(*) from verification_documents d where d.user_id = u.id) as document_count
                 from users u
-                where u.verification_status <> 'unverified'
+                where u.verification_status in ('pending', 'rejected', 'suspended')
                 order by case u.verification_status when 'pending' then 0 when 'rejected' then 1 else 2 end,
                          u.verification_submitted_at desc nulls last
                 limit 200

@@ -43,11 +43,3 @@ CREATE TABLE IF NOT EXISTS verification_events (
   detail jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-
--- Grandfather demo drivers created by the earlier seed.
-UPDATE users
-SET verification_status = 'approved',
-    verification_expires_at = now() + interval '1 year',
-    verification_submitted_at = coalesce(verification_submitted_at, now()),
-    verification_reviewed_at = coalesce(verification_reviewed_at, now())
-WHERE verified_level >= 3 AND verification_status = 'unverified';
