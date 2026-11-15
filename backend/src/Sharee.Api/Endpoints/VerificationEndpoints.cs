@@ -168,6 +168,9 @@ public static partial class VerificationEndpoints
                 return Results.Conflict(new { error = "Hồ sơ đã được gửi và đang chờ duyệt" });
             if ((string)user.verification_status == "approved")
                 return Results.Conflict(new { error = "Tài khoản đã được xác thực" });
+            if ((string)user.verification_status == "suspended")
+                return Results.Json(new { error = "Tài khoản đang bị tạm dừng, vui lòng liên hệ hỗ trợ." },
+                    statusCode: StatusCodes.Status403Forbidden);
 
             var profileError = ValidateStoredProfile(user);
             if (profileError is not null) return Results.BadRequest(new { error = profileError });
@@ -443,12 +446,29 @@ public static partial class VerificationEndpoints
         var registration = (string?)user.vehicle_registration;
         var insurance = ToDateOnly(user.insurance_expiry);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        if (string.IsNullOrWhiteSpace(legalName) || dob is null || idNumber is null
-            || idExpiry is null || license is null || licenseExpiry is null
-            || registration is null || insurance is null)
-            return "Hồ sơ chưa đầy đủ thông tin pháp lý";
-        if (idExpiry <= today || licenseExpiry <= today || insurance <= today)
-            return "Có giấy tờ đã hết hạn, vui lòng cập nhật";
+        if (string.IsNullOrWhiteSpace(legalName) || legalName.Length is < 2 or > 100)
+            return "Họ tên pháp lý không hợp lệ";
+        if (dob is null) return "Thiếu ngày sinh";
+        var age = today.Year - dob.Value.Year;
+        if (dob.Value > today.AddYears(-age)) age--;
+        if (age is < 18 or > 80) return "Tài xế phải từ 18–80 tuổi";
+        if (string.IsNullOrWhiteSpace(idNumber) || !IdNumberRegex().IsMatch(idNumber))
+            return "Số CCCD/CMND không hợp lệ";
+        if (idExpiry is null || idExpiry <= today)
+            return "CCCD đã hết hạn hoặc thiếu ngày hết hạn";
+        if (string.IsNullOrWhiteSpace(license) || license.Length is < 6 or > 20
+            || !license.All(char.IsLetterOrDigit))
+            return "Số GPLX không hợp lệ";
+        var licenseClass = (string?)user.license_class;
+        if (licenseClass is not ("A1" or "A2" or "B1" or "B2" or "C" or "D" or "E"
+            or "FB2" or "FC" or "FD" or "FE"))
+            return "Hạng GPLX không hợp lệ";
+        if (licenseExpiry is null || licenseExpiry <= today)
+            return "GPLX đã hết hạn hoặc thiếu ngày hết hạn";
+        if (string.IsNullOrWhiteSpace(registration) || !VehicleRegistrationRegex().IsMatch(registration))
+            return "Biển số/đăng ký xe không hợp lệ";
+        if (insurance is null || insurance <= today)
+            return "Bảo hiểm xe đã hết hạn hoặc thiếu ngày hết hạn";
         return null;
     }
 }
