@@ -280,7 +280,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Center(
-                  child: Text('Sharee 1.2.2',
+                  child: Text('Sharee 1.2.3',
                       style: TextStyle(fontSize: 9.5, color: AppTheme.mutedLight)),
                 ),
                 const SizedBox(height: 20),

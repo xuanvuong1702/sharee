@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Center(
-                    child: Text('Sharee 1.2.2',
+                    child: Text('Sharee 1.2.3',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45), fontSize: 9.5)),
                   ),
@@ -370,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.info_outline, size: 14, color: AppTheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text('Mã demo: $_devCode (đã tự điền)',
+                  child: Text('Mã xác thực: $_devCode (đã tự điền)',
                       style: const TextStyle(
                           fontSize: 10.5, color: AppTheme.primary, fontWeight: FontWeight.w600)),
                 ),
