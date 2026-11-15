@@ -288,6 +288,9 @@ public static class EscrowAppealEndpoints
             var payment = await conn.QuerySingleOrDefaultAsync<dynamic>(
                 "select id, status from payments where booking_id = @bookingId",
                 new { bookingId = appeal.BookingId });
+            var bookingInfo = await conn.QuerySingleAsync<dynamic>(
+                "select trip_id, seats, status from bookings where id = @bookingId",
+                new { bookingId = appeal.BookingId });
 
             await using var tx = await conn.BeginTransactionAsync(ct);
             var resolution = outcome == "release" ? "released" : "refunded";
@@ -328,6 +331,13 @@ public static class EscrowAppealEndpoints
                 await conn.ExecuteAsync(
                     "update bookings set status = 'refunded', updated_at = now() where id = @bookingId",
                     new { bookingId = appeal.BookingId }, tx);
+                if ((string)bookingInfo.status == "confirmed")
+                    await conn.ExecuteAsync("""
+                        update trips set seats_available = least(seats_total, seats_available + @seats),
+                            status = case when status = 'full' then 'open' else status end,
+                            updated_at = now()
+                        where id = @tripId
+                        """, new { tripId = (Guid)bookingInfo.trip_id, seats = (short)bookingInfo.seats }, tx);
             }
 
             await Notifier.NotifyAsync(conn, tx, appeal.OpenedBy, "appeal.resolved",
