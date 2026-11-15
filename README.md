@@ -228,6 +228,19 @@ flutter build apk --release \
 - Keystore: `scripts/create-keystore.ps1`; `key.properties` và keystore không commit.
 - Android SDK chuẩn: `flutter config --android-sdk C:\Android\sdk`.
 
+## Auto release Android + iOS
+
+Workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) build APK/AAB/IPA và tạo GitHub Release khi push tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Cần secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+`ANDROID_KEY_PASSWORD`; iOS/TestFlight và Firebase là tuỳ chọn. Hướng dẫn:
+[RELEASE.md](RELEASE.md).
+
 ## Production
 
 ```bash
