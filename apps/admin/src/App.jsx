@@ -21,7 +21,7 @@ const money = (v) => `${Number(v || 0).toLocaleString('vi-VN')}đ`;
 const dt = (v) => (v ? new Date(v).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '—');
 
 function Login({ onLogin }) {
-  const [phone, setPhone] = useState('+84900000001');
+  const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [devCode, setDevCode] = useState('');
   const [step, setStep] = useState(0);
@@ -53,7 +53,7 @@ function Login({ onLogin }) {
       <div className="login-card">
         <div className="brand"><span>S</span> Sharee Admin</div>
         <h1>Đăng nhập vận hành</h1>
-        <p className="muted">Dùng số admin demo <b>+84900000001</b></p>
+        <p className="muted">Đăng nhập bằng tài khoản vận hành.</p>
         {step === 0 ? (
           <>
             <label>Số điện thoại</label>

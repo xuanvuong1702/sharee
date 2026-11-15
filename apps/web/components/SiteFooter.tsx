@@ -16,7 +16,7 @@ export function SiteFooter() {
             Tải APK
           </a>
         </div>
-        <span className="footer-copy">© {new Date().getFullYear()} Sharee · Demo</span>
+        <span className="footer-copy">© {new Date().getFullYear()} Sharee</span>
       </div>
     </footer>
   );
