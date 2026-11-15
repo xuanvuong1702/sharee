@@ -216,6 +216,17 @@ public static class BookingEndpoints
                 : 0;
 
             await using var conn = await db.OpenAsync(ct);
+            var mustHold = await conn.ExecuteScalarAsync<bool>("""
+                select exists(select 1 from appeals
+                              where booking_id = @id and status in ('open','investigating'))
+                    or exists(select 1 from escrow_holds
+                              where booking_id = @id and status = 'released')
+                """, new { id });
+            if (mustHold)
+                return Results.Conflict(new
+                {
+                    error = "Booking đang có khiếu nại mở hoặc tiền đã được giải ngân, không thể huỷ."
+                });
             await using var tx = await conn.BeginTransactionAsync(ct);
 
             await conn.ExecuteAsync("""
