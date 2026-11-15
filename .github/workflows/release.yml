@@ -20,6 +20,7 @@ env:
   FIREBASE_MESSAGING_SENDER_ID: ${{ vars.FIREBASE_MESSAGING_SENDER_ID }}
   FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
   APP_VERSION: ${{ vars.APP_VERSION }}
+  IOS_EXPORT_METHOD: ${{ vars.IOS_EXPORT_METHOD }}
   GITHUB_REF_TYPE: ${{ github.ref_type }}
 
 jobs:
@@ -229,7 +230,12 @@ jobs:
             ARGS+=("--dart-define=FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID}")
             ARGS+=("--dart-define=FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}")
           fi
-          flutter build ipa --release --export-method app-store "${ARGS[@]}"
+          EXPORT_METHOD="${IOS_EXPORT_METHOD:-development}"
+          case "$EXPORT_METHOD" in
+            app-store|ad-hoc|development|enterprise) ;;
+            *) echo "::error::IOS_EXPORT_METHOD must be app-store, ad-hoc, development or enterprise"; exit 1 ;;
+          esac
+          flutter build ipa --release --export-method "$EXPORT_METHOD" "${ARGS[@]}"
 
       - name: Build unsigned iOS app
         if: steps.signing.outputs.signed != 'true' || steps.signed_build.outcome == 'failure'
@@ -255,7 +261,7 @@ jobs:
           cp "$IPA" "../dist/Sharee-${VERSION}-${GITHUB_RUN_NUMBER}.ipa"
 
       - name: Upload to TestFlight
-        if: steps.signing.outputs.signed == 'true' && steps.signed_build.outcome == 'success' && env.APPSTORE_KEY_ID != ''
+        if: steps.signing.outputs.signed == 'true' && steps.signed_build.outcome == 'success' && env.APPSTORE_KEY_ID != '' && env.IOS_EXPORT_METHOD == 'app-store'
         continue-on-error: true
         run: |
           mkdir -p "$HOME/.appstoreconnect/private_keys"
