@@ -297,8 +297,8 @@ Web mobile giữ khung điện thoại; Next.js web là bản desktop/web chính
 Workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) build APK/AAB/IPA và tạo GitHub Release khi push tag:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.2
+git push origin v1.1.2
 ```
 
 Cần secrets `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,

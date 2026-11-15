@@ -98,7 +98,7 @@ export default function HomePage() {
               <div className="route-icon">↓</div>
               <Badge tone="gray">Mobile app</Badge>
               <h3>Tải Sharee APK</h3>
-              <p>Android · bản 1.1.0</p>
+              <p>Android · bản mới nhất</p>
               <strong>Tải miễn phí</strong>
             </Card>
           </a>
