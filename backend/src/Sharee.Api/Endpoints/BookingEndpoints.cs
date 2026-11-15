@@ -232,6 +232,10 @@ public static class BookingEndpoints
                     ("escrow", 'D', refundAmount),
                     ("customer_receivable", 'C', refundAmount));
             }
+            await conn.ExecuteAsync("""
+                update escrow_holds set status = 'refunded', released_at = now(), updated_at = now()
+                where booking_id = @id and status <> 'released'
+                """, new { id }, tx);
 
             await Notifier.NotifyAsync(conn, tx,
                 driverCancelled ? booking.Passenger.Id : booking.Driver.Id,
@@ -263,9 +267,35 @@ public static class BookingEndpoints
             }
 
             var payout = booking.PriceTotal;
-            await ledger.RecordAsync(conn, tx, "payout", "booking", id,
-                ("escrow", 'D', payout),
-                ("driver_payable", 'C', payout));
+            var openAppeal = await conn.ExecuteScalarAsync<bool>("""
+                select exists(select 1 from appeals
+                              where booking_id = @id and status in ('open','investigating'))
+                """, new { id }, tx);
+            if (openAppeal)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Conflict(new
+                {
+                    error = "Booking đang có khiếu nại mở, chưa thể giải ngân."
+                });
+            }
+            var method = await conn.ExecuteScalarAsync<string>("""
+                select method from escrow_holds where booking_id = @id
+                """, new { id }, tx);
+            method ??= await conn.ExecuteScalarAsync<string>(
+                "select payment_method from bookings where id = @id", new { id });
+            await conn.ExecuteAsync("""
+                insert into escrow_holds (booking_id, amount, method, status, released_at)
+                values (@id, @payout, coalesce(@method, 'payos'), 'released', now())
+                on conflict (booking_id) do update set
+                    status = 'released', released_at = now(), updated_at = now()
+                """, new { id, payout, method }, tx);
+            if (method != "cash")
+            {
+                await ledger.RecordAsync(conn, tx, "payout", "booking", id,
+                    ("escrow", 'D', payout),
+                    ("driver_payable", 'C', payout));
+            }
 
             await Notifier.NotifyAsync(conn, tx, booking.Passenger.Id, "booking.completed",
                 "Chuyến đã hoàn thành", "Hãy đánh giá tài xế để giúp cộng đồng.");

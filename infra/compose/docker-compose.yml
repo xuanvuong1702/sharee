@@ -57,8 +57,10 @@ services:
       Payments__AllowMock: "true"
       Swagger__Enabled: "true"
       Storage__VerificationRoot: /data/verifications
+      Storage__AppealRoot: /data/appeals
     volumes:
       - sharee-verification:/data/verifications
+      - sharee-appeals:/data/appeals
     ports:
       - "8080:8080"
 
@@ -98,4 +100,5 @@ services:
 volumes:
   sharee-pgdata:
   sharee-verification:
+  sharee-appeals:
 

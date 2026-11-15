@@ -8,6 +8,7 @@ import 'chat_screen.dart';
 import 'earnings_screen.dart';
 import 'notifications_screen.dart';
 import 'recurring_trips_screen.dart';
+import 'reputation_screen.dart';
 import 'tip_account_screen.dart';
 import 'tips_received_screen.dart';
 import 'verification_screen.dart';
@@ -148,6 +149,15 @@ class ProfileScreen extends StatelessWidget {
                 _Group(
                   title: 'Hoạt động',
                   children: [
+                    _MenuTile(
+                      icon: Icons.workspace_premium_rounded,
+                      color: const Color(0xFFB45309),
+                      background: const Color(0xFFFFF3E0),
+                      title: 'Chỉ số uy tín',
+                      subtitle: 'Điểm tín nhiệm, tỷ lệ hoàn thành, xếp hạng',
+                      onTap: () =>
+                          Navigator.of(context).push(appRoute(const ReputationScreen())),
+                    ),
                     _MenuTile(
                       icon: Icons.account_balance_wallet_rounded,
                       color: AppTheme.success,

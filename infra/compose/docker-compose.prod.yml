@@ -87,9 +87,11 @@ services:
       Cors__AllowedOrigins__2: ${WEB_ORIGIN:?WEB_ORIGIN is required}
       ReverseProxy__TrustForwarded: "true"
       Storage__VerificationRoot: /data/verifications
+      Storage__AppealRoot: /data/appeals
     volumes:
       - ${FCM_CREDENTIALS_FILE:?FCM_CREDENTIALS_FILE is required}:/run/secrets/firebase.json:ro
       - sharee-prod-verification:/data/verifications
+      - sharee-prod-appeals:/data/appeals
     ports:
       - "127.0.0.1:8080:8080"
     deploy:
@@ -133,4 +135,5 @@ volumes:
   sharee-prod-pgdata:
   sharee-prod-redis:
   sharee-prod-verification:
+  sharee-prod-appeals:
 

@@ -184,6 +184,32 @@ public record VerificationQueueItemDto(
     DateOnly? LicenseExpiry, DateOnly? InsuranceExpiry, int DocumentCount,
     DateTimeOffset? SubmittedAt, DateTimeOffset? ExpiresAt);
 
+public record EscrowDto(
+    Guid BookingId, int Amount, string Currency, string Method, string Status,
+    DateTimeOffset HeldAt, DateTimeOffset? ReleasedAt);
+
+public record SetPaymentMethodRequest(string Method);
+
+public record CreateAppealRequest(string Reason, string Description);
+
+public record AppealEvidenceDto(
+    Guid Id, string OriginalName, string MimeType, int SizeBytes, string UploaderName,
+    DateTimeOffset CreatedAt);
+
+public record AppealDto(
+    Guid Id, Guid BookingId, Guid OpenedBy, string OpenedByName, Guid AgainstId,
+    string AgainstName, string Reason, string Description, string Status,
+    string? Resolution, string? ResolutionNote, DateTimeOffset CreatedAt,
+    DateTimeOffset? ResolvedAt, IReadOnlyList<AppealEvidenceDto> Evidence);
+
+public record ResolveAppealRequest(string Outcome, string Note);
+
+public record ReputationDto(
+    Guid UserId, string FullName, string? AvatarUrl, double Rating, int ReviewCount,
+    int CompletedAsDriver, int CompletedAsPassenger, int CancelledAsDriver,
+    int CancelledAsPassenger, int TotalOrders, int CompletionRate, int Score,
+    string Tier, IReadOnlyList<string> Badges);
+
 public record LocationUpdateRequest(
     double Lat, double Lng, double? Heading = null, double? Speed = null, double? Accuracy = null);
 

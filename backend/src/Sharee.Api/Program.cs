@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.RateLimiting;
 using Dapper;
@@ -50,6 +50,11 @@ builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new Ve
     RootPath = config["Storage:VerificationRoot"] ?? "./data/verifications"
 }));
 builder.Services.AddSingleton<VerificationStorage>();
+builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new AppealStorageOptions
+{
+    RootPath = config["Storage:AppealRoot"] ?? "./data/appeals"
+}));
+builder.Services.AddSingleton<AppealStorage>();
 builder.Services.AddScoped<OtpService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<RefreshTokenService>();
@@ -308,6 +313,7 @@ app.MapRecurringEndpoints();
 app.MapTrackingEndpoints();
 app.MapBookingEndpoints();
 app.MapVerificationEndpoints();
+app.MapEscrowAppealEndpoints();
 app.MapPaymentEndpoints();
 app.MapPayOsEndpoints();
 app.MapTipEndpoints();

@@ -406,6 +406,59 @@ class Api {
     return VerificationInfo.fromJson(data);
   }
 
+  Future<void> setPaymentMethod(String bookingId, String method) async {
+    await _send('POST', '/api/bookings/$bookingId/payment-method',
+        body: {'method': method});
+  }
+
+  Future<EscrowInfo> escrow(String bookingId) async {
+    final data = await _send('GET', '/api/bookings/$bookingId/escrow')
+        as Map<String, dynamic>;
+    return EscrowInfo.fromJson(data);
+  }
+
+  Future<List<AppealInfo>> bookingAppeals(String bookingId) async {
+    final data = await _send('GET', '/api/bookings/$bookingId/appeals') as List<dynamic>;
+    return data.map((e) => AppealInfo.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<AppealInfo> createAppeal(
+    String bookingId, {
+    required String reason,
+    required String description,
+  }) async {
+    final data = await _send('POST', '/api/bookings/$bookingId/appeals', body: {
+      'reason': reason,
+      'description': description,
+    }) as Map<String, dynamic>;
+    return AppealInfo.fromJson(data);
+  }
+
+  Future<void> uploadAppealEvidence(
+      String appealId, Uint8List bytes, String filename) async {
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/api/appeals/$appealId/evidence'),
+    );
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+    final response = await http.Response.fromStream(
+        await _client.send(request).timeout(const Duration(seconds: 40)));
+    if (response.statusCode >= 400) {
+      String message = 'Lỗi ${response.statusCode}';
+      try {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        if (data is Map && data['error'] != null) message = data['error'].toString();
+      } catch (_) {}
+      throw ApiException(message, response.statusCode);
+    }
+  }
+
+  Future<ReputationInfo> reputation() async {
+    final data = await _send('GET', '/api/me/reputation') as Map<String, dynamic>;
+    return ReputationInfo.fromJson(data);
+  }
+
   Future<void> cancelBooking(String id) async {
     await _send('POST', '/api/bookings/$id/cancel', body: {});
   }

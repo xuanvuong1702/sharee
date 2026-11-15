@@ -19,7 +19,13 @@ public static class PayOsEndpoints
             {
                 provider = enabled ? "payos" : "mock",
                 enabled,
-                checkout = enabled ? "payos" : "mock"
+                checkout = enabled ? "payos" : "mock",
+                methods = new[]
+                {
+                    new { id = "bank", label = "Chuyển khoản ngân hàng", escrow = true },
+                    new { id = "wallet", label = "Ví điện tử (qua PayOS)", escrow = true },
+                    new { id = "cash", label = "Tiền mặt khi lên xe", escrow = false }
+                }
             });
         }).WithTags("Payments");
 

@@ -78,6 +78,7 @@ function Login({ onLogin }) {
 const NAV = [
   ['dashboard', 'Tổng quan', '▦'],
   ['verifications', 'Duyệt hồ sơ', '✓'],
+  ['appeals', 'Khiếu nại', '⚖'],
   ['reports', 'Báo cáo', '⚑'],
   ['refunds', 'Hoàn tiền', '↩'],
   ['users', 'Người dùng', '☺'],
@@ -119,6 +120,7 @@ function App() {
         </header>
         {tab === 'dashboard' && <Dashboard token={token} />}
         {tab === 'verifications' && <Verifications token={token} />}
+        {tab === 'appeals' && <Appeals token={token} />}
         {tab === 'reports' && <Reports token={token} />}
         {tab === 'refunds' && <Refunds token={token} />}
         {tab === 'users' && <Users token={token} />}
@@ -347,6 +349,122 @@ function Info({ label, value }) {
       <span>{label}</span>
       <b>{value || '—'}</b>
     </div>
+  );
+}
+
+function Appeals({ token }) {
+  const { data, loading, error, reload } = useLoad(() => api('/api/admin/appeals', { token }));
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [note, setNote] = useState('');
+  const [detailError, setDetailError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function open(id) {
+    setSelected(id); setDetail(null); setDetailError(''); setNote('');
+    try { setDetail(await api(`/api/admin/appeals/${id}`, { token })); }
+    catch (e) { setDetailError(e.message); }
+  }
+
+  async function resolve(outcome) {
+    if (note.trim().length < 5) { setDetailError('Nhập ghi chú xử lý (ít nhất 5 ký tự)'); return; }
+    setBusy(true);
+    try {
+      await api(`/api/admin/appeals/${selected}/resolve`, {
+        token, method: 'POST', body: { outcome, note },
+      });
+      await reload();
+      setSelected(null); setDetail(null);
+    } catch (e) { setDetailError(e.message); } finally { setBusy(false); }
+  }
+
+  async function viewEvidence(evidenceId) {
+    try {
+      const res = await fetch(`${API}/api/admin/appeals/${selected}/evidence/${evidenceId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Không mở được bằng chứng');
+      window.open(URL.createObjectURL(await res.blob()), '_blank', 'noopener');
+    } catch (e) { setDetailError(e.message); }
+  }
+
+  return (
+    <State loading={loading} error={error}>
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h3>Khiếu nại & tranh chấp</h3>
+            <p className="muted small">Tiền trong escrow bị khóa cho đến khi admin xử lý.</p>
+          </div>
+          <span className="pill">{data?.length || 0} khiếu nại</span>
+        </div>
+        <table>
+          <thead><tr><th>Booking</th><th>Bên mở</th><th>Bên bị khiếu nại</th><th>Lý do</th><th>Trạng thái</th><th /></tr></thead>
+          <tbody>
+            {(data || []).map((a) => (
+              <tr key={a.id}>
+                <td className="mono small">{a.bookingId.slice(0, 8)}</td>
+                <td><b>{a.openedByName}</b></td>
+                <td>{a.againstName}</td>
+                <td><b>{a.reason}</b><div className="muted small">{a.description}</div></td>
+                <td><Status value={a.status} /></td>
+                <td><button onClick={() => open(a.id)}>Xem</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {(!data || data.length === 0) && <div className="empty">Chưa có khiếu nại.</div>}
+      </div>
+
+      {selected && (
+        <div className="review-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setDetail(null); } }}>
+          <div className="review-panel">
+            <div className="review-head">
+              <div>
+                <div className="caption">HỒ SƠ KHIẾU NẠI</div>
+                <h2>{detail?.reason || 'Đang tải…'}</h2>
+              </div>
+              <button className="ghost" onClick={() => { setSelected(null); setDetail(null); }}>Đóng</button>
+            </div>
+            {detailError && <div className="error">{detailError}</div>}
+            {!detail ? <div className="muted">Đang tải…</div> : (
+              <>
+                <div className="review-grid">
+                  <Info label="Người mở" value={detail.openedByName} />
+                  <Info label="Bên bị khiếu nại" value={detail.againstName} />
+                  <Info label="Booking" value={detail.bookingId.slice(0, 8)} />
+                  <Info label="Trạng thái" value={detail.status} />
+                  <Info label="Ngày mở" value={dt(detail.createdAt)} />
+                  <Info label="Kết quả" value={detail.resolution || '—'} />
+                </div>
+                <h3>Mô tả</h3>
+                <p className="muted small">{detail.description}</p>
+                <h3>Bằng chứng ({detail.evidence?.length || 0})</h3>
+                <div className="doc-grid">
+                  {(detail.evidence || []).map((ev) => (
+                    <button key={ev.id} className="doc-card" onClick={() => viewEvidence(ev.id)}>
+                      <span className="doc-icon">{ev.mimeType === 'application/pdf' ? 'PDF' : 'IMG'}</span>
+                      <b>{ev.originalName}</b>
+                      <small>{ev.uploaderName} · {Math.max(1, Math.round(ev.sizeBytes / 1024))} KB</small>
+                    </button>
+                  ))}
+                </div>
+                {(detail.status === 'open' || detail.status === 'investigating') && (
+                  <>
+                    <label>Ghi chú xử lý</label>
+                    <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Căn cứ quyết định, bằng chứng đã kiểm tra..." />
+                    <div className="review-actions">
+                      <button className="primary" onClick={() => resolve('release')} disabled={busy}>Giải ngân cho tài xế</button>
+                      <button className="danger" onClick={() => resolve('refund')} disabled={busy}>Hoàn tiền cho khách</button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </State>
   );
 }
 

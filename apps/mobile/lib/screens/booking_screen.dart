@@ -7,6 +7,7 @@ import '../widgets/app_ui.dart';
 import '../widgets/payos_sheet.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
+import 'appeal_screen.dart';
 import 'tracking_screen.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -44,6 +45,60 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _pay() async {
+    final method = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(18, 4, 18, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Chọn phương thức thanh toán',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.account_balance_rounded, color: AppTheme.primary),
+              title: const Text('Chuyển khoản ngân hàng'),
+              subtitle: const Text('Tiền được giữ trong escrow đến khi hoàn tất'),
+              onTap: () => Navigator.pop(context, 'bank'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.wallet_rounded, color: AppTheme.primary),
+              title: const Text('Ví điện tử'),
+              subtitle: const Text('Thanh toán qua PayOS, bảo vệ bằng escrow'),
+              onTap: () => Navigator.pop(context, 'wallet'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.payments_rounded, color: AppTheme.success),
+              title: const Text('Tiền mặt khi lên xe'),
+              subtitle: const Text('Cần xác thực danh tính, trả trực tiếp cho tài xế'),
+              onTap: () => Navigator.pop(context, 'cash'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (method == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await AppScope.of(context).api.setPaymentMethod(widget.bookingId, method);
+      if (!mounted) return;
+      if (method == 'cash') {
+        setState(_load);
+        showInfo(context, 'Đã xác nhận thanh toán tiền mặt');
+        return;
+      }
+    } catch (e) {
+      if (mounted) showError(context, e);
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+    if (mounted) setState(() => _busy = false);
     if (_paymentProvider == 'payos') {
       await _payWithPayOs();
       return;
@@ -396,6 +451,16 @@ class _BookingScreenState extends State<BookingScreen> {
                       Navigator.of(context).push(appRoute(const ChatThreadsScreen())),
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                   label: const Text('Nhắn tin với tài xế'),
+                ),
+              ],
+              if (booking.status == 'confirmed' || booking.status == 'completed') ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    appRoute(AppealScreen(bookingId: booking.id)),
+                  ),
+                  icon: const Icon(Icons.gavel_rounded, size: 17),
+                  label: const Text('Khiếu nại / tranh chấp'),
                 ),
               ],
               if (booking.status == 'completed') ...[

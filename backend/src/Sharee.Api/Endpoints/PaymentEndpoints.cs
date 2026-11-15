@@ -61,6 +61,12 @@ public static class PaymentEndpoints
             await ledger.RecordAsync(conn, tx, "payment", "booking", id,
                 ("customer_receivable", 'D', booking.PriceTotal),
                 ("escrow", 'C', booking.PriceTotal));
+            await conn.ExecuteAsync("""
+                insert into escrow_holds (booking_id, amount, method, status)
+                values (@id, @amount,
+                        coalesce((select payment_method from bookings where id = @id), 'payos'), 'held')
+                on conflict (booking_id) do nothing
+                """, new { id, amount = booking.PriceTotal }, tx);
 
             await conn.ExecuteAsync("""
                 update bookings set status = 'confirmed', updated_at = now()

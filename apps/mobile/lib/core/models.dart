@@ -948,3 +948,134 @@ class VerificationInfo {
     return null;
   }
 }
+
+class EscrowInfo {
+  final String bookingId;
+  final int amount;
+  final String method;
+  final String status;
+
+  const EscrowInfo({
+    required this.bookingId,
+    required this.amount,
+    required this.method,
+    required this.status,
+  });
+
+  factory EscrowInfo.fromJson(Map<String, dynamic> json) => EscrowInfo(
+        bookingId: json['bookingId'] as String,
+        amount: (json['amount'] as num?)?.toInt() ?? 0,
+        method: json['method'] as String? ?? '',
+        status: json['status'] as String? ?? '',
+      );
+}
+
+class AppealEvidence {
+  final String id;
+  final String originalName;
+  final String mimeType;
+  final int sizeBytes;
+  final String uploaderName;
+
+  const AppealEvidence({
+    required this.id,
+    required this.originalName,
+    required this.mimeType,
+    required this.sizeBytes,
+    required this.uploaderName,
+  });
+
+  factory AppealEvidence.fromJson(Map<String, dynamic> json) => AppealEvidence(
+        id: json['id'] as String,
+        originalName: json['originalName'] as String? ?? '',
+        mimeType: json['mimeType'] as String? ?? '',
+        sizeBytes: (json['sizeBytes'] as num?)?.toInt() ?? 0,
+        uploaderName: json['uploaderName'] as String? ?? '',
+      );
+}
+
+class AppealInfo {
+  final String id;
+  final String bookingId;
+  final String openedByName;
+  final String againstName;
+  final String reason;
+  final String description;
+  final String status;
+  final String? resolution;
+  final String? resolutionNote;
+  final DateTime createdAt;
+  final List<AppealEvidence> evidence;
+
+  const AppealInfo({
+    required this.id,
+    required this.bookingId,
+    required this.openedByName,
+    required this.againstName,
+    required this.reason,
+    required this.description,
+    required this.status,
+    required this.resolution,
+    required this.resolutionNote,
+    required this.createdAt,
+    required this.evidence,
+  });
+
+  factory AppealInfo.fromJson(Map<String, dynamic> json) => AppealInfo(
+        id: json['id'] as String,
+        bookingId: json['bookingId'] as String,
+        openedByName: json['openedByName'] as String? ?? '',
+        againstName: json['againstName'] as String? ?? '',
+        reason: json['reason'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        status: json['status'] as String? ?? 'open',
+        resolution: json['resolution'] as String?,
+        resolutionNote: json['resolutionNote'] as String?,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        evidence: (json['evidence'] as List<dynamic>? ?? [])
+            .map((e) => AppealEvidence.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class ReputationInfo {
+  final String userId;
+  final String fullName;
+  final double rating;
+  final int reviewCount;
+  final int completedAsDriver;
+  final int completedAsPassenger;
+  final int totalOrders;
+  final int completionRate;
+  final int score;
+  final String tier;
+  final List<String> badges;
+
+  const ReputationInfo({
+    required this.userId,
+    required this.fullName,
+    required this.rating,
+    required this.reviewCount,
+    required this.completedAsDriver,
+    required this.completedAsPassenger,
+    required this.totalOrders,
+    required this.completionRate,
+    required this.score,
+    required this.tier,
+    required this.badges,
+  });
+
+  factory ReputationInfo.fromJson(Map<String, dynamic> json) => ReputationInfo(
+        userId: json['userId'] as String,
+        fullName: json['fullName'] as String? ?? '',
+        rating: (json['rating'] as num?)?.toDouble() ?? 0,
+        reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+        completedAsDriver: (json['completedAsDriver'] as num?)?.toInt() ?? 0,
+        completedAsPassenger: (json['completedAsPassenger'] as num?)?.toInt() ?? 0,
+        totalOrders: (json['totalOrders'] as num?)?.toInt() ?? 0,
+        completionRate: (json['completionRate'] as num?)?.toInt() ?? 0,
+        score: (json['score'] as num?)?.toInt() ?? 0,
+        tier: json['tier'] as String? ?? 'new',
+        badges: (json['badges'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      );
+}

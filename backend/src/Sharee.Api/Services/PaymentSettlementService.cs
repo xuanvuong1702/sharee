@@ -16,6 +16,7 @@ public sealed class PaymentSettlementService(Db db, LedgerService ledger)
         var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
             select p.id as payment_id, p.amount, p.status as payment_status,
                    b.id as booking_id, b.status as booking_status, b.price_total, b.seats,
+                   b.payment_method,
                    b.passenger_id, t.driver_id, t.origin_label, t.destination_label
             from payments p
             join bookings b on b.id = p.booking_id
@@ -65,6 +66,15 @@ public sealed class PaymentSettlementService(Db db, LedgerService ledger)
         await ledger.RecordAsync(conn, tx, "payment", "booking", (Guid)row.booking_id,
             ("customer_receivable", 'D', amount),
             ("escrow", 'C', amount));
+        await conn.ExecuteAsync("""
+            insert into escrow_holds (booking_id, amount, method, status)
+            values (@bookingId, @amount, @method, 'held')
+            on conflict (booking_id) do nothing
+            """, new
+        {
+            bookingId = (Guid)row.booking_id, amount,
+            method = (string?)row.payment_method ?? "payos"
+        }, tx);
 
         await conn.ExecuteAsync("""
             insert into conversations (booking_id) values (@bookingId)
