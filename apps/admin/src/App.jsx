@@ -178,7 +178,7 @@ function CommandPalette({ onClose, onRun }) {
         <div className="command-list">
           {items.map(([key, label, icon]) => (
             <button key={key} onClick={() => onRun(key)}>
-              <span className="command-icon">{icon}</span>
+              <span className="command-icon">→</span>
               <span>{label}</span>
               <span className="command-enter">↵</span>
             </button>

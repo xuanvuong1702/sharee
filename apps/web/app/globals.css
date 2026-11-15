@@ -371,7 +371,7 @@ h1, h2, h3, p { margin-top: 0; }
 .inspiration-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,26,51,0.02) 15%, rgba(7,26,51,0.82) 100%); }
 .inspiration-img-coast { background-image: url('/images/vietnam-road.jpg'); }
 .inspiration-img-hanoi { background-image: url('/images/hanoi.jpg'); }
-.inspiration-img-road { background-image: url('/images/road-trip.jpg'); }
+.inspiration-img-road { background-image: url('/images/vietnam-city.jpg'); }
 .inspiration-copy { padding: 20px; display: grid; gap: 5px; z-index: 1; }
 .inspiration-copy span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.72); }
 .inspiration-copy h3 { font-size: 20px; line-height: 1.2; letter-spacing: -0.5px; margin: 0; color: #fff; }
