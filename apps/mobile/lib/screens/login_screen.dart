@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(13),
                         ),
                         alignment: Alignment.center,
-                        child: const Text('R',
+                        child: const Text('S',
                             style: TextStyle(
                                 color: AppTheme.primary,
                                 fontSize: 22,
@@ -239,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Center(
-                    child: Text('Sharee 1.1.6 · made for learning',
+                    child: Text('Sharee 1.2.0 · made for learning',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45), fontSize: 9.5)),
                   ),

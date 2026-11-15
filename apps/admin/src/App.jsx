@@ -151,6 +151,7 @@ function State({ loading, error, children }) {
 
 function Dashboard({ token, onNavigate }) {
   const { data, loading, error } = useLoad(() => api('/api/admin/dashboard', { token }));
+  const audit = useLoad(() => api('/api/admin/audit', { token }));
   return (
     <State loading={loading} error={error}>
       <div className="kpis">
@@ -203,6 +204,27 @@ function Dashboard({ token, onNavigate }) {
           <div className="dashboard-note">
             <BadgeText>{data?.bookings ?? 0} booking · {data?.trips ?? 0} chuyến · {data?.dailyTickets ?? 0} vé Daily 24h</BadgeText>
           </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <div className="card-head">
+          <div>
+            <h3>Hoạt động gần đây</h3>
+            <p className="muted small">Audit log của duyệt hồ sơ, khiếu nại và thanh toán.</p>
+          </div>
+          <span className="pill">{audit.data?.length || 0} bản ghi</span>
+        </div>
+        <div className="activity-list">
+          {(audit.data || []).slice(0, 7).map((row) => (
+            <div className="activity-row" key={row.id}>
+              <span className="activity-dot" />
+              <b>{row.action}</b>
+              <span className="muted small">{row.actorName || 'Hệ thống'}</span>
+              <span className="activity-time">{dt(row.createdAt)}</span>
+            </div>
+          ))}
+          {(!audit.data || audit.data.length === 0) && <div className="empty">Chưa có hoạt động.</div>}
         </div>
       </div>
     </State>

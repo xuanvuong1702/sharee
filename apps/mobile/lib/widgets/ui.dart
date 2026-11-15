@@ -29,7 +29,7 @@ class BrandMark extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        'R',
+        'S',
         style: TextStyle(
           color: Colors.white,
           fontSize: size * 0.5,
