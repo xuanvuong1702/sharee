@@ -51,7 +51,7 @@ function Login({ onLogin }) {
   return (
     <div className="login-wrap">
       <div className="login-card">
-        <div className="brand"><span>R</span> Sharee Admin</div>
+        <div className="brand"><span>S</span> Sharee Admin</div>
         <h1>Đăng nhập vận hành</h1>
         <p className="muted">Dùng số admin demo <b>+84900000001</b></p>
         {step === 0 ? (
@@ -95,7 +95,7 @@ function App() {
   return (
     <div className="layout">
       <aside>
-        <div className="brand"><span>R</span> Sharee</div>
+        <div className="brand"><span>S</span> Sharee</div>
         <div className="caption">VẬN HÀNH</div>
         {NAV.map(([key, label, icon]) => (
           <button key={key} className={`nav ${tab === key ? 'on' : ''}`} onClick={() => setTab(key)}>
@@ -219,7 +219,7 @@ function Dashboard({ token, onNavigate }) {
           {(audit.data || []).slice(0, 7).map((row) => (
             <div className="activity-row" key={row.id}>
               <span className="activity-dot" />
-              <b>{row.action}</b>
+              <b>{actionLabel(row.action)}</b>
               <span className="muted small">{row.actorName || 'Hệ thống'}</span>
               <span className="activity-time">{dt(row.createdAt)}</span>
             </div>
@@ -233,6 +233,18 @@ function Dashboard({ token, onNavigate }) {
 
 function BadgeText({ children }) {
   return <span className="muted">{children}</span>;
+}
+
+function actionLabel(action) {
+  const labels = {
+    'verification.approve': 'Duyệt hồ sơ KYC',
+    'verification.reject': 'Từ chối hồ sơ KYC',
+    'verification.suspend': 'Tạm dừng tài xế',
+    'appeal.resolve': 'Xử lý khiếu nại',
+    'report.resolve': 'Xử lý báo cáo',
+    'refund.manual': 'Hoàn tiền thủ công',
+  };
+  return labels[action] || action;
 }
 
 function Kpi({ label, value, tone }) {
