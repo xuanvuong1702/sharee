@@ -380,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SectionHeader('Tuyến phổ biến'),
               SizedBox(
-                height: 126,
+                height: 148,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Hà Nội → Hải Phòng',
                       subtitle: '2 giờ 30 · 150.000đ',
                       icon: Icons.directions_car_filled_rounded,
-                      colors: const [Color(0xFF1F5EFF), Color(0xFF133B8F)],
+                      image: 'assets/images/coast.jpg',
                       onTap: () {
                         setState(() => _preset = 0);
                         _search();
@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Hà Nội → Nội Bài',
                       subtitle: '45 phút · 90.000đ',
                       icon: Icons.flight_takeoff_rounded,
-                      colors: const [Color(0xFF071A33), Color(0xFF1F5EFF)],
+                      image: 'assets/images/hanoi.jpg',
                       onTap: () {
                         setState(() => _preset = 1);
                         _search();
@@ -560,58 +560,80 @@ class _DateQuick extends StatelessWidget {
 class _PopularCard extends StatelessWidget {
   final String title;
   final String subtitle;
+  final String image;
   final IconData icon;
-  final List<Color> colors;
   final VoidCallback onTap;
 
   const _PopularCard({
     required this.title,
     required this.subtitle,
+    required this.image,
     required this.icon,
-    required this.colors,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 210,
-      child: AppCard(
-        onTap: onTap,
-        padding: const EdgeInsets.all(14),
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(9),
+      width: 220,
+      height: 142,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(image, fit: BoxFit.cover),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF071A33).withValues(alpha: 0.18),
+                      const Color(0xFF071A33).withValues(alpha: 0.88),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  child: Icon(icon, color: Colors.white, size: 16),
                 ),
-                const Spacer(),
-                const Icon(Icons.arrow_outward_rounded, color: Colors.white70, size: 16),
-              ],
-            ),
-            const Spacer(),
-            Text(title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 3),
-            Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 10.5)),
-          ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(icon, color: Colors.white, size: 16),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.arrow_outward_rounded,
+                            color: Colors.white70, size: 16),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 3),
+                    Text(subtitle,
+                        style: const TextStyle(color: Colors.white70, fontSize: 10.5)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

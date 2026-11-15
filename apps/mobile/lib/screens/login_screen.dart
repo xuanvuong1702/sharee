@@ -67,7 +67,24 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppTheme.primaryDark,
       body: Stack(
         children: [
-          Container(decoration: const BoxDecoration(gradient: AppTheme.gradient)),
+          Positioned.fill(
+            child: Image.asset('assets/images/coast.jpg', fit: BoxFit.cover),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF071A33).withValues(alpha: 0.78),
+                    const Color(0xFF071A33).withValues(alpha: 0.42),
+                    AppTheme.primaryDark.withValues(alpha: 0.88),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             right: -80,
             top: -40,
@@ -127,11 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Text('Bản demo',
+                        child: const Text('Đi chung an toàn',
                             style: TextStyle(
-                                color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                                color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
@@ -239,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Center(
-                    child: Text('Sharee 1.2.1 · made for learning',
+                    child: Text('Sharee 1.2.2',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45), fontSize: 9.5)),
                   ),
@@ -294,47 +311,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 13),
         PrimaryButton(label: 'Gửi mã OTP', loading: _busy, onPressed: _requestOtp),
-        const SizedBox(height: 17),
-        Row(
-          children: [
-            const Expanded(child: Divider()),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 9),
-              child: Text('Đăng nhập nhanh',
-                  style: TextStyle(
-                      fontSize: 9.5, color: AppTheme.muted, fontWeight: FontWeight.w600)),
-            ),
-            const Expanded(child: Divider()),
-          ],
-        ),
-        const SizedBox(height: 11),
-        Row(
-          children: [
-            Expanded(
-              child: _DemoAccount(
-                label: 'Hành khách',
-                name: 'Minh',
-                icon: Icons.person_outline_rounded,
-                onTap: () {
-                  _phone.text = '+84912345678';
-                  _requestOtp();
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _DemoAccount(
-                label: 'Tài xế',
-                name: 'Trung Kiên',
-                icon: Icons.directions_car_outlined,
-                onTap: () {
-                  _phone.text = '+84912000001';
-                  _requestOtp();
-                },
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: 16),
         const Row(
           children: [
@@ -410,67 +386,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: const Text('Không nhận được mã? Gửi lại'),
         ),
       ],
-    );
-  }
-}
-
-class _DemoAccount extends StatelessWidget {
-  final String label;
-  final String name;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _DemoAccount({
-    required this.label,
-    required this.name,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFF8FAFD),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.line),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 27,
-                height: 27,
-                decoration: BoxDecoration(
-                  color: AppTheme.primarySoft,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 14, color: AppTheme.primary),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label,
-                        style: const TextStyle(
-                            fontSize: 8, color: AppTheme.muted, fontWeight: FontWeight.w600)),
-                    Text(name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
