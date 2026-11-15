@@ -227,12 +227,19 @@ public static class BookingEndpoints
                 {
                     error = "Booking đang có khiếu nại mở hoặc tiền đã được giải ngân, không thể huỷ."
                 });
+            var paymentMethod = await conn.ExecuteScalarAsync<string>(
+                "select payment_method from bookings where id = @id", new { id });
             await using var tx = await conn.BeginTransactionAsync(ct);
 
-            await conn.ExecuteAsync("""
+            var cancelled = await conn.ExecuteAsync("""
                 update bookings set status = @newStatus, updated_at = now()
                 where id = @id and status in ('pending_driver','pending_payment','confirmed')
                 """, new { id, newStatus }, tx);
+            if (cancelled == 0)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Conflict(new { error = "Booking đã thay đổi trạng thái" });
+            }
 
             await conn.ExecuteAsync("""
                 update trips set seats_available = least(seats_total, seats_available + @seats),
@@ -245,9 +252,10 @@ public static class BookingEndpoints
             {
                 await conn.ExecuteAsync(
                     "update payments set status = 'refunded' where booking_id = @id", new { id }, tx);
-                await ledger.RecordAsync(conn, tx, "refund", "booking", id,
-                    ("escrow", 'D', refundAmount),
-                    ("customer_receivable", 'C', refundAmount));
+                if (paymentMethod != "cash")
+                    await ledger.RecordAsync(conn, tx, "refund", "booking", id,
+                        ("escrow", 'D', refundAmount),
+                        ("customer_receivable", 'C', refundAmount));
             }
             await conn.ExecuteAsync("""
                 update escrow_holds set status = 'refunded', released_at = now(), updated_at = now()

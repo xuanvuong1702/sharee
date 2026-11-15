@@ -213,7 +213,7 @@ public static class EscrowAppealEndpoints
             await using var tx = await conn.BeginTransactionAsync(ct);
             await conn.ExecuteAsync("""
                 update appeals set status = 'cancelled', updated_at = now(), resolved_at = now()
-                where id = @appealId
+                where id = @appealId and status in ('open','investigating')
                 """, new { appealId }, tx);
             await conn.ExecuteAsync("""
                 update escrow_holds set status = case when method = 'cash' then 'cash_pending' else 'held' end,
@@ -299,12 +299,17 @@ public static class EscrowAppealEndpoints
 
             await using var tx = await conn.BeginTransactionAsync(ct);
             var resolution = outcome == "release" ? "released" : "refunded";
-            await conn.ExecuteAsync("""
+            var affected = await conn.ExecuteAsync("""
                 update appeals set status = 'resolved', resolution = @outcome,
                     resolution_note = @note, resolved_by = @adminId,
                     updated_at = now(), resolved_at = now()
-                where id = @appealId
+                where id = @appealId and status in ('open','investigating')
                 """, new { appealId, outcome, note, adminId = http.User.GetUserId() }, tx);
+            if (affected == 0)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Conflict(new { error = "Khiếu nại đã được xử lý bởi người khác" });
+            }
             await conn.ExecuteAsync("""
                 update escrow_holds set status = @resolution, released_at = now(), updated_at = now()
                 where booking_id = @bookingId
