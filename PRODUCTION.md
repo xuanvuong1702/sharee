@@ -23,12 +23,13 @@ map tile, ký số store và kiểm thử tải** — không còn mock trong cod
 | FCM/APNs | ✅ code, ⚠️ credentials | FCM HTTP v1 + APNs ES256; device token API; chưa gửi thật do thiếu Firebase/APNs key |
 | Realtime chat/noti | ✅ | SignalR + Redis backplane; chat persisted; notification badge |
 | Tracking | ✅ | Map, GPS, ETA, trạng thái; OSM demo tiles |
+| Tip tài xế | ✅ | VietQR/NAPAS 247, tiền mặt, xác nhận, notification, earnings |
 | Bản đồ | ⚠️ | Tile URL cấu hình được; self-host stack có script; import Việt Nam chưa hoàn tất do dung lượng |
 | Android SDK | ✅ | SDK chuẩn mới tại `C:\Android\sdk`; debug + release APK build thành công |
 | APK release | ✅ ký local | `app-release.apk` ký upload keystore; chưa phát hành store |
 | CI | ✅ | GitHub Actions build/test/audit/Docker |
 | Security headers / CORS / rate limit | ✅ | Kiểm chứng header, CORS, 429 |
-| Migrations | ✅ | Advisory lock, seed gating, 9 migrations |
+| Migrations | ✅ | Advisory lock, seed gating, 10 migrations |
 | Backup/HA/load test | ⚠️ ngoài phạm vi | Chưa triển khai/đo |
 | Pháp lý / vận hành | — | Bỏ qua theo yêu cầu |
 
@@ -121,8 +122,10 @@ Sau deploy:
 
 ## Bằng chứng kiểm thử hiện tại
 
-- `dotnet test`: 6/6 pass; `flutter test`: 2/2 pass.
+- `dotnet test`: 8/8 pass; `flutter test`: 2/2 pass.
 - PayOS fake gateway: checkout + webhook + settlement pass; sai chữ ký 400.
+- Tip: tạo QR/tiền mặt, thông báo `tip.received`, khách báo đã chuyển, tài xế xác nhận,
+  earnings và VietQR payload đã kiểm tra end-to-end.
 - FCM device register: DB ghi nhận token; push disabled khi thiếu credential.
 - Production-mode fresh DB: 0 users/trips, Swagger 404, health ready.
 - APK debug/release build thành công; release ký cert `CN=Sharee`.
