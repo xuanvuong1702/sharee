@@ -273,9 +273,9 @@ public static partial class VerificationEndpoints
                 return Results.Conflict(new { error = "Hồ sơ chưa đủ giấy tờ bắt buộc" });
 
             var expiries = new List<DateOnly>();
-            if (ToDateOnly(user.id_expiry) is { } idExp) expiries.Add(idExp);
-            if (ToDateOnly(user.license_expiry) is { } licExp) expiries.Add(licExp);
-            if (ToDateOnly(user.insurance_expiry) is { } insExp) expiries.Add(insExp);
+            if (ToDateOnly((object?)user.id_expiry) is { } idExp) expiries.Add(idExp);
+            if (ToDateOnly((object?)user.license_expiry) is { } licExp) expiries.Add(licExp);
+            if (ToDateOnly((object?)user.insurance_expiry) is { } insExp) expiries.Add(insExp);
             if (expiries.Count == 0)
                 return Results.BadRequest(new { error = "Thiếu ngày hết hạn giấy tờ" });
             var maxExpiry = expiries.Min();
@@ -376,11 +376,11 @@ public static partial class VerificationEndpoints
             DtoOrNull(user.verification_submitted_at),
             DtoOrNull(user.verification_reviewed_at),
             (string?)user.verification_rejection_reason, (string?)user.legal_name,
-            ToDateOnly(user.date_of_birth), (string?)user.id_number,
-            ToDateOnly(user.id_issued_at), ToDateOnly(user.id_expiry),
+            ToDateOnly((object?)user.date_of_birth), (string?)user.id_number,
+            ToDateOnly((object?)user.id_issued_at), ToDateOnly((object?)user.id_expiry),
             (string?)user.license_number, (string?)user.license_class,
-            ToDateOnly(user.license_expiry), (string?)user.vehicle_registration,
-            ToDateOnly(user.insurance_expiry),
+            ToDateOnly((object?)user.license_expiry), (string?)user.vehicle_registration,
+            ToDateOnly((object?)user.insurance_expiry),
             docs.Select(MapDocument).ToList(), VerificationTypes.RequiredForDriver);
     }
 
@@ -438,13 +438,13 @@ public static partial class VerificationEndpoints
     private static string? ValidateStoredProfile(dynamic user)
     {
         var legalName = (string?)user.legal_name;
-        var dob = ToDateOnly(user.date_of_birth);
+        var dob = ToDateOnly((object?)user.date_of_birth);
         var idNumber = (string?)user.id_number;
-        var idExpiry = ToDateOnly(user.id_expiry);
+        var idExpiry = ToDateOnly((object?)user.id_expiry);
         var license = (string?)user.license_number;
-        var licenseExpiry = ToDateOnly(user.license_expiry);
+        var licenseExpiry = ToDateOnly((object?)user.license_expiry);
         var registration = (string?)user.vehicle_registration;
-        var insurance = ToDateOnly(user.insurance_expiry);
+        var insurance = ToDateOnly((object?)user.insurance_expiry);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         if (string.IsNullOrWhiteSpace(legalName) || legalName.Length is < 2 or > 100)
             return "Họ tên pháp lý không hợp lệ";
