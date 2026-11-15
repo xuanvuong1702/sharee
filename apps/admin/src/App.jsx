@@ -118,7 +118,7 @@ function App() {
           </div>
           <div className="pill">Admin</div>
         </header>
-        {tab === 'dashboard' && <Dashboard token={token} />}
+        {tab === 'dashboard' && <Dashboard token={token} onNavigate={setTab} />}
         {tab === 'verifications' && <Verifications token={token} />}
         {tab === 'appeals' && <Appeals token={token} />}
         {tab === 'reports' && <Reports token={token} />}
@@ -149,30 +149,68 @@ function State({ loading, error, children }) {
   return children;
 }
 
-function Dashboard({ token }) {
+function Dashboard({ token, onNavigate }) {
   const { data, loading, error } = useLoad(() => api('/api/admin/dashboard', { token }));
   return (
     <State loading={loading} error={error}>
       <div className="kpis">
         <Kpi label="Người dùng" value={data?.users} />
-        <Kpi label="Chuyến" value={data?.trips} />
-        <Kpi label="Booking" value={data?.bookings} />
         <Kpi label="GMV" value={money(data?.gmv)} />
+        <Kpi label="Escrow đang giữ" value={money(data?.escrowHeld)} tone="accent" />
+        <Kpi label="Khiếu nại mở" value={data?.openAppeals} tone="warn" />
+        <Kpi label="Chờ duyệt KYC" value={data?.pendingVerifications} tone="warn" />
         <Kpi label="Báo cáo mở" value={data?.openReports} tone="warn" />
-        <Kpi label="Chờ duyệt" value={data?.pendingVerifications} tone="warn" />
+        <Kpi label="Tài xế đã KYC" value={data?.verifiedDrivers} tone="good" />
         <Kpi label="Chuyến đang mở" value={data?.activeTrips} />
-        <Kpi label="Vé Daily 24h" value={data?.dailyTickets} />
       </div>
-      <div className="card">
-        <h3>Việc cần xử lý hôm nay</h3>
-        <ul className="todo">
-          <li><b>{data?.pendingVerifications ?? 0}</b> hồ sơ chờ duyệt</li>
-          <li><b>{data?.openReports ?? 0}</b> báo cáo sự cố</li>
-          <li>Đối soát thanh toán chạy tự động 02:00</li>
-        </ul>
+
+      <div className="dashboard-grid">
+        <div className="card">
+          <div className="card-head">
+            <div>
+              <h3>Việc cần xử lý</h3>
+              <p className="muted small">Ưu tiên hồ sơ và tranh chấp ảnh hưởng đến giao dịch.</p>
+            </div>
+            <span className="pill">{Number(data?.pendingVerifications || 0) + Number(data?.openAppeals || 0)} việc</span>
+          </div>
+          <div className="queue-list">
+            <button className="queue-item" onClick={() => onNavigate('verifications')}>
+              <span className="queue-icon">✓</span>
+              <span><b>{data?.pendingVerifications ?? 0} hồ sơ KYC</b><small>Kiểm tra CCCD, GPLX và giấy tờ xe</small></span>
+              <span className="queue-arrow">→</span>
+            </button>
+            <button className="queue-item" onClick={() => onNavigate('appeals')}>
+              <span className="queue-icon warn">⚖</span>
+              <span><b>{data?.openAppeals ?? 0} khiếu nại mở</b><small>Tiền escrow đang bị khóa chờ xử lý</small></span>
+              <span className="queue-arrow">→</span>
+            </button>
+            <button className="queue-item" onClick={() => onNavigate('reports')}>
+              <span className="queue-icon">⚑</span>
+              <span><b>{data?.openReports ?? 0} báo cáo sự cố</b><small>Phản hồi từ hành khách và tài xế</small></span>
+              <span className="queue-arrow">→</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3>Sức khỏe vận hành</h3>
+          <div className="health-list">
+            <div><span className="health-dot ok" /><b>API</b><small>Đang hoạt động</small></div>
+            <div><span className="health-dot ok" /><b>Thanh toán</b><small>Mock · cho phép thử nghiệm</small></div>
+            <div><span className="health-dot ok" /><b>Escrow</b><small>{money(data?.escrowHeld)} đang được bảo vệ</small></div>
+            <div><span className="health-dot" /><b>Đối soát</b><small>Chạy tự động 02:00 hằng ngày</small></div>
+          </div>
+          <div className="dashboard-note">
+            <BadgeText>{data?.bookings ?? 0} booking · {data?.trips ?? 0} chuyến · {data?.dailyTickets ?? 0} vé Daily 24h</BadgeText>
+          </div>
+        </div>
       </div>
     </State>
   );
+}
+
+function BadgeText({ children }) {
+  return <span className="muted">{children}</span>;
 }
 
 function Kpi({ label, value, tone }) {

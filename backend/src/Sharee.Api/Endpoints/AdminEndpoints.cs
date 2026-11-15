@@ -22,7 +22,10 @@ public static class AdminEndpoints
                 await conn.ExecuteScalarAsync<int>("select count(*) from users where verification_status = 'pending'"),
                 await conn.ExecuteScalarAsync<long>("select coalesce(sum(price_total),0) from bookings where status in ('confirmed','completed')"),
                 await conn.ExecuteScalarAsync<int>("select count(*) from trips where status = 'open' and departure_time > now()"),
-                await conn.ExecuteScalarAsync<int>("select count(*) from e_tickets where created_at > now() - interval '1 day'"));
+                await conn.ExecuteScalarAsync<int>("select count(*) from e_tickets where created_at > now() - interval '1 day'"),
+                await conn.ExecuteScalarAsync<long>("select coalesce(sum(amount),0) from escrow_holds where status in ('held','cash_pending','disputed')"),
+                await conn.ExecuteScalarAsync<int>("select count(*) from appeals where status in ('open','investigating')"),
+                await conn.ExecuteScalarAsync<int>("select count(*) from users where verified_level >= 3 and verification_status = 'approved'"));
             return Results.Ok(dto);
         });
 

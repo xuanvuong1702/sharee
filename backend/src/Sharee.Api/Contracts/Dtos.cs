@@ -105,7 +105,8 @@ public record ValidateTicketRequest(string Code);
 
 public record AdminDashboardDto(
     int Users, int Trips, int Bookings, int OpenReports, int PendingVerifications,
-    long Gmv, int ActiveTrips, int DailyTickets);
+    long Gmv, int ActiveTrips, int DailyTickets, long EscrowHeld, int OpenAppeals,
+    int VerifiedDrivers);
 
 public record VerificationDto(
     Guid Id, Guid UserId, string UserName, string Phone, string Type, string Status,

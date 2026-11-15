@@ -20,7 +20,7 @@ export default function HomePage() {
             <h1>
               Đi chung một chuyến,
               <br />
-              <span>an tâm trọn hành trình.</span>
+              <span>an tâm mỗi chuyến đi.</span>
             </h1>
             <p>
               Đặt ghế nhanh, tài xế KYC, tiền được giữ trong escrow và theo dõi trực tiếp
@@ -76,7 +76,7 @@ export default function HomePage() {
               href={`/search/?route=${route.id}&fromLat=${route.fromLat}&fromLng=${route.fromLng}&toLat=${route.toLat}&toLng=${route.toLng}&fromLabel=${encodeURIComponent(route.fromLabel)}&toLabel=${encodeURIComponent(route.toLabel)}&seats=1`}
             >
               <Card className="route-card">
-                <div className="route-icon">{index === 0 ? "🚗" : "✈"}</div>
+                <div className="route-icon">{index === 0 ? "→" : "✈"}</div>
                 <Badge tone={index === 0 ? "blue" : "green"}>
                   {index === 0 ? "Phổ biến" : "Sân bay"}
                 </Badge>
