@@ -347,5 +347,5 @@ public static partial class TipEndpoints
     }
 
     private static string FormatMoney(int amount)
-        => amount.ToString("N0", CultureInfo.InvariantCulture) + "đ";
+        => amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) + "đ";
 }

@@ -13,6 +13,19 @@ class TipAccountScreen extends StatefulWidget {
 }
 
 class _TipAccountScreenState extends State<TipAccountScreen> {
+  static const _banks = [
+    ('Vietcombank', '970436'),
+    ('BIDV', '970418'),
+    ('VietinBank', '970415'),
+    ('Agribank', '970405'),
+    ('Techcombank', '970407'),
+    ('MB Bank', '970422'),
+    ('ACB', '970416'),
+    ('VPBank', '970432'),
+    ('TPBank', '970423'),
+    ('Sacombank', '970403'),
+  ];
+
   final _form = GlobalKey<FormState>();
   final _bin = TextEditingController();
   final _bankName = TextEditingController();
@@ -189,6 +202,23 @@ class _TipAccountScreenState extends State<TipAccountScreen> {
                             }
                             return null;
                           },
+                        ),
+                        const SizedBox(height: 7),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final bank in _banks)
+                              ActionChip(
+                                label: Text(bank.$1, style: const TextStyle(fontSize: 10)),
+                                onPressed: () => setState(() {
+                                  _bin.text = bank.$2;
+                                  if (_bankName.text.trim().isEmpty) {
+                                    _bankName.text = bank.$1;
+                                  }
+                                }),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 9),
                         TextFormField(

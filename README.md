@@ -202,6 +202,31 @@ PayOS__CancelUrl=https://app.example.com/payment/cancel
 - Demo dùng mock; production tự chặn mock.
 - Kiểm thử gateway giả: `node tools/uicheck/payos-check.mjs`.
 
+## Tip / donate cho tài xế
+
+- Tài xế cấu hình **BIN ngân hàng + số tài khoản + tên chủ tài khoản** trong Hồ sơ → **Nhận tip**.
+- QR được sinh trực tiếp theo chuẩn **VietQR/NAPAS 247**, không phụ thuộc dịch vụ ảnh QR bên thứ ba.
+- Hành khách có thể tip sau khi chuyến **hoàn thành**:
+  - **Chuyển khoản/QR**: tài xế nhận thông báo, khách báo đã chuyển, tài xế xác nhận;
+  - **Tiền mặt**: ghi nhận ngay và thông báo cho tài xế.
+- Thông báo realtime qua SignalR + push (nếu cấu hình FCM/APNs).
+- Thu nhập tip hiển thị trong **Thu nhập** và **Tip đã nhận**.
+
+API chính:
+```text
+GET  /api/me/tip-account
+PUT  /api/me/tip-account
+GET  /api/bookings/{id}/tip-info
+POST /api/bookings/{id}/tips
+POST /api/tips/{id}/sent
+POST /api/tips/{id}/confirm
+POST /api/tips/{id}/cancel
+GET  /api/me/tips
+```
+
+Tip chuyển khoản/tiền mặt đi **trực tiếp** giữa khách và tài xế, Sharee chỉ ghi nhận và thông báo.
+Muốn thu tiền qua nền tảng (PayOS) thì cần bổ sung luồng thanh toán/đối soát riêng.
+
 ## Push FCM / APNs
 
 - Backend: FCM HTTP v1 + APNs HTTP/2, device token API, outbox gửi push sau notification.
