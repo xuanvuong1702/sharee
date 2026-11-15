@@ -74,5 +74,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sharee cần quyền truy cập ảnh để tải lên CCCD, GPLX và giấy tờ xe phục vụ xác thực tài xế.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Sharee cần quyền camera để chụp ảnh giấy tờ và selfie xác thực tài xế.</string>
 </dict>
 </plist>

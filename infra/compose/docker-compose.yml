@@ -56,6 +56,9 @@ services:
       Seed__DemoData: "true"
       Payments__AllowMock: "true"
       Swagger__Enabled: "true"
+      Storage__VerificationRoot: /data/verifications
+    volumes:
+      - sharee-verification:/data/verifications
     ports:
       - "8080:8080"
 
@@ -94,4 +97,5 @@ services:
 
 volumes:
   sharee-pgdata:
+  sharee-verification:
 

@@ -10,6 +10,7 @@ import 'notifications_screen.dart';
 import 'recurring_trips_screen.dart';
 import 'tip_account_screen.dart';
 import 'tips_received_screen.dart';
+import 'verification_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -209,9 +210,9 @@ class ProfileScreen extends StatelessWidget {
                       color: const Color(0xFF7C3AED),
                       background: const Color(0xFFF3E8FF),
                       title: 'Xác minh danh tính',
-                      subtitle: 'Cấp ${user.verifiedLevel}/3 · CCCD, GPLX',
+                      subtitle: 'CCCD, GPLX, giấy tờ xe và selfie',
                       onTap: () =>
-                          showInfo(context, 'Chức năng xác minh sẽ mở trong bản cập nhật'),
+                          Navigator.of(context).push(appRoute(const VerificationScreen())),
                     ),
                     _MenuTile(
                       icon: Icons.notifications_rounded,

@@ -184,34 +184,169 @@ function Kpi({ label, value, tone }) {
 
 function Verifications({ token }) {
   const { data, loading, error, reload } = useLoad(() => api('/api/admin/verifications', { token }));
-  async function act(id, action) {
-    await api(`/api/admin/verifications/${id}/${action}`, { token, method: 'POST', body: {} });
-    reload();
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [detailError, setDetailError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState('');
+
+  async function open(userId) {
+    setSelected(userId); setDetail(null); setDetailError(''); setReason('');
+    try { setDetail(await api(`/api/admin/verifications/${userId}`, { token })); }
+    catch (e) { setDetailError(e.message); }
   }
+
+  async function approve() {
+    if (!detail) return;
+    setBusy(true);
+    try {
+      await api(`/api/admin/verifications/${selected}/approve`, { token, method: 'POST', body: { expiresAt: null } });
+      await reload();
+      setSelected(null); setDetail(null);
+    } catch (e) { setDetailError(e.message); } finally { setBusy(false); }
+  }
+
+  async function reject() {
+    if (!detail) return;
+    if (reason.trim().length < 5) { setDetailError('Nhập lý do từ chối (ít nhất 5 ký tự)'); return; }
+    setBusy(true);
+    try {
+      await api(`/api/admin/verifications/${selected}/reject`, { token, method: 'POST', body: { reason } });
+      await reload();
+      setSelected(null); setDetail(null);
+    } catch (e) { setDetailError(e.message); } finally { setBusy(false); }
+  }
+
+  async function suspend() {
+    if (!detail || reason.trim().length < 5) { setDetailError('Nhập lý do tạm dừng'); return; }
+    setBusy(true);
+    try {
+      await api(`/api/admin/verifications/${selected}/suspend`, { token, method: 'POST', body: { reason } });
+      await reload();
+      setSelected(null); setDetail(null);
+    } catch (e) { setDetailError(e.message); } finally { setBusy(false); }
+  }
+
+  async function viewDocument(docId) {
+    try {
+      const res = await fetch(`${API}/api/admin/verifications/${selected}/documents/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Không mở được tài liệu');
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+    } catch (e) { setDetailError(e.message); }
+  }
+
   return (
     <State loading={loading} error={error}>
       <div className="card">
+        <div className="card-head">
+          <div>
+            <h3>Hồ sơ xác thực tài xế</h3>
+            <p className="muted small">Kiểm tra CCCD, GPLX, giấy tờ xe và selfie trước khi duyệt.</p>
+          </div>
+          <span className="pill">{data?.length || 0} hồ sơ</span>
+        </div>
         <table>
-          <thead><tr><th>Người dùng</th><th>Loại</th><th>Trạng thái</th><th>Gửi lúc</th><th /></tr></thead>
+          <thead><tr><th>Tài xế</th><th>Hồ sơ</th><th>Giấy tờ</th><th>Trạng thái</th><th>Gửi lúc</th><th /></tr></thead>
           <tbody>
             {(data || []).map((v) => (
-              <tr key={v.id}>
-                <td><b>{v.userName}</b><div className="muted small">{v.phone}</div></td>
-                <td>{v.type.toUpperCase()}</td>
-                <td><Status value={v.status} /></td>
-                <td className="muted">{dt(v.createdAt)}</td>
-                <td className="actions">
-                  {v.status === 'pending' && <>
-                    <button onClick={() => act(v.id, 'approve')}>Duyệt</button>
-                    <button className="danger" onClick={() => act(v.id, 'reject')}>Từ chối</button>
-                  </>}
+              <tr key={v.userId}>
+                <td><b>{v.fullName}</b><div className="muted small">{v.phone}</div></td>
+                <td>
+                  <div className="small">{v.legalName || '—'}</div>
+                  <div className="muted small mono">CCCD {v.idNumber || '—'} · GPLX {v.licenseNumber || '—'}</div>
                 </td>
+                <td>{v.documentCount}/7</td>
+                <td><Status value={v.status} /></td>
+                <td className="muted small">{dt(v.submittedAt)}</td>
+                <td><button onClick={() => open(v.userId)}>Xem hồ sơ</button></td>
               </tr>
             ))}
           </tbody>
         </table>
+        {(!data || data.length === 0) && <div className="empty">Chưa có hồ sơ xác thực.</div>}
       </div>
+
+      {selected && (
+        <div className="review-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setDetail(null); } }}>
+          <div className="review-panel">
+            <div className="review-head">
+              <div>
+                <div className="caption">HỒ SƠ XÁC THỰC</div>
+                <h2>{detail?.legalName || 'Đang tải…'}</h2>
+              </div>
+              <button className="ghost" onClick={() => { setSelected(null); setDetail(null); }}>Đóng</button>
+            </div>
+            {detailError && <div className="error">{detailError}</div>}
+            {!detail ? <div className="muted">Đang tải hồ sơ…</div> : (
+              <>
+                <div className="review-grid">
+                  <Info label="Họ tên pháp lý" value={detail.legalName} />
+                  <Info label="Ngày sinh" value={detail.dateOfBirth} />
+                  <Info label="Số CCCD" value={detail.idNumber} />
+                  <Info label="Ngày cấp / hết hạn" value={`${detail.idIssuedAt || '—'} → ${detail.idExpiry || '—'}`} />
+                  <Info label="Số GPLX" value={detail.licenseNumber} />
+                  <Info label="Hạng GPLX" value={detail.licenseClass} />
+                  <Info label="GPLX hết hạn" value={detail.licenseExpiry} />
+                  <Info label="Đăng ký xe" value={detail.vehicleRegistration} />
+                  <Info label="Bảo hiểm hết hạn" value={detail.insuranceExpiry} />
+                  <Info label="Trạng thái" value={detail.status} />
+                  <Info label="Xác thực đến" value={detail.expiresAt ? dt(detail.expiresAt) : '—'} />
+                  <Info label="Gửi lúc" value={detail.submittedAt ? dt(detail.submittedAt) : '—'} />
+                </div>
+
+                <h3>Giấy tờ ({detail.documents?.length || 0}/7)</h3>
+                <div className="doc-grid">
+                  {(detail.documents || []).map((doc) => (
+                    <button key={doc.id} className="doc-card" onClick={() => viewDocument(doc.id)}>
+                      <span className="doc-icon">{doc.mimeType === 'application/pdf' ? 'PDF' : 'IMG'}</span>
+                      <b>{DOC_LABELS[doc.type] || doc.type}</b>
+                      <small>{doc.originalName}</small>
+                      <small className="muted">{Math.round(doc.sizeBytes / 1024)} KB</small>
+                    </button>
+                  ))}
+                </div>
+                {detail.status === 'pending' && (
+                  <>
+                    <label>Lý do từ chối / tạm dừng</label>
+                    <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: Ảnh CCCD bị mờ, không đọc được số..." />
+                    <div className="review-actions">
+                      <button className="primary" onClick={approve} disabled={busy}>{busy ? 'Đang xử lý…' : 'Duyệt hồ sơ'}</button>
+                      <button className="danger" onClick={reject} disabled={busy}>Từ chối</button>
+                      <button className="ghost" onClick={suspend} disabled={busy}>Tạm dừng</button>
+                    </div>
+                  </>
+                )}
+                {detail.status !== 'pending' && detail.status !== 'approved' && (
+                  <div className="error">Hồ sơ không ở trạng thái chờ duyệt.</div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </State>
+  );
+}
+
+const DOC_LABELS = {
+  id_front: 'CCCD mặt trước',
+  id_back: 'CCCD mặt sau',
+  license_front: 'GPLX mặt trước',
+  license_back: 'GPLX mặt sau',
+  vehicle_registration: 'Đăng ký xe',
+  insurance: 'Bảo hiểm xe',
+  selfie: 'Ảnh selfie',
+};
+
+function Info({ label, value }) {
+  return (
+    <div className="info">
+      <span>{label}</span>
+      <b>{value || '—'}</b>
+    </div>
   );
 }
 

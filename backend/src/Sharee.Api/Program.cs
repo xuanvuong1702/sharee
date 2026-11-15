@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Threading.RateLimiting;
 using Dapper;
@@ -41,10 +41,15 @@ if (string.IsNullOrWhiteSpace(connectionString))
     connectionString = "Host=localhost;Port=5432;Database=sharee;Username=sharee;Password=sharee";
 }
 
-builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 2 * 1024 * 1024);
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 12 * 1024 * 1024);
 builder.Services.AddSingleton(NpgsqlDataSource.Create(connectionString));
 builder.Services.AddSingleton<Db>();
 builder.Services.AddSingleton<Migrator>();
+builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new VerificationStorageOptions
+{
+    RootPath = config["Storage:VerificationRoot"] ?? "./data/verifications"
+}));
+builder.Services.AddSingleton<VerificationStorage>();
 builder.Services.AddScoped<OtpService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<RefreshTokenService>();
@@ -302,6 +307,7 @@ app.MapTripEndpoints();
 app.MapRecurringEndpoints();
 app.MapTrackingEndpoints();
 app.MapBookingEndpoints();
+app.MapVerificationEndpoints();
 app.MapPaymentEndpoints();
 app.MapPayOsEndpoints();
 app.MapTipEndpoints();

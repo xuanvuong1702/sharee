@@ -106,3 +106,30 @@ td b { font-weight: 800; }
   main { max-width: calc(100vw - 72px); padding: 20px; }
   .kpis { grid-template-columns: repeat(2, 1fr); }
 }
+
+.card-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 12px; }
+.card-head h3 { margin: 0 0 2px; }
+.card-head p { margin: 0; }
+.empty { padding: 28px; text-align: center; color: var(--muted); font-size: 12px; }
+.review-overlay { position: fixed; inset: 0; background: rgba(7, 21, 44, 0.55); backdrop-filter: blur(4px); z-index: 50; display: flex; justify-content: flex-end; }
+.review-panel { width: min(720px, 100%); height: 100%; overflow: auto; background: #fff; padding: 24px; box-shadow: -20px 0 60px rgba(7,21,44,0.25); }
+.review-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.review-head h2 { margin: 3px 0 0; }
+.review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 22px; }
+.info { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; }
+.info span { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.info b { display: block; margin-top: 3px; font-size: 12px; word-break: break-word; }
+.doc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0 18px; }
+.doc-card { text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; display: grid; gap: 2px; cursor: pointer; }
+.doc-card:hover { border-color: var(--primary); }
+.doc-icon { font-size: 10px; font-weight: 900; color: var(--primary); }
+.doc-card b { font-size: 11.5px; }
+.doc-card small { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.review-panel label { display: block; margin: 10px 0 5px; font-size: 11px; font-weight: 800; }
+.review-panel textarea { width: 100%; min-height: 74px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; }
+.review-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.review-actions button { padding: 10px 14px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-weight: 800; cursor: pointer; }
+.review-actions .primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.review-actions .danger { background: #fdecec; color: var(--danger); border-color: transparent; }
+.review-actions .ghost { color: var(--muted); }
+@media (max-width: 620px) { .review-grid, .doc-grid { grid-template-columns: 1fr; } .review-panel { padding: 18px; } }

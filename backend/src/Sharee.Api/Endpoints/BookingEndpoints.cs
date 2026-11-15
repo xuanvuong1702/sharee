@@ -133,13 +133,20 @@ public static class BookingEndpoints
             Guid id, HttpContext http, Db db, ReadService read, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
+            var driverId = http.User.GetUserId();
+            if (!await DriverVerification.IsApprovedAsync(conn, driverId, ct))
+                return Results.Json(new
+                {
+                    error = "Tài xế chưa được xác thực nên không thể nhận booking.",
+                    verificationRequired = true
+                }, statusCode: StatusCodes.Status403Forbidden);
             var affected = await conn.ExecuteAsync("""
                 update bookings b set status = 'pending_payment',
                        expires_at = now() + interval '10 minutes', updated_at = now()
                 from trips t
                 where b.id = @id and b.trip_id = t.id and b.status = 'pending_driver'
                   and t.driver_id = @driverId
-                """, new { id, driverId = http.User.GetUserId() });
+                """, new { id, driverId });
 
             if (affected == 0) return Results.Conflict(new { error = "Không thể chấp nhận booking này" });
 

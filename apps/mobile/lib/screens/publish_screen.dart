@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 import 'home_screen.dart';
+import 'verification_screen.dart';
 
 class PublishScreen extends StatefulWidget {
   const PublishScreen({super.key});
@@ -17,6 +18,8 @@ class PublishScreen extends StatefulWidget {
 class _PublishScreenState extends State<PublishScreen> {
   late Future<List<Vehicle>> _vehicles;
   bool _started = false;
+  bool _checkingVerification = true;
+  VerificationInfo? _verification;
   Vehicle? _vehicle;
   int _preset = 0;
   DateTime _departure = DateTime.now().add(const Duration(days: 1, hours: 1));
@@ -31,6 +34,16 @@ class _PublishScreenState extends State<PublishScreen> {
     if (_started) return;
     _started = true;
     final api = AppScope.of(context).api;
+    api.verification().then((info) {
+      if (mounted) {
+        setState(() {
+          _verification = info;
+          _checkingVerification = false;
+        });
+      }
+    }).catchError((_) {
+      if (mounted) setState(() => _checkingVerification = false);
+    });
     _vehicles = api.vehicles();
     _vehicles.then((list) {
       if (mounted && _vehicle == null && list.isNotEmpty) {
@@ -197,6 +210,63 @@ class _PublishScreenState extends State<PublishScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingVerification) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_verification?.approved != true) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Đăng chuyến', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              Text('Cần xác thực tài xế trước', style: TextStyle(fontSize: 11, color: AppTheme.muted)),
+            ],
+          ),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(18),
+          children: [
+            AppCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFF3E8FF), shape: BoxShape.circle),
+                    child: const Icon(Icons.verified_user_rounded,
+                        color: Color(0xFF7C3AED), size: 24),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Xác thực tài xế để đăng chuyến',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Vì an toàn của hành khách, tài xế cần xác thực CCCD, GPLX, đăng ký xe, bảo hiểm và selfie trước khi đăng chuyến hoặc nhận booking.',
+                    style: TextStyle(fontSize: 11.5, color: AppTheme.muted, height: 1.5),
+                  ),
+                  const SizedBox(height: 14),
+                  PrimaryButton(
+                    label: 'Bắt đầu xác thực',
+                    onPressed: () async {
+                      await Navigator.of(context)
+                          .push(appRoute(const VerificationScreen()));
+                      if (!mounted) return;
+                      final info = await AppScope.of(context).api.verification();
+                      if (!mounted) return;
+                      setState(() => _verification = info);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Column(

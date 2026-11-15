@@ -129,6 +129,12 @@ public static class TripEndpoints
                 return Results.BadRequest(new { error = "Điểm đầu phải cho đón, điểm cuối phải cho trả" });
 
             await using var conn = await db.OpenAsync(ct);
+            if (!await DriverVerification.IsApprovedAsync(conn, driverId, ct))
+                return Results.Json(new
+                {
+                    error = "Tài xế chưa được xác thực. Vui lòng hoàn tất xác thực CCCD, GPLX và giấy tờ xe trước khi đăng chuyến.",
+                    verificationRequired = true
+                }, statusCode: StatusCodes.Status403Forbidden);
             var vehicle = await conn.QuerySingleOrDefaultAsync<VehicleRow>(
                 "select * from vehicles where id = @id and owner_id = @ownerId and status = 'active'",
                 new { id = request.VehicleId, ownerId = driverId });

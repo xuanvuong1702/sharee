@@ -842,3 +842,109 @@ class TipSummary {
             .toList(),
       );
 }
+
+class VerificationDocument {
+  final String id;
+  final String type;
+  final String originalName;
+  final String mimeType;
+  final int sizeBytes;
+
+  const VerificationDocument({
+    required this.id,
+    required this.type,
+    required this.originalName,
+    required this.mimeType,
+    required this.sizeBytes,
+  });
+
+  factory VerificationDocument.fromJson(Map<String, dynamic> json) => VerificationDocument(
+        id: json['id'] as String,
+        type: json['type'] as String? ?? '',
+        originalName: json['originalName'] as String? ?? '',
+        mimeType: json['mimeType'] as String? ?? '',
+        sizeBytes: (json['sizeBytes'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class VerificationInfo {
+  final String status;
+  final int level;
+  final DateTime? expiresAt;
+  final DateTime? submittedAt;
+  final DateTime? reviewedAt;
+  final String? rejectionReason;
+  final String? legalName;
+  final String? dateOfBirth;
+  final String? idNumber;
+  final String? idIssuedAt;
+  final String? idExpiry;
+  final String? licenseNumber;
+  final String? licenseClass;
+  final String? licenseExpiry;
+  final String? vehicleRegistration;
+  final String? insuranceExpiry;
+  final List<VerificationDocument> documents;
+  final List<String> requiredDocuments;
+
+  const VerificationInfo({
+    required this.status,
+    required this.level,
+    required this.expiresAt,
+    required this.submittedAt,
+    required this.reviewedAt,
+    required this.rejectionReason,
+    required this.legalName,
+    required this.dateOfBirth,
+    required this.idNumber,
+    required this.idIssuedAt,
+    required this.idExpiry,
+    required this.licenseNumber,
+    required this.licenseClass,
+    required this.licenseExpiry,
+    required this.vehicleRegistration,
+    required this.insuranceExpiry,
+    required this.documents,
+    required this.requiredDocuments,
+  });
+
+  factory VerificationInfo.fromJson(Map<String, dynamic> json) => VerificationInfo(
+        status: json['status'] as String? ?? 'unverified',
+        level: (json['level'] as num?)?.toInt() ?? 1,
+        expiresAt: json['expiresAt'] == null ? null : DateTime.parse(json['expiresAt'] as String),
+        submittedAt:
+            json['submittedAt'] == null ? null : DateTime.parse(json['submittedAt'] as String),
+        reviewedAt:
+            json['reviewedAt'] == null ? null : DateTime.parse(json['reviewedAt'] as String),
+        rejectionReason: json['rejectionReason'] as String?,
+        legalName: json['legalName'] as String?,
+        dateOfBirth: json['dateOfBirth'] as String?,
+        idNumber: json['idNumber'] as String?,
+        idIssuedAt: json['idIssuedAt'] as String?,
+        idExpiry: json['idExpiry'] as String?,
+        licenseNumber: json['licenseNumber'] as String?,
+        licenseClass: json['licenseClass'] as String?,
+        licenseExpiry: json['licenseExpiry'] as String?,
+        vehicleRegistration: json['vehicleRegistration'] as String?,
+        insuranceExpiry: json['insuranceExpiry'] as String?,
+        documents: (json['documents'] as List<dynamic>? ?? [])
+            .map((e) => VerificationDocument.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        requiredDocuments: (json['requiredDocuments'] as List<dynamic>? ?? [])
+            .map((e) => e.toString())
+            .toList(),
+      );
+
+  bool get approved => status == 'approved';
+  bool get pending => status == 'pending';
+  bool get rejected => status == 'rejected';
+  bool get suspended => status == 'suspended';
+  bool get canEdit => status != 'pending' && status != 'approved' && status != 'suspended';
+
+  VerificationDocument? documentOf(String type) {
+    for (final doc in documents) {
+      if (doc.type == type) return doc;
+    }
+    return null;
+  }
+}

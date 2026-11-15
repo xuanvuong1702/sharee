@@ -19,65 +19,11 @@ public static class AdminEndpoints
                 await conn.ExecuteScalarAsync<int>("select count(*) from trips"),
                 await conn.ExecuteScalarAsync<int>("select count(*) from bookings"),
                 await conn.ExecuteScalarAsync<int>("select count(*) from reports where status = 'open'"),
-                await conn.ExecuteScalarAsync<int>("select count(*) from user_verifications where status = 'pending'"),
+                await conn.ExecuteScalarAsync<int>("select count(*) from users where verification_status = 'pending'"),
                 await conn.ExecuteScalarAsync<long>("select coalesce(sum(price_total),0) from bookings where status in ('confirmed','completed')"),
                 await conn.ExecuteScalarAsync<int>("select count(*) from trips where status = 'open' and departure_time > now()"),
                 await conn.ExecuteScalarAsync<int>("select count(*) from e_tickets where created_at > now() - interval '1 day'"));
             return Results.Ok(dto);
-        });
-
-        group.MapGet("/verifications", async (Db db, CancellationToken ct) =>
-        {
-            await using var conn = await db.OpenAsync(ct);
-            var rows = await conn.QueryAsync<dynamic>("""
-                select v.id, v.user_id, u.full_name as user_name, u.phone, v.type, v.status,
-                       v.document_ref, v.created_at
-                from user_verifications v join users u on u.id = v.user_id
-                order by case when v.status = 'pending' then 0 else 1 end, v.created_at desc
-                limit 100
-                """);
-            return Results.Ok(rows.Select(r => new VerificationDto(
-                (Guid)r.id, (Guid)r.user_id, (string)r.user_name, (string)r.phone,
-                (string)r.type, (string)r.status, (string?)r.document_ref,
-                Time.ToDto((DateTime)r.created_at))));
-        });
-
-        group.MapPost("/verifications/{id:guid}/approve", async (
-            Guid id, HttpContext http, Db db, CancellationToken ct) =>
-        {
-            await using var conn = await db.OpenAsync(ct);
-            var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-                update user_verifications
-                set status = 'approved', reviewed_by = @adminId, reviewed_at = now()
-                where id = @id and status = 'pending'
-                returning user_id, type
-                """, new { id, adminId = http.User.GetUserId() });
-            if (row is null) return Results.NotFound();
-
-            Guid userId = row.user_id;
-            string type = row.type;
-            var level = type switch { "license" => 3, "id" => 2, "vehicle" => 2, _ => 1 };
-            await conn.ExecuteAsync(
-                "update users set verified_level = greatest(verified_level, @level) where id = @userId",
-                new { level, userId });
-            await Audit.LogAsync(conn, null, http.User.GetUserId(), "verification.approve",
-                "verification", id.ToString(), new { userId, type });
-            return Results.Ok(new { status = "approved" });
-        });
-
-        group.MapPost("/verifications/{id:guid}/reject", async (
-            Guid id, HttpContext http, Db db, CancellationToken ct) =>
-        {
-            await using var conn = await db.OpenAsync(ct);
-            var affected = await conn.ExecuteAsync("""
-                update user_verifications
-                set status = 'rejected', reviewed_by = @adminId, reviewed_at = now()
-                where id = @id and status = 'pending'
-                """, new { id, adminId = http.User.GetUserId() });
-            if (affected > 0)
-                await Audit.LogAsync(conn, null, http.User.GetUserId(), "verification.reject",
-                    "verification", id.ToString());
-            return affected == 0 ? Results.NotFound() : Results.Ok(new { status = "rejected" });
         });
 
         group.MapGet("/reports", async (Db db, CancellationToken ct) =>

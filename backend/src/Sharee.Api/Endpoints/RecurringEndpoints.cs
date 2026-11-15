@@ -15,11 +15,19 @@ public static class RecurringEndpoints
 
         group.MapPost("", async (
             CreateRecurringTripRequest request, HttpContext http, RecurringTripService service,
-            CancellationToken ct) =>
+            Db db, CancellationToken ct) =>
         {
+            var userId = http.User.GetUserId();
+            await using var conn = await db.OpenAsync(ct);
+            if (!await DriverVerification.IsApprovedAsync(conn, userId, ct))
+                return Results.Json(new
+                {
+                    error = "Tài xế chưa được xác thực. Vui lòng hoàn tất xác thực trước khi tạo chuyến định kỳ.",
+                    verificationRequired = true
+                }, statusCode: StatusCodes.Status403Forbidden);
             try
             {
-                var dto = await service.CreateAsync(http.User.GetUserId(), request, ct);
+                var dto = await service.CreateAsync(userId, request, ct);
                 return Results.Created($"/api/trips/recurring/{dto.Id}", dto);
             }
             catch (ArgumentException ex)

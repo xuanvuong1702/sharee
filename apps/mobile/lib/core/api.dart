@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -340,6 +341,69 @@ class Api {
   Future<TipSummary> receivedTips() async {
     final data = await _send('GET', '/api/me/tips') as Map<String, dynamic>;
     return TipSummary.fromJson(data);
+  }
+
+  Future<VerificationInfo> verification() async {
+    final data = await _send('GET', '/api/me/verification') as Map<String, dynamic>;
+    return VerificationInfo.fromJson(data);
+  }
+
+  Future<VerificationInfo> saveVerificationProfile({
+    required String legalName,
+    required String? dateOfBirth,
+    required String idNumber,
+    required String? idIssuedAt,
+    required String? idExpiry,
+    required String licenseNumber,
+    required String licenseClass,
+    required String? licenseExpiry,
+    required String vehicleRegistration,
+    required String? insuranceExpiry,
+  }) async {
+    final data = await _send('PUT', '/api/me/verification/profile', body: {
+      'legalName': legalName,
+      'dateOfBirth': dateOfBirth,
+      'idNumber': idNumber,
+      'idIssuedAt': idIssuedAt,
+      'idExpiry': idExpiry,
+      'licenseNumber': licenseNumber,
+      'licenseClass': licenseClass,
+      'licenseExpiry': licenseExpiry,
+      'vehicleRegistration': vehicleRegistration,
+      'insuranceExpiry': insuranceExpiry,
+    }) as Map<String, dynamic>;
+    return VerificationInfo.fromJson(data);
+  }
+
+  Future<VerificationDocument> uploadVerificationDocument(
+    String type,
+    Uint8List bytes,
+    String filename,
+  ) async {
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/api/me/verification/documents/$type'),
+    );
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+    final streamed = await _client.send(request).timeout(const Duration(seconds: 40));
+    final response = await http.Response.fromStream(streamed);
+    final text = utf8.decode(response.bodyBytes);
+    if (response.statusCode >= 400) {
+      String message = 'Lỗi ${response.statusCode}';
+      try {
+        final data = jsonDecode(text);
+        if (data is Map && data['error'] != null) message = data['error'].toString();
+      } catch (_) {}
+      throw ApiException(message, response.statusCode);
+    }
+    return VerificationDocument.fromJson(jsonDecode(text) as Map<String, dynamic>);
+  }
+
+  Future<VerificationInfo> submitVerification() async {
+    final data = await _send('POST', '/api/me/verification/submit', body: {})
+        as Map<String, dynamic>;
+    return VerificationInfo.fromJson(data);
   }
 
   Future<void> cancelBooking(String id) async {

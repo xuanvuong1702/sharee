@@ -157,6 +157,33 @@ public record TipSummaryDto(
     int TotalConfirmed, int CountConfirmed, int CountPending,
     IReadOnlyList<TipDto> Recent);
 
+public record VerificationDocumentDto(
+    Guid Id, string Type, string OriginalName, string MimeType, int SizeBytes,
+    DateTimeOffset CreatedAt);
+
+public record VerificationStatusDto(
+    string Status, int Level, DateTimeOffset? ExpiresAt, DateTimeOffset? SubmittedAt,
+    DateTimeOffset? ReviewedAt, string? RejectionReason, string? LegalName,
+    DateOnly? DateOfBirth, string? IdNumber, DateOnly? IdIssuedAt, DateOnly? IdExpiry,
+    string? LicenseNumber, string? LicenseClass, DateOnly? LicenseExpiry,
+    string? VehicleRegistration, DateOnly? InsuranceExpiry,
+    IReadOnlyList<VerificationDocumentDto> Documents,
+    IReadOnlyList<string> RequiredDocuments);
+
+public record UpdateVerificationProfileRequest(
+    string LegalName, DateOnly? DateOfBirth, string IdNumber, DateOnly? IdIssuedAt,
+    DateOnly? IdExpiry, string LicenseNumber, string LicenseClass, DateOnly? LicenseExpiry,
+    string VehicleRegistration, DateOnly? InsuranceExpiry);
+
+public record ApproveVerificationRequest(DateOnly? ExpiresAt);
+public record RejectVerificationRequest(string Reason);
+
+public record VerificationQueueItemDto(
+    Guid UserId, string FullName, string Phone, string Status, int Level,
+    string? LegalName, string? IdNumber, string? LicenseNumber,
+    DateOnly? LicenseExpiry, DateOnly? InsuranceExpiry, int DocumentCount,
+    DateTimeOffset? SubmittedAt, DateTimeOffset? ExpiresAt);
+
 public record LocationUpdateRequest(
     double Lat, double Lng, double? Heading = null, double? Speed = null, double? Accuracy = null);
 
