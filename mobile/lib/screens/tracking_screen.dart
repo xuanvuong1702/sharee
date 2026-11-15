@@ -7,7 +7,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/app_state.dart';
-import '../core/format.dart';
 import '../core/map_config.dart';
 import '../core/models.dart';
 import '../widgets/app_ui.dart';
@@ -30,7 +29,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
   Timer? _simTimer;
   bool _started = false;
   bool _busy = false;
-  bool _locating = false;
   bool _sharing = false;
   bool _simulated = false;
   bool _follow = true;
@@ -99,7 +97,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
   Future<void> _initLocation() async {
     final d = _data;
     if (d == null) return;
-    setState(() => _locating = true);
     try {
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -132,8 +129,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
       if (mounted) setState(() => _sharing = true);
     } catch (_) {
       _useFallback();
-    } finally {
-      if (mounted) setState(() => _locating = false);
     }
   }
 
