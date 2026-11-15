@@ -69,9 +69,12 @@ public static partial class VerificationEndpoints
                 """, new
             {
                 userId, legalName, idNumber, licenseNumber, vehicleRegistration,
-                request.DateOfBirth, request.IdIssuedAt, request.IdExpiry,
+                dateOfBirth = ToDateTime(request.DateOfBirth),
+                idIssuedAt = ToDateTime(request.IdIssuedAt),
+                idExpiry = ToDateTime(request.IdExpiry),
                 licenseClass = request.LicenseClass.Trim().ToUpperInvariant(),
-                request.LicenseExpiry, request.InsuranceExpiry
+                licenseExpiry = ToDateTime(request.LicenseExpiry),
+                insuranceExpiry = ToDateTime(request.InsuranceExpiry)
             });
 
             return Results.Ok(await GetStatusAsync(conn, userId));
@@ -390,6 +393,9 @@ public static partial class VerificationEndpoints
 
     private static DateTimeOffset? DtoOrNull(object? value)
         => value is DateTime dt ? Time.ToDto(dt) : null;
+
+    private static DateTime? ToDateTime(DateOnly? value)
+        => value?.ToDateTime(TimeOnly.MinValue);
 
     private static string? ValidateProfile(
         UpdateVerificationProfileRequest request, out string legalName,
