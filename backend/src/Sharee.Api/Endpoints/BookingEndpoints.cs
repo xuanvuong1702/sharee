@@ -32,6 +32,12 @@ public static class BookingEndpoints
             if (trip is null) return Results.NotFound(new { error = "Không tìm thấy chuyến" });
             if (trip.DriverId == userId) return Results.BadRequest(new { error = "Bạn là tài xế của chuyến này" });
             if (trip.Status != "open") return Results.Conflict(new { error = "Chuyến không còn mở" });
+            if (!await DriverVerification.IsApprovedAsync(conn, trip.DriverId, ct))
+                return Results.Json(new
+                {
+                    error = "Tài xế của chuyến chưa được xác thực, tạm thời không thể đặt chỗ.",
+                    driverVerificationRequired = true
+                }, statusCode: StatusCodes.Status409Conflict);
 
             var stops = (await conn.QueryAsync<StopRow>(
                 "select id, trip_id, seq, name, ST_Y(location::geometry) lat, ST_X(location::geometry) lng, eta_offset_min, allow_pickup, allow_dropoff, price_from_origin from trip_stops where trip_id = @tripId",
@@ -284,9 +290,10 @@ public static class BookingEndpoints
                     error = "Booking đang có khiếu nại mở, chưa thể giải ngân."
                 });
             }
-            var method = await conn.ExecuteScalarAsync<string>("""
-                select method from escrow_holds where booking_id = @id
-                """, new { id }, tx);
+            var escrow = await conn.QuerySingleOrDefaultAsync<dynamic>(
+                "select method, status from escrow_holds where booking_id = @id", new { id }, tx);
+            var alreadyReleased = escrow is not null && (string)escrow.status == "released";
+            var method = escrow is null ? null : (string)escrow.method;
             method ??= await conn.ExecuteScalarAsync<string>(
                 "select payment_method from bookings where id = @id", new { id });
             await conn.ExecuteAsync("""
@@ -295,7 +302,7 @@ public static class BookingEndpoints
                 on conflict (booking_id) do update set
                     status = 'released', released_at = now(), updated_at = now()
                 """, new { id, payout, method }, tx);
-            if (method != "cash")
+            if (method != "cash" && !alreadyReleased)
             {
                 await ledger.RecordAsync(conn, tx, "payout", "booking", id,
                     ("escrow", 'D', payout),

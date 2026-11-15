@@ -52,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           const Icon(Icons.verified_user_rounded, color: Colors.white, size: 13),
                           const SizedBox(width: 4),
-                          Text(user.verifiedLevel >= 2 ? 'Đã xác thực' : 'Cơ bản',
+                          Text('Cấp ${user.verifiedLevel}/3',
                               style: const TextStyle(
                                   color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
                         ],
@@ -131,7 +131,7 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     _Stat(value: '★ ${user.ratingAvg.toStringAsFixed(1)}', label: 'Đánh giá'),
                     const _StatDivider(),
-                    _Stat(value: '${user.ratingCount}', label: 'Chuyến đi'),
+                    _Stat(value: '${user.ratingCount}', label: 'Lượt đánh giá'),
                     const _StatDivider(),
                     _Stat(
                         value: 'Cấp ${user.verifiedLevel}',

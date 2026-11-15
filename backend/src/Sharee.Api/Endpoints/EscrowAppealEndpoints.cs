@@ -48,9 +48,14 @@ public static class EscrowAppealEndpoints
                 return Results.Ok(new { method, next = method == "cash" ? "confirm" : "payos" });
             }
 
-            var level = await conn.ExecuteScalarAsync<int>(
-                "select verified_level from users where id = @userId", new { userId });
-            if (level < 2)
+            var kyc = await conn.QuerySingleAsync<dynamic>("""
+                select verified_level, verification_status, verification_expires_at
+                from users where id = @userId
+                """, new { userId });
+            if ((int)kyc.verified_level < 2
+                || (string)kyc.verification_status != "approved"
+                || (kyc.verification_expires_at is not null
+                    && (DateTime)kyc.verification_expires_at <= DateTime.UtcNow))
                 return Results.Json(new
                 {
                     error = "Cần xác thực danh tính trước khi thanh toán tiền mặt.",
@@ -437,14 +442,17 @@ public static class EscrowAppealEndpoints
         var rating = (double)(decimal)user.rating_avg;
         var score = total == 0 ? 0 : (int)Math.Round(50 * (rating / 5.0) + 35 * (rate / 100.0)
             + 15 * Math.Min(1, completed / 20.0));
-        var tier = score switch
-        {
-            >= 80 => "elite",
-            >= 65 => "gold",
-            >= 50 => "silver",
-            >= 30 => "bronze",
-            _ => "new"
-        };
+        var tier = total < 3
+            ? "new"
+            : score >= 80 && completed >= 10
+                ? "elite"
+                : score >= 65 && completed >= 5
+                    ? "gold"
+                    : score >= 50
+                        ? "silver"
+                        : score >= 30
+                            ? "bronze"
+                            : "new";
         var badges = new List<string>();
         if ((int)user.verified_level >= 2) badges.Add("kyc");
         if ((int)user.verified_level >= 3) badges.Add("verified_driver");

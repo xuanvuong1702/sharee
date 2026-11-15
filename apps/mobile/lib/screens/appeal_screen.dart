@@ -139,7 +139,7 @@ class _AppealScreenState extends State<AppealScreen> {
                     ),
                   ),
                 const SizedBox(height: 12),
-                if (appeals.isEmpty) ...[
+                if (!open) ...[
                   const Text('Mở khiếu nại',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 4),
@@ -164,8 +164,11 @@ class _AppealScreenState extends State<AppealScreen> {
                     label: _busy ? 'Đang gửi...' : 'Mở khiếu nại',
                     onPressed: _busy ? null : _create,
                   ),
-                ] else
+                ],
+                if (appeals.isNotEmpty) ...[
+                  const SizedBox(height: 10),
                   ...appeals.map(_appealCard),
+                ],
                 if (_error != null) ...[
                   const SizedBox(height: 10),
                   Text(_error!, style: const TextStyle(color: AppTheme.danger, fontSize: 11)),

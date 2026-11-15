@@ -89,7 +89,8 @@ class _BookingScreenState extends State<BookingScreen> {
       await AppScope.of(context).api.setPaymentMethod(widget.bookingId, method);
       if (!mounted) return;
       if (method == 'cash') {
-        setState(_load);
+        if (mounted) setState(() => _busy = false);
+        _load();
         showInfo(context, 'Đã xác nhận thanh toán tiền mặt');
         return;
       }
