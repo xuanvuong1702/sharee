@@ -133,7 +133,7 @@ jobs:
           if-no-files-found: error
 
   ios:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
       IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
