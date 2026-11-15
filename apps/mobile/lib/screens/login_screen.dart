@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../core/app_state.dart';
 import '../widgets/app_ui.dart';
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: Colors.white.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Báº£n demo',
+                        child: const Text('Bản demo',
                             style: TextStyle(
                                 color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
                       ),
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
                   const Text(
-                    'Äi cÃ¹ng nhau,\nÄ‘i xa hÆ¡n.',
+                    'Đi cùng nhau,\nđi xa hơn.',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 34,
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Chia sáº» chuyáº¿n Ä‘i, tiáº¿t kiá»‡m chi phÃ­,\ngáº·p gá»¡ nhá»¯ng ngÆ°á»i Ä‘Ã£ xÃ¡c thá»±c.',
+                    'Chia sẻ chuyến đi, tiết kiệm chi phí,\ngặp gỡ những người đã xác thực.',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 13,
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(
-                                'Báº£o máº­t thÃ´ng tin. Chá»‰ cáº§n sá»‘ Ä‘iá»‡n thoáº¡i Ä‘á»ƒ báº¯t Ä‘áº§u.',
+                                'Bảo mật thông tin. Chỉ cần số điện thoại để bắt đầu.',
                                 style: TextStyle(
                                     fontSize: 9.5,
                                     color: AppTheme.mutedLight.withValues(alpha: 0.9),
@@ -220,24 +220,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Center(
-                    child: Text('Sharee 1.0 Â· made for learning',
+                    child: Text('Sharee 1.1.0 · made for learning',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45), fontSize: 9.5)),
                   ),
                   const SizedBox(height: 22),
                   Row(
                     children: const [
-                      Expanded(child: _HeroStat(value: '12k+', label: 'chuyáº¿n Ä‘i')),
+                      Expanded(child: _HeroStat(value: '12k+', label: 'chuyến đi')),
                       _HeroDivider(),
-                      Expanded(child: _HeroStat(value: '4.9', label: 'Ä‘Ã¡nh giÃ¡')),
+                      Expanded(child: _HeroStat(value: '4.9', label: 'đánh giá')),
                       _HeroDivider(),
-                      Expanded(child: _HeroStat(value: '24/7', label: 'há»— trá»£')),
+                      Expanded(child: _HeroStat(value: '24/7', label: 'hỗ trợ')),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Center(
                     child: Text(
-                      'Tiáº¿p tá»¥c nghÄ©a lÃ  báº¡n Ä‘á»“ng Ã½ vá»›i Äiá»u khoáº£n & ChÃ­nh sÃ¡ch báº£o máº­t.',
+                      'Tiếp tục nghĩa là bạn đồng ý với Điều khoản & Chính sách bảo mật.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.35), fontSize: 8.5),
@@ -259,29 +259,29 @@ class _LoginScreenState extends State<LoginScreen> {
       key: const ValueKey('phone'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('ÄÄƒng nháº­p',
+        const Text('Đăng nhập',
             style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
         const SizedBox(height: 3),
-        const Text('Nháº­p sá»‘ Ä‘iá»‡n thoáº¡i Ä‘á»ƒ nháº­n mÃ£ xÃ¡c thá»±c',
+        const Text('Nhập số điện thoại để nhận mã xác thực',
             style: TextStyle(fontSize: 11.5, color: AppTheme.muted)),
         const SizedBox(height: 18),
         TextField(
           controller: _phone,
           keyboardType: TextInputType.phone,
           decoration: const InputDecoration(
-            labelText: 'Sá»‘ Ä‘iá»‡n thoáº¡i',
+            labelText: 'Số điện thoại',
             prefixIcon: Icon(Icons.phone_iphone_rounded, size: 20),
           ),
         ),
         const SizedBox(height: 13),
-        PrimaryButton(label: 'Gá»­i mÃ£ OTP', loading: _busy, onPressed: _requestOtp),
+        PrimaryButton(label: 'Gửi mã OTP', loading: _busy, onPressed: _requestOtp),
         const SizedBox(height: 17),
         Row(
           children: [
             const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 9),
-              child: Text('ÄÄƒng nháº­p nhanh',
+              child: Text('Đăng nhập nhanh',
                   style: TextStyle(
                       fontSize: 9.5, color: AppTheme.muted, fontWeight: FontWeight.w600)),
             ),
@@ -293,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Expanded(
               child: _DemoAccount(
-                label: 'HÃ nh khÃ¡ch',
+                label: 'Hành khách',
                 name: 'Minh',
                 icon: Icons.person_outline_rounded,
                 onTap: () {
@@ -305,8 +305,8 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: _DemoAccount(
-                label: 'TÃ i xáº¿',
-                name: 'Trung KiÃªn',
+                label: 'Tài xế',
+                name: 'Trung Kiên',
                 icon: Icons.directions_car_outlined,
                 onTap: () {
                   _phone.text = '+84912000001';
@@ -319,9 +319,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         const Row(
           children: [
-            Expanded(child: _TrustItem(icon: Icons.verified_user_rounded, label: 'XÃ¡c thá»±c CCCD')),
-            Expanded(child: _TrustItem(icon: Icons.lock_rounded, label: 'Thanh toÃ¡n an toÃ n')),
-            Expanded(child: _TrustItem(icon: Icons.event_available_rounded, label: 'Huá»· linh hoáº¡t')),
+            Expanded(child: _TrustItem(icon: Icons.verified_user_rounded, label: 'Xác thực CCCD')),
+            Expanded(child: _TrustItem(icon: Icons.lock_rounded, label: 'Thanh toán an toàn')),
+            Expanded(child: _TrustItem(icon: Icons.event_available_rounded, label: 'Huỷ linh hoạt')),
           ],
         ),
       ],
@@ -345,13 +345,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(width: 9),
             const Expanded(
-              child: Text('Nháº­p mÃ£ xÃ¡c thá»±c',
+              child: Text('Nhập mã xác thực',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.4)),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        Text('MÃ£ 6 sá»‘ Ä‘Ã£ gá»­i Ä‘áº¿n ${_phone.text}',
+        Text('Mã 6 số đã gửi đến ${_phone.text}',
             style: const TextStyle(fontSize: 11.5, color: AppTheme.muted)),
         const SizedBox(height: 16),
         TextField(
@@ -360,7 +360,7 @@ class _LoginScreenState extends State<LoginScreen> {
           maxLength: 6,
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: 12),
-          decoration: const InputDecoration(counterText: '', hintText: 'â€¢â€¢â€¢â€¢â€¢â€¢'),
+          decoration: const InputDecoration(counterText: '', hintText: '••••••'),
         ),
         if (_devCode != null) ...[
           const SizedBox(height: 10),
@@ -375,7 +375,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.info_outline, size: 14, color: AppTheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text('MÃ£ demo: $_devCode (Ä‘Ã£ tá»± Ä‘iá»n)',
+                  child: Text('Mã demo: $_devCode (đã tự điền)',
                       style: const TextStyle(
                           fontSize: 10.5, color: AppTheme.primary, fontWeight: FontWeight.w600)),
                 ),
@@ -384,11 +384,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
         const SizedBox(height: 14),
-        PrimaryButton(label: 'XÃ¡c thá»±c vÃ  tiáº¿p tá»¥c', loading: _busy, onPressed: _verify),
+        PrimaryButton(label: 'Xác thực và tiếp tục', loading: _busy, onPressed: _verify),
         const SizedBox(height: 4),
         TextButton(
           onPressed: _busy ? null : _requestOtp,
-          child: const Text('KhÃ´ng nháº­n Ä‘Æ°á»£c mÃ£? Gá»­i láº¡i'),
+          child: const Text('Không nhận được mã? Gửi lại'),
         ),
       ],
     );

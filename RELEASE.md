@@ -1,38 +1,38 @@
-﻿# Auto release Android + iOS trÃªn GitHub Actions
+# Auto release Android + iOS trên GitHub Actions
 
 Workflow: [`.github/workflows/release.yml`](.github/workflows/release.yml)
 
-Cháº¡y khi:
-- push tag `v*` â†’ build APK/AAB/IPA vÃ  táº¡o GitHub Release;
-- `workflow_dispatch` â†’ build artifact, khÃ´ng táº¡o Release.
+Chạy khi:
+- push tag `v*` → build APK/AAB/IPA và tạo GitHub Release;
+- `workflow_dispatch` → build artifact, không tạo Release.
 
 ## 1. Repository variables
 
-Settings â†’ Secrets and variables â†’ Actions â†’ **Variables**:
+Settings → Secrets and variables → Actions → **Variables**:
 
-| Biáº¿n | Báº¯t buá»™c | VÃ­ dá»¥ |
+| Biến | Bắt buộc | Ví dụ |
 |---|---|---|
-| `API_BASE_URL` | âœ… | `https://api.example.com` |
-| `MAP_TILE_URL` | â€” | `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=...` |
-| `MAP_ATTRIBUTION` | â€” | `Â© MapTiler Â© OpenStreetMap` |
-| `MAP_USER_AGENT` | â€” | `vn.sharee.mobile` |
-| `FIREBASE_API_KEY` | â€” | Firebase Web API key |
-| `FIREBASE_APP_ID` | â€” | `1:...:android:...` |
-| `FIREBASE_MESSAGING_SENDER_ID` | â€” | `123456789` |
-| `FIREBASE_PROJECT_ID` | â€” | `sharee-prod` |
-| `APP_VERSION` | â€” | `1.0.0` (dÃ¹ng cho manual dispatch) |
-| `IOS_EXPORT_METHOD` | â€” | `development` (máº·c Ä‘á»‹nh), `ad-hoc`, `app-store`, `enterprise` |
+| `API_BASE_URL` | ✅ | `https://api.example.com` |
+| `MAP_TILE_URL` | — | `https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=...` |
+| `MAP_ATTRIBUTION` | — | `© MapTiler © OpenStreetMap` |
+| `MAP_USER_AGENT` | — | `vn.sharee.mobile` |
+| `FIREBASE_API_KEY` | — | Firebase Web API key |
+| `FIREBASE_APP_ID` | — | `1:...:android:...` |
+| `FIREBASE_MESSAGING_SENDER_ID` | — | `123456789` |
+| `FIREBASE_PROJECT_ID` | — | `sharee-prod` |
+| `APP_VERSION` | — | `1.0.0` (dùng cho manual dispatch) |
+| `IOS_EXPORT_METHOD` | — | `development` (mặc định), `ad-hoc`, `app-store`, `enterprise` |
 
 ## 2. Android secrets
 
-| Secret | Ná»™i dung |
+| Secret | Nội dung |
 |---|---|
-| `ANDROID_KEYSTORE_BASE64` | file `.jks`/`.p12` mÃ£ hoÃ¡ base64 |
-| `ANDROID_KEYSTORE_PASSWORD` | máº­t kháº©u keystore |
-| `ANDROID_KEY_ALIAS` | alias, vÃ­ dá»¥ `sharee` |
-| `ANDROID_KEY_PASSWORD` | máº­t kháº©u key |
+| `ANDROID_KEYSTORE_BASE64` | file `.jks`/`.p12` mã hoá base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | mật khẩu keystore |
+| `ANDROID_KEY_ALIAS` | alias, ví dụ `sharee` |
+| `ANDROID_KEY_PASSWORD` | mật khẩu key |
 
-Táº¡o keystore local:
+Tạo keystore local:
 
 ```powershell
 powershell -File infra/scripts/create-keystore.ps1
@@ -45,116 +45,116 @@ Base64:
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("apps/mobile/android/keystore/sharee-upload.jks")) | Set-Clipboard
 ```
 
-Workflow táº¡o `key.properties` vÃ  build:
+Workflow tạo `key.properties` và build:
 - `Sharee-<version>-<run>.apk`
 - `Sharee-<version>-<run>.aab`
 
-## 3. iOS: chá»n cÃ¡ch kÃ½
+## 3. iOS: chọn cách ký
 
-Náº¿u **khÃ´ng cÃ³** iOS secrets, workflow build **unsigned IPA**. IPA nÃ y khÃ´ng cÃ i trá»±c tiáº¿p Ä‘Æ°á»£c, nhÆ°ng cÃ³ thá»ƒ
-dÃ¹ng Sideloadly/AltStore Ä‘á»ƒ kÃ½ báº±ng Apple ID trÃªn mÃ¡y tÃ­nh.
+Nếu **không có** iOS secrets, workflow build **unsigned IPA**. IPA này không cài trực tiếp được, nhưng có thể
+dùng Sideloadly/AltStore để ký bằng Apple ID trên máy tính.
 
-Náº¿u cÃ³ Apple Developer account, cáº¥u hÃ¬nh secrets vÃ  chá»n `IOS_EXPORT_METHOD`:
+Nếu có Apple Developer account, cấu hình secrets và chọn `IOS_EXPORT_METHOD`:
 
-| GiÃ¡ trá»‹ | DÃ¹ng khi | CÃ i lÃªn iPhone |
+| Giá trị | Dùng khi | Cài lên iPhone |
 |---|---|---|
-| `development` | MÃ¡y iPhone cá»§a báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ trong Apple Developer | Xcode / Apple Configurator 2 |
-| `ad-hoc` | Chia cho vÃ i tester Ä‘Ã£ Ä‘Äƒng kÃ½ UDID | Diawi, Firebase App Distribution |
+| `development` | Máy iPhone của bạn đã đăng ký trong Apple Developer | Xcode / Apple Configurator 2 |
+| `ad-hoc` | Chia cho vài tester đã đăng ký UDID | Diawi, Firebase App Distribution |
 | `app-store` | TestFlight / App Store | TestFlight |
-| `enterprise` | Apple Enterprise Program | MDM/ná»™i bá»™ |
+| `enterprise` | Apple Enterprise Program | MDM/nội bộ |
 
-Vá»›i **má»™t iPhone cÃ¡ nhÃ¢n**, dÃ¹ng `development` lÃ  Ä‘Æ¡n giáº£n nháº¥t.
+Với **một iPhone cá nhân**, dùng `development` là đơn giản nhất.
 
 ### Secrets
 
-| Secret | Ná»™i dung |
+| Secret | Nội dung |
 |---|---|
-| `IOS_CERTIFICATE_BASE64` | file `.p12` development hoáº·c distribution |
-| `IOS_CERTIFICATE_PASSWORD` | máº­t kháº©u p12 |
-| `IOS_PROVISIONING_PROFILE_BASE64` | file `.mobileprovision` cÃ³ UDID cá»§a iPhone |
-| `IOS_KEYCHAIN_PASSWORD` | máº­t kháº©u keychain táº¡m |
+| `IOS_CERTIFICATE_BASE64` | file `.p12` development hoặc distribution |
+| `IOS_CERTIFICATE_PASSWORD` | mật khẩu p12 |
+| `IOS_PROVISIONING_PROFILE_BASE64` | file `.mobileprovision` có UDID của iPhone |
+| `IOS_KEYCHAIN_PASSWORD` | mật khẩu keychain tạm |
 | `IOS_TEAM_ID` | Apple Team ID |
-| `IOS_BUNDLE_ID` | bundle id, máº·c Ä‘á»‹nh `vn.sharee.shareeMobile` |
+| `IOS_BUNDLE_ID` | bundle id, mặc định `vn.sharee.shareeMobile` |
 
-Provisioning profile pháº£i khá»›p:
+Provisioning profile phải khớp:
 - bundle id;
 - certificate;
-- UDID cá»§a thiáº¿t bá»‹ (vá»›i development/ad-hoc).
+- UDID của thiết bị (với development/ad-hoc).
 
-Quy trÃ¬nh táº¡o trÃªn [developer.apple.com](https://developer.apple.com/account):
-1. ÄÄƒng kÃ½ iPhone UDID.
-2. Táº¡o certificate development (hoáº·c distribution cho ad-hoc).
-3. Táº¡o provisioning profile tÆ°Æ¡ng á»©ng, chá»n Ä‘Ãºng App ID + certificate + device.
-4. Export `.p12` tá»« Keychain Access vÃ  táº£i `.mobileprovision`.
-5. Base64 hai file, lÆ°u vÃ o GitHub Secrets.
+Quy trình tạo trên [developer.apple.com](https://developer.apple.com/account):
+1. Đăng ký iPhone UDID.
+2. Tạo certificate development (hoặc distribution cho ad-hoc).
+3. Tạo provisioning profile tương ứng, chọn đúng App ID + certificate + device.
+4. Export `.p12` từ Keychain Access và tải `.mobileprovision`.
+5. Base64 hai file, lưu vào GitHub Secrets.
 
-## 4. CÃ i IPA lÃªn iPhone
+## 4. Cài IPA lên iPhone
 
-### CÃ¡ch A â€” Apple Configurator 2 (macOS)
+### Cách A — Apple Configurator 2 (macOS)
 
-1. CÃ i Apple Configurator 2 tá»« Mac App Store.
-2. Cáº¯m iPhone, báº­t **Developer Mode** trÃªn iPhone:
-   - Settings â†’ Privacy & Security â†’ Developer Mode â†’ On â†’ restart.
-3. Má»Ÿ Apple Configurator 2 â†’ chá»n iPhone â†’ **Add â†’ Apps â†’ Choose from my Mac** â†’ chá»n file `.ipa`.
-4. TrÃªn iPhone vÃ o Settings â†’ General â†’ VPN & Device Management â†’ trust developer certificate.
+1. Cài Apple Configurator 2 từ Mac App Store.
+2. Cắm iPhone, bật **Developer Mode** trên iPhone:
+   - Settings → Privacy & Security → Developer Mode → On → restart.
+3. Mở Apple Configurator 2 → chọn iPhone → **Add → Apps → Choose from my Mac** → chọn file `.ipa`.
+4. Trên iPhone vào Settings → General → VPN & Device Management → trust developer certificate.
 
-### CÃ¡ch B â€” Xcode (macOS)
+### Cách B — Xcode (macOS)
 
-1. Má»Ÿ Xcode â†’ Window â†’ Devices and Simulators.
-2. Chá»n iPhone â†’ **+** â†’ chá»n `.ipa`.
-3. Trust certificate trÃªn iPhone.
+1. Mở Xcode → Window → Devices and Simulators.
+2. Chọn iPhone → **+** → chọn `.ipa`.
+3. Trust certificate trên iPhone.
 
-### CÃ¡ch C â€” Ad Hoc qua Diawi/Firebase App Distribution
+### Cách C — Ad Hoc qua Diawi/Firebase App Distribution
 
-- Upload IPA ad-hoc lÃªn Diawi hoáº·c Firebase App Distribution.
-- Gá»­i link cho tester.
-- Tester má»Ÿ link trÃªn iPhone vÃ  cÃ i; UDID pháº£i cÃ³ trong provisioning profile.
+- Upload IPA ad-hoc lên Diawi hoặc Firebase App Distribution.
+- Gửi link cho tester.
+- Tester mở link trên iPhone và cài; UDID phải có trong provisioning profile.
 
-### CÃ¡ch D â€” KhÃ´ng cÃ³ Apple Developer Program
+### Cách D — Không có Apple Developer Program
 
-DÃ¹ng **unsigned IPA** tá»« GitHub Release:
+Dùng **unsigned IPA** từ GitHub Release:
 
-1. Táº£i `Sharee-<version>-unsigned.ipa`.
-2. TrÃªn Windows/macOS cÃ i **Sideloadly** hoáº·c **AltStore**.
-3. ÄÄƒng nháº­p Apple ID, chá»n IPA, kÃ½ vÃ  cÃ i vÃ o iPhone.
-4. Báº­t Developer Mode vÃ  trust certificate.
+1. Tải `Sharee-<version>-unsigned.ipa`.
+2. Trên Windows/macOS cài **Sideloadly** hoặc **AltStore**.
+3. Đăng nhập Apple ID, chọn IPA, ký và cài vào iPhone.
+4. Bật Developer Mode và trust certificate.
 
-LÆ°u Ã½:
-- Apple ID miá»…n phÃ­: app háº¿t háº¡n sau **7 ngÃ y**, pháº£i kÃ½ láº¡i.
-- Apple Developer Program: development/ad-hoc profile dÃ¹ng Ä‘Æ°á»£c **1 nÄƒm** (theo certificate/profile).
-- Cáº§n cÃ¡p káº¿t ná»‘i iPhone vá»›i mÃ¡y tÃ­nh cho cÃ¡ch A/B/D.
+Lưu ý:
+- Apple ID miễn phí: app hết hạn sau **7 ngày**, phải ký lại.
+- Apple Developer Program: development/ad-hoc profile dùng được **1 năm** (theo certificate/profile).
+- Cần cáp kết nối iPhone với máy tính cho cách A/B/D.
 
-## 5. TestFlight (tuá»³ chá»n)
+## 5. TestFlight (tuỳ chọn)
 
-ThÃªm:
+Thêm:
 
-| Secret | Ná»™i dung |
+| Secret | Nội dung |
 |---|---|
 | `APPSTORE_KEY_ID` | App Store Connect API Key ID |
 | `APPSTORE_ISSUER_ID` | Issuer ID |
-| `APPSTORE_PRIVATE_KEY` | ná»™i dung file `.p8` |
+| `APPSTORE_PRIVATE_KEY` | nội dung file `.p8` |
 
-Äáº·t `IOS_EXPORT_METHOD=app-store` Ä‘á»ƒ workflow upload báº±ng `xcrun altool`.
-TestFlight khÃ´ng cáº§n Ä‘áº©y app ra store, nhÆ°ng cáº§n Apple Developer Program vÃ  App Store Connect.
+Đặt `IOS_EXPORT_METHOD=app-store` để workflow upload bằng `xcrun altool`.
+TestFlight không cần đẩy app ra store, nhưng cần Apple Developer Program và App Store Connect.
 
 ## 6. Firebase config
 
-- Android: `GOOGLE_SERVICES_JSON_BASE64` (secret) â†’ `apps/mobile/android/app/google-services.json`.
-- iOS: `GOOGLE_SERVICE_INFO_PLIST_BASE64` (secret) â†’ `apps/mobile/ios/Runner/GoogleService-Info.plist`.
+- Android: `GOOGLE_SERVICES_JSON_BASE64` (secret) → `apps/mobile/android/app/google-services.json`.
+- iOS: `GOOGLE_SERVICE_INFO_PLIST_BASE64` (secret) → `apps/mobile/ios/Runner/GoogleService-Info.plist`.
 
-LÆ°u Ã½: project chÆ°a báº­t Gradle plugin `com.google.gms.google-services`; náº¿u FCM Android cáº§n plugin,
-thÃªm plugin vÃ  rebuild. Mobile hiá»‡n khá»Ÿi táº¡o Firebase báº±ng `FirebaseOptions` tá»« dart-defines.
+Lưu ý: project chưa bật Gradle plugin `com.google.gms.google-services`; nếu FCM Android cần plugin,
+thêm plugin và rebuild. Mobile hiện khởi tạo Firebase bằng `FirebaseOptions` từ dart-defines.
 
-## 7. PhÃ¡t hÃ nh
+## 7. Phát hành
 
 ```bash
 git tag v1.1.1
 git push origin v1.1.1
 ```
 
-Workflow sáº½ build Android + iOS, upload artifact vÃ  táº¡o GitHub Release.
+Workflow sẽ build Android + iOS, upload artifact và tạo GitHub Release.
 
-Kiá»ƒm tra local trÆ°á»›c khi tag:
+Kiểm tra local trước khi tag:
 
 ```powershell
 cd mobile
@@ -162,11 +162,11 @@ flutter analyze
 flutter test
 ```
 
-## 8. LÆ°u Ã½
+## 8. Lưu ý
 
-- KhÃ´ng commit keystore, `.p8`, `key.properties`, `google-services.json` tháº­t.
-- API URL pháº£i HTTPS cho báº£n phÃ¡t hÃ nh tháº­t.
-- GitHub Release chá»‰ cháº¡y vá»›i tag; manual dispatch chá»‰ artifact.
-- iOS unsigned IPA **khÃ´ng cÃ i trá»±c tiáº¿p** â€” pháº£i kÃ½ láº¡i hoáº·c dÃ¹ng signed IPA.
-- Apple Developer Program cÃ³ phÃ­ thÆ°á»ng niÃªn; Apple ID miá»…n phÃ­ chá»‰ kÃ½ Ä‘Æ°á»£c 7 ngÃ y/láº§n.
+- Không commit keystore, `.p8`, `key.properties`, `google-services.json` thật.
+- API URL phải HTTPS cho bản phát hành thật.
+- GitHub Release chỉ chạy với tag; manual dispatch chỉ artifact.
+- iOS unsigned IPA **không cài trực tiếp** — phải ký lại hoặc dùng signed IPA.
+- Apple Developer Program có phí thường niên; Apple ID miễn phí chỉ ký được 7 ngày/lần.
 

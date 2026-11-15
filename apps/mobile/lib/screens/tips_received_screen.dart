@@ -195,7 +195,7 @@ class _TipCard extends StatelessWidget {
                 ),
                 if (tip.message != null) ...[
                   const SizedBox(height: 3),
-                  Text('“${tip.message}”',
+                  Text('"${tip.message}"',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
