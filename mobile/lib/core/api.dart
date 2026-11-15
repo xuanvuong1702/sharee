@@ -312,7 +312,7 @@ class Api {
   }) async {
     final data = await _send('POST', '/api/bookings/$bookingId/tips', body: {
       'amount': amount,
-      'method': method,
+      'paymentMethod': method,
       'message': message,
     }) as Map<String, dynamic>;
     return CreateTipResult.fromJson(data);

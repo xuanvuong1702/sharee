@@ -142,7 +142,7 @@ public record TipAccountDto(
 public record SetTipAccountRequest(
     string BankBin, string? BankName, string AccountNumber, string AccountName);
 
-public record CreateTipRequest(int Amount, string? Message, string Method);
+public record CreateTipRequest(int Amount, string? Message, string PaymentMethod);
 
 public record TipDto(
     Guid Id, Guid BookingId, Guid TripId, string PassengerName, string DriverName,

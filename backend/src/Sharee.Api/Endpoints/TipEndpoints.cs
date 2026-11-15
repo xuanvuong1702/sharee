@@ -127,7 +127,7 @@ public static partial class TipEndpoints
             Guid id, [FromBody] CreateTipRequest request, HttpContext http, Db db, CancellationToken ct) =>
         {
             var userId = http.User.GetUserId();
-            var method = (request.Method ?? "").Trim().ToLowerInvariant();
+            var method = (request.PaymentMethod ?? "").Trim().ToLowerInvariant();
             if (method is not ("bank_transfer" or "cash"))
                 return Results.BadRequest(new { error = "Phương thức tip không hợp lệ" });
             if (request.Amount is < 1000 or > MaxAmount)
