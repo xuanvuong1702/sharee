@@ -110,6 +110,46 @@ export default function HomePage() {
           </a>
         </div>
 
+        <section className="inspiration-section">
+          <SectionTitle
+            eyebrow="Cảm hứng"
+            title="Đi để thấy Việt Nam gần hơn"
+            action={<span className="muted-small">Tuyến đẹp, tài xế xác thực</span>}
+          />
+          <div className="inspiration-grid">
+            <Link
+              href={`/search/?route=${routePresets[0].id}&fromLat=${routePresets[0].fromLat}&fromLng=${routePresets[0].fromLng}&toLat=${routePresets[0].toLat}&toLng=${routePresets[0].toLng}&fromLabel=${encodeURIComponent(routePresets[0].fromLabel)}&toLabel=${encodeURIComponent(routePresets[0].toLabel)}&seats=1`}
+              className="inspiration-card"
+            >
+              <div className="inspiration-img inspiration-img-coast" />
+              <div className="inspiration-copy">
+                <span>Biển &amp; thành phố</span>
+                <h3>Hà Nội → Hải Phòng</h3>
+                <p>Từ 180.000đ · 2 giờ 30</p>
+              </div>
+            </Link>
+            <Link
+              href={`/search/?route=${routePresets[1].id}&fromLat=${routePresets[1].fromLat}&fromLng=${routePresets[1].fromLng}&toLat=${routePresets[1].toLat}&toLng=${routePresets[1].toLng}&fromLabel=${encodeURIComponent(routePresets[1].fromLabel)}&toLabel=${encodeURIComponent(routePresets[1].toLabel)}&seats=1`}
+              className="inspiration-card"
+            >
+              <div className="inspiration-img inspiration-img-hanoi" />
+              <div className="inspiration-copy">
+                <span>Bay đúng giờ</span>
+                <h3>Hà Nội → Nội Bài</h3>
+                <p>Từ 90.000đ · 45 phút</p>
+              </div>
+            </Link>
+            <Link href="/account/" className="inspiration-card">
+              <div className="inspiration-img inspiration-img-road" />
+              <div className="inspiration-copy">
+                <span>Đi hằng ngày</span>
+                <h3>Daily shuttle</h3>
+                <p>Tuyến cố định · 15.000đ</p>
+              </div>
+            </Link>
+          </div>
+        </section>
+
         <SectionTitle eyebrow="Vì sao chọn Sharee?" title="An toàn, minh bạch, tiện lợi" />
         <div className="features-grid">
           {features.map((feature) => (

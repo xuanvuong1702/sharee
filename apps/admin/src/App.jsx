@@ -89,6 +89,19 @@ const NAV = [
 function App() {
   const [token, setToken] = useState(localStorage.getItem('sharee_admin_token'));
   const [tab, setTab] = useState('dashboard');
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen((value) => !value);
+      }
+      if (event.key === 'Escape') setPaletteOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   if (!token) return <Login onLogin={setToken} />;
 
@@ -116,7 +129,12 @@ function App() {
             <div className="caption">SHAREE / {NAV.find(([k]) => k === tab)?.[1]}</div>
             <h1>{NAV.find(([k]) => k === tab)?.[1]}</h1>
           </div>
-          <div className="pill">Admin</div>
+          <div className="header-tools">
+            <button className="command-trigger" onClick={() => setPaletteOpen(true)}>
+              <span>⌘ K</span> Tìm nhanh
+            </button>
+            <div className="pill">Admin</div>
+          </div>
         </header>
         {tab === 'dashboard' && <Dashboard token={token} onNavigate={setTab} />}
         {tab === 'verifications' && <Verifications token={token} />}
@@ -127,6 +145,48 @@ function App() {
         {tab === 'trips' && <Trips token={token} />}
         {tab === 'daily' && <DailyAdmin token={token} />}
       </main>
+      {paletteOpen && (
+        <CommandPalette
+          onClose={() => setPaletteOpen(false)}
+          onRun={(key) => { setTab(key); setPaletteOpen(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CommandPalette({ onClose, onRun }) {
+  const [query, setQuery] = useState('');
+  const items = NAV.filter(([, label]) => label.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <div className="command-overlay" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="command-panel" role="dialog" aria-label="Tìm nhanh">
+        <div className="command-search">
+          <span>⌘</span>
+          <input
+            autoFocus
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Đi tới màn hình..."
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && items[0]) onRun(items[0][0]);
+              if (event.key === 'Escape') onClose();
+            }}
+          />
+          <kbd>ESC</kbd>
+        </div>
+        <div className="command-list">
+          {items.map(([key, label, icon]) => (
+            <button key={key} onClick={() => onRun(key)}>
+              <span className="command-icon">{icon}</span>
+              <span>{label}</span>
+              <span className="command-enter">↵</span>
+            </button>
+          ))}
+          {items.length === 0 && <div className="empty">Không tìm thấy màn hình.</div>}
+        </div>
+        <div className="command-foot">Nhấn <b>Enter</b> để mở · <b>Esc</b> để đóng</div>
+      </div>
     </div>
   );
 }

@@ -362,3 +362,19 @@ h1, h2, h3, p { margin-top: 0; }
 .sh-empty-icon { font-size: 24px; color: var(--sh-blue); }
 .sh-empty strong { display: block; color: var(--sh-ink); margin: 6px 0 3px; }
 .sh-empty p { margin: 0; font-size: 13px; }
+
+.inspiration-section { padding-top: 34px; }
+.inspiration-grid { display: grid; grid-template-columns: 1.15fr 0.9fr 0.9fr; gap: 14px; }
+.inspiration-card { position: relative; min-height: 270px; border-radius: 26px; overflow: hidden; display: flex; align-items: flex-end; color: #fff; box-shadow: var(--sh-shadow-soft); isolation: isolate; }
+.inspiration-card:hover .inspiration-img { transform: scale(1.04); }
+.inspiration-img { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform .5s ease; z-index: -2; }
+.inspiration-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,26,51,0.02) 15%, rgba(7,26,51,0.82) 100%); }
+.inspiration-img-coast { background-image: url('/images/vietnam-road.jpg'); }
+.inspiration-img-hanoi { background-image: url('/images/hanoi.jpg'); }
+.inspiration-img-road { background-image: url('/images/road-trip.jpg'); }
+.inspiration-copy { padding: 20px; display: grid; gap: 5px; z-index: 1; }
+.inspiration-copy span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.72); }
+.inspiration-copy h3 { font-size: 20px; line-height: 1.2; letter-spacing: -0.5px; margin: 0; color: #fff; }
+.inspiration-copy p { font-size: 11px; color: rgba(255,255,255,.74); margin: 0; }
+@media (max-width: 900px) { .inspiration-grid { grid-template-columns: 1fr 1fr; } .inspiration-card:first-child { grid-column: span 2; } }
+@media (max-width: 620px) { .inspiration-grid { grid-template-columns: 1fr; } .inspiration-card:first-child { grid-column: auto; } .inspiration-card { min-height: 220px; } }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../core/app_state.dart';
 import '../core/format.dart';
@@ -325,6 +326,8 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               if (booking.confirmed || booking.status == 'completed') ...[
                 const SizedBox(height: 12),
+                _TicketCard(booking: booking),
+                const SizedBox(height: 10),
                 PrimaryButton(
                   label: 'Theo dõi trực tiếp',
                   icon: Icons.near_me_rounded,
@@ -695,6 +698,87 @@ class _Step extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TicketCard extends StatelessWidget {
+  final Booking booking;
+  const _TicketCard({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    final code = booking.id.substring(0, 8).toUpperCase();
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 13, 15, 10),
+            child: Row(
+              children: [
+                const Icon(Icons.confirmation_number_rounded,
+                    size: 17, color: AppTheme.primary),
+                const SizedBox(width: 7),
+                const Text('Vé điện tử',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                const Spacer(),
+                Pill('Đã xác nhận',
+                    color: AppTheme.success, background: AppTheme.successSoft),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${booking.originLabel.split(',').first} → ${booking.destinationLabel.split(',').first}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 5),
+                      Text('${dayLabel(booking.departureTime)} · ${hhmm(booking.departureTime)}',
+                          style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                      const SizedBox(height: 2),
+                      Text('${booking.seats} ghế · ${money(booking.priceTotal)}',
+                          style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                      const SizedBox(height: 7),
+                      Text('Mã vé  $code',
+                          style: const TextStyle(
+                              fontSize: 10.5,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primary)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.line),
+                  ),
+                  child: QrImageView(
+                    data: 'SHAREE:${booking.id}',
+                    size: 72,
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
