@@ -22,7 +22,7 @@ class AppCard extends StatelessWidget {
     this.gradient,
     this.color,
     this.border,
-    this.radius = 20,
+    this.radius = 24,
     this.shadow = true,
   });
 
@@ -111,7 +111,7 @@ class PrimaryButton extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: gradient ?? const LinearGradient(colors: [Color(0xFF1F63F0), Color(0xFF1149D6)]),
+        gradient: gradient ?? const LinearGradient(colors: [Color(0xFF2A6BFF), Color(0xFF1747CC)]),
         boxShadow: AppTheme.liftedShadow,
       ),
       child: FilledButton(
@@ -151,10 +151,10 @@ class Pill extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = color ?? AppTheme.muted;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: background ?? const Color(0xFFF1F4F9),
-        borderRadius: BorderRadius.circular(7),
+        color: background ?? const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -163,7 +163,8 @@ class Pill extends StatelessWidget {
             Icon(icon, size: 11, color: fg),
             const SizedBox(width: 3),
           ],
-          Text(text, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg)),        ],
+          Text(text, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: fg)),
+        ],
       ),
     );
   }

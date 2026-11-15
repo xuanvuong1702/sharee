@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Hà Nội → Hải Phòng',
                       subtitle: '2 giờ 30 · 150.000đ',
                       icon: Icons.directions_car_filled_rounded,
-                      colors: const [Color(0xFF1657E8), Color(0xFF3B82F6)],
+                      colors: const [Color(0xFF1F5EFF), Color(0xFF133B8F)],
                       onTap: () {
                         setState(() => _preset = 0);
                         _search();
@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Hà Nội → Nội Bài',
                       subtitle: '45 phút · 90.000đ',
                       icon: Icons.flight_takeoff_rounded,
-                      colors: const [Color(0xFF0B2A6B), Color(0xFF1657E8)],
+                      colors: const [Color(0xFF071A33), Color(0xFF1F5EFF)],
                       onTap: () {
                         setState(() => _preset = 1);
                         _search();
@@ -409,31 +409,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              const SectionHeader('Vì sao chọn Sharee?'),
+              const SectionHeader('An tâm mỗi chuyến'),
               Row(
                 children: const [
                   Expanded(
                       child: _Benefit(
                           icon: Icons.verified_user_rounded,
-                          title: 'Đã xác thực',
+                          title: 'Tài xế KYC',
                           sub: 'CCCD & GPLX')),
                   SizedBox(width: 8),
                   Expanded(
                       child: _Benefit(
-                          icon: Icons.payments_rounded,
-                          title: 'Giá rõ ràng',
-                          sub: 'Không phụ phí')),
+                          icon: Icons.lock_rounded,
+                          title: 'Escrow',
+                          sub: 'Giữ tiền an toàn')),
                   SizedBox(width: 8),
                   Expanded(
                       child: _Benefit(
-                          icon: Icons.support_agent_rounded,
-                          title: 'Hỗ trợ 24/7',
-                          sub: 'Khi cần')),
+                          icon: Icons.star_rounded,
+                          title: 'Đánh giá thật',
+                          sub: 'Sao & hoàn thành')),
                 ],
               ),
               const SizedBox(height: 16),
               AppCard(
-                gradient: const LinearGradient(colors: [Color(0xFF0B2A6B), Color(0xFF1657E8)]),
+                gradient: const LinearGradient(colors: [Color(0xFF071A33), Color(0xFF12306B)]),
                 border: null,
                 child: Row(
                   children: [

@@ -127,16 +127,19 @@ class AppScope extends InheritedNotifier<AppState> {
 }
 
 class AppTheme {
-  static const primary = Color(0xFF1657E8);
-  static const primaryDark = Color(0xFF0B3FC0);
-  static const primarySoft = Color(0xFFEAF0FF);
-  static const accent = Color(0xFFFF9F1C);
-  static const ink = Color(0xFF0A1A2F);
-  static const muted = Color(0xFF68778D);
-  static const mutedLight = Color(0xFF95A2B5);
-  static const bg = Color(0xFFF5F7FB);
+  static const primary = Color(0xFF1F5EFF);
+  static const primaryDark = Color(0xFF1747CC);
+  static const primarySoft = Color(0xFFEBF0FF);
+  static const accent = Color(0xFFFFB020);
+  static const mint = Color(0xFF00C2A8);
+  static const ink = Color(0xFF071A33);
+  static const muted = Color(0xFF64748B);
+  static const mutedLight = Color(0xFF94A3B8);
+  static const bg = Color(0xFFF6F8FB);
+  static const sand = Color(0xFFF6F1E7);
   static const surface = Colors.white;
-  static const line = Color(0xFFE8EDF5);
+  static const surfaceAlt = Color(0xFFFBFCFE);
+  static const line = Color(0xFFE4EAF3);
   static const success = Color(0xFF0FA968);
   static const successSoft = Color(0xFFE6F8F0);
   static const warning = Color(0xFFB45309);
@@ -144,31 +147,31 @@ class AppTheme {
   static const dangerSoft = Color(0xFFFDECEC);
 
   static const gradient = LinearGradient(
-    colors: [Color(0xFF0B2A6B), Color(0xFF1657E8), Color(0xFF3B82F6)],
+    colors: [Color(0xFF071A33), Color(0xFF133B8F), Color(0xFF1F5EFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const softShadow = [
-    BoxShadow(color: Color(0x0D0A1A2F), blurRadius: 24, offset: Offset(0, 8)),
+    BoxShadow(color: Color(0x0A071A33), blurRadius: 24, offset: Offset(0, 8)),
   ];
 
   static const liftedShadow = [
-    BoxShadow(color: Color(0x1A1657E8), blurRadius: 26, offset: Offset(0, 12)),
+    BoxShadow(color: Color(0x1F1F5EFF), blurRadius: 28, offset: Offset(0, 14)),
   ];
 
   static TextTheme get _textTheme => const TextTheme(
-        displayLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, letterSpacing: -1.0, height: 1.1),
-        headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.7, height: 1.15),
-        headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, height: 1.2),
+        displayLarge: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -1.2, height: 1.08),
+        headlineLarge: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8, height: 1.12),
+        headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.5, height: 1.18),
         titleLarge: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, letterSpacing: -0.3),
         titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.1),
-        bodyLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.5),
-        bodyMedium: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500, height: 1.45),
-        bodySmall: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, height: 1.4),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-        labelMedium: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-        labelSmall: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 0.08),
+        bodyLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w400, height: 1.5),
+        bodyMedium: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w400, height: 1.45),
+        bodySmall: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w400, height: 1.4),
+        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        labelMedium: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        labelSmall: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, letterSpacing: 0.08),
       );
 
   static ThemeData get light {
@@ -177,7 +180,7 @@ class AppTheme {
       brightness: Brightness.light,
     ).copyWith(
       primary: primary,
-      secondary: accent,
+      secondary: mint,
       surface: surface,
       error: danger,
       onSurface: ink,
@@ -187,7 +190,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: bg,
-      fontFamily: 'Roboto',
+      fontFamily: 'BeVietnamPro',
       splashFactory: InkSparkle.splashFactory,
       textTheme: _textTheme,
       appBarTheme: const AppBarTheme(
@@ -197,14 +200,18 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: ink),
+        titleTextStyle: TextStyle(
+            fontFamily: 'BeVietnamPro',
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+            color: ink),
       ),
       cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: line),
         ),
       ),
@@ -212,19 +219,19 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF8FAFD),
-        hintStyle: const TextStyle(color: mutedLight, fontSize: 13, fontWeight: FontWeight.w500),
+        hintStyle: const TextStyle(color: mutedLight, fontSize: 13, fontWeight: FontWeight.w400),
         labelStyle: const TextStyle(color: muted, fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: primary, width: 1.5),
         ),
       ),
@@ -235,7 +242,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -245,13 +252,13 @@ class AppTheme {
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           side: const BorderSide(color: Color(0xFFD5E1FF)),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primary,
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -282,7 +289,7 @@ class AppTheme {
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
               fontSize: 10.5,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: states.contains(WidgetState.selected) ? primary : mutedLight,
             )),
         iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(

@@ -150,12 +150,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Chia sẻ chuyến đi, tiết kiệm chi phí,\ngặp gỡ những người đã xác thực.',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
+                      color: Colors.white.withValues(alpha: 0.78),
                       fontSize: 13,
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      Pill('Tài xế KYC',
+                          icon: Icons.verified_user_rounded,
+                          color: Colors.white,
+                          background: Colors.white.withValues(alpha: 0.13)),
+                      Pill('Escrow an toàn',
+                          icon: Icons.lock_rounded,
+                          color: Colors.white,
+                          background: Colors.white.withValues(alpha: 0.13)),
+                      Pill('Đánh giá thật',
+                          icon: Icons.star_rounded,
+                          color: Colors.white,
+                          background: Colors.white.withValues(alpha: 0.13)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(

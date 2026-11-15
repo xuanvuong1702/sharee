@@ -265,6 +265,27 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             style: const TextStyle(fontSize: 10, color: AppTheme.muted),
                           ),
                         ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.successSoft,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.lock_rounded, size: 14, color: AppTheme.success),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Tiền được giữ an toàn, chỉ chuyển cho tài xế sau khi chuyến hoàn tất.',
+                                  style: TextStyle(
+                                      fontSize: 9.5, color: AppTheme.success, height: 1.35),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),

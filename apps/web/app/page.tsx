@@ -4,10 +4,10 @@ import { SearchBox } from "@/components/SearchBox";
 import { money, routePresets } from "@/lib/sharee";
 
 const features = [
-  { icon: "✓", title: "Tài xế xác thực", text: "Hồ sơ, GPLX và phương tiện được kiểm duyệt." },
-  { icon: "₫", title: "Giá minh bạch", text: "Biết trước chi phí, không phụ phí ẩn." },
-  { icon: "⌖", title: "Theo dõi trực tiếp", text: "Xem vị trí và ETA trên bản đồ." },
-  { icon: "♥", title: "Tip tài xế", text: "Ủng hộ tài xế bằng VietQR hoặc tiền mặt." },
+  { icon: "✓", title: "Tài xế KYC", text: "CCCD, GPLX, giấy tờ xe và selfie được duyệt thủ công." },
+  { icon: "⌂", title: "Escrow an toàn", text: "Tiền chỉ được chuyển cho tài xế sau khi chuyến hoàn tất." },
+  { icon: "⚖", title: "Khiếu nại minh bạch", text: "Khóa tiền, xem bằng chứng hai bên và xử lý bởi admin." },
+  { icon: "★", title: "Uy tín thật", text: "Điểm tín nhiệm từ đánh giá, tỷ lệ hoàn thành và số chuyến." },
 ];
 
 export default function HomePage() {
@@ -16,28 +16,34 @@ export default function HomePage() {
       <section className="home-hero" id="tim-chuyen">
         <div className="sh-container-wide hero-grid">
           <div className="hero-copy">
-            <Badge tone="blue">CARPOOLING &amp; DAILY SHUTTLE</Badge>
+            <Badge tone="blue">NỀN TẢNG ĐI CHUNG AN TOÀN</Badge>
             <h1>
               Đi chung một chuyến,
               <br />
-              chia sẻ một hành trình.
+              <span>an tâm trọn hành trình.</span>
             </h1>
             <p>
-              Đặt ghế nhanh, tài xế xác thực, theo dõi trực tiếp và tip tài xế ngay trên một nền tảng.
+              Đặt ghế nhanh, tài xế KYC, tiền được giữ trong escrow và theo dõi trực tiếp
+              trên một nền tảng minh bạch.
             </p>
             <div className="hero-stats">
               <div>
-                <strong>10K+</strong>
-                <span>Hành khách</span>
+                <strong>100%</strong>
+                <span>Tài xế KYC</span>
+              </div>
+              <div>
+                <strong>Escrow</strong>
+                <span>Bảo vệ thanh toán</span>
               </div>
               <div>
                 <strong>4.9</strong>
-                <span>Đánh giá</span>
+                <span>Đánh giá thật</span>
               </div>
-              <div>
-                <strong>24/7</strong>
-                <span>Hỗ trợ</span>
-              </div>
+            </div>
+            <div className="hero-trust">
+              <span>✓ Xác thực CCCD &amp; GPLX</span>
+              <span>✓ Tiền giữ đến khi hoàn tất</span>
+              <span>✓ Hỗ trợ tranh chấp</span>
             </div>
             <div className="hero-actions">
               <a
