@@ -124,9 +124,11 @@ class _AppealScreenState extends State<AppealScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _escrow!.status == 'disputed'
-                                    ? 'Tiền đang bị khóa do khiếu nại'
-                                    : 'Tiền đang được giữ trong escrow',
+                                _escrow!.method == 'cash' && _escrow!.status == 'cash_pending'
+                                    ? 'Thanh toán tiền mặt khi hoàn tất'
+                                    : _escrow!.status == 'disputed'
+                                        ? 'Tiền đang bị khóa do khiếu nại'
+                                        : 'Tiền đang được giữ trong escrow',
                                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: 2),

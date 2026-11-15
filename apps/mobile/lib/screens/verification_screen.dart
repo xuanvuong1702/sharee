@@ -318,6 +318,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final pending = status == 'pending';
     final rejected = status == 'rejected';
     final suspended = status == 'suspended';
+    final expired = status == 'expired';
     final title = approved
         ? 'Đã xác thực tài xế'
         : pending
@@ -326,7 +327,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 ? 'Hồ sơ bị từ chối'
                 : suspended
                     ? 'Tài khoản tài xế bị tạm dừng'
-                    : 'Chưa xác thực tài xế';
+                    : expired
+                        ? 'Giấy tờ xác thực đã hết hạn'
+                        : 'Chưa xác thực tài xế';
     final color = approved
         ? AppTheme.success
         : rejected || suspended
@@ -367,9 +370,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
             const Text('Quản trị viên đang kiểm tra giấy tờ. Bạn không thể sửa hồ sơ lúc này.',
                 style: TextStyle(fontSize: 11, color: AppTheme.muted, height: 1.4)),
           ],
-          if (rejected || suspended) ...[
+          if (rejected || suspended || expired) ...[
             const SizedBox(height: 7),
-            Text(info?.rejectionReason ?? 'Vui lòng liên hệ hỗ trợ.',
+            Text(info?.rejectionReason ??
+                    (expired ? 'Vui lòng cập nhật giấy tờ mới và gửi lại hồ sơ.' : 'Vui lòng liên hệ hỗ trợ.'),
                 style: const TextStyle(fontSize: 11.5, color: AppTheme.ink, height: 1.4)),
           ],
           if (info == null || status == 'unverified' || status == 'draft') ...[
