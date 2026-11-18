@@ -1,123 +1,309 @@
-# DESIGN.md — Điểm vào của bộ tài liệu thiết kế
+# DESIGN.md — Sharee: chợ chuyến đi thương lượng
 
-> Nguồn: rút ra từ 14 screenshot iPhone của app Green SM v5.13.0 (Home, Hoạt động, Thông báo, Hồ sơ, Cài đặt, Cập nhật tài khoản, Thanh toán, Trung tâm hỗ trợ, Ưu đãi của tôi, Safety Centre, Hội viên, Đóng góp bản đồ).
-> Trạng thái: **bản nháp v0.1**. Mọi số đo (px, hex) là **ước lượng từ ảnh** (ảnh ~3x, quy về pt). Cần đối chiếu với file Figma/code thật nếu có. Mục nào đánh dấu `[ĐỀ XUẤT]` là phần ảnh không có, tôi bổ sung để hệ thống đầy đủ.
-> Lưu ý bản quyền: tài liệu mô tả **hệ thống thiết kế** (bố cục, quy tắc, token), không chép logo, minh họa 3D, ảnh banner hay mascot. App của bạn phải dùng tài sản (asset) riêng.
+> **v1.0** — source of truth cho thiết kế lại toàn bộ app.
+> Đọc `README.md` trước. Bản Green SM cũ nằm ở `_reference-green-sm/`, chỉ để tham khảo.
 
-## Cách AI sử dụng bộ tài liệu này
+## 1. Tầm nhìn
 
-Đọc theo thứ tự, và **không được thiết kế trước khi đọc xong mục 1-4 dưới đây**:
+**Sharee là nơi hai người tự thỏa thuận một chuyến đi, còn nền tảng lo phần an toàn, minh bạch và thanh toán.**
 
-| File | Nội dung | Khi nào đọc |
+App không phải một hãng xe. App không áp giá. App không giấu tài xế sau thuật toán. App tạo một **chợ** nơi người đi và tài xế gặp nhau, thấy giá, thấy uy tín, thấy chuyến, rồi tự quyết định.
+
+### Một câu định vị
+
+> **Trả giá của bạn. Chọn tài xế của bạn. Đi theo cách của bạn.**
+
+### Giá trị cốt lõi
+
+| Giá trị | Nghĩa là |
+|---|---|
+| **Tự do giá** | Người đi đặt giá; tài xế nhận, trả giá hoặc báo giá. Không surge, không giá ảo. |
+| **Tin cậy** | KYC tài xế, đánh giá thật, lịch sử chuyến, escrow, tranh chấp có bằng chứng. |
+| **Rõ ràng** | Giá chốt, phí, toll, huỷ, hoàn tiền đều hiển thị trước khi xác nhận. |
+| **An toàn** | Theo dõi trực tiếp, chia sẻ chuyến, SOS, che số điện thoại. |
+| **Công bằng** | Tài xế thấy yêu cầu thật; người đi thấy lời cháo thật; không bóp giá bằng thuật toán. |
+
+## 2. Actor
+
+| Actor | Mục tiêu chính | Không được làm |
 |---|---|---|
-| `DESIGN.md` (file này) | Triết lý, ưu tiên, luật cứng, checklist | Luôn đọc đầu tiên |
-| `tokens.json` | Màu, font, spacing, bo góc, bóng, motion | Mọi lần dựng UI |
-| `components.md` | Thông số và trạng thái từng component | Khi dùng component |
-| `screens.md` | Cấu trúc từng màn hình mẫu (golden screens) | Khi thiết kế màn mới tương tự |
-| `content-and-states.md` | Giọng văn, microcopy, trạng thái hệ thống, accessibility, anti-patterns | Khi viết chữ, xử lý lỗi/rỗng |
+| **Passenger** | Tìm chuyến đúng giá, đúng giờ, an toàn | Đặt giá thấp hơn 0; spam nhiều request; quấy rối |
+| **Driver** | Nhận chuyến có lời, chủ động giá, kiếm thu nhập | Nhận chuyến khi chưa KYC; huỷ vô lý; đòi thêm tiền ngoài app |
+| **Admin/Ops** | Giữ chợ an toàn, xử lý KYC/tranh chấp/SOS | Tự đặt giá thay người dùng; xem dữ liệu nhạy cảm không lý do |
+| **Support** | Hỗ trợ, hoàn tiền, tra cứu | Can thiệp giá đã chốt nếu không có tranh chấp |
 
-## 1. Bối cảnh sản phẩm (suy ra từ ảnh, hãy sửa nếu sai)
+## 3. Mục tiêu và phi mục tiêu
 
-- **Loại app**: super-app di chuyển + đồ ăn + giao hàng + thuê xe + hội viên + gamification môi trường ("Green Race").
-- **Người dùng**: đại chúng Việt Nam, dùng một tay, ngoài trời, thường vội. Có "Chế độ tối giản" dành cho người cao tuổi và trẻ em, nghĩa là độ tuổi và trình độ công nghệ rất rộng.
-- **Mục tiêu giao diện**: từ lúc mở app đến lúc bấm đặt xe hoặc đặt món chỉ cần 1-2 chạm.
-- **Non-goals** `[ĐỀ XUẤT, hãy xác nhận]`: không làm mạng xã hội, không làm trang tin tức dài, không để khuyến mãi che mất hành động đặt xe/đặt món.
+### Mục tiêu
 
-## 2. Nguyên tắc thiết kế
+- Đặt chuyến từ mở app đến gửi yêu cầu **≤ 60 giây**.
+- Tài xế hiểu yêu cầu và gửi giá **≤ 20 giây**.
+- Người đi chốt tài xế **≤ 3 chạm** từ danh sách offer.
+- Không có màn hình nào không có loading/rỗng/lỗi.
+- Tất cả giao dịch tiền có biên nhận và trạng thái.
+- Hỗ trợ tiếng Việt có dấu, màn 360pt, một tay.
 
-**P1. Hành động chính trước, dịch vụ phụ sau.**
-Trên Home thứ tự cố định: ô tìm kiếm → gợi ý cá nhân hóa → 2 dịch vụ chính (Đặt xe, Đặt đồ ăn) → lưới dịch vụ phụ → banner → gợi ý quán.
-- Do: 2 thẻ dịch vụ chính luôn to hơn, nằm trên lưới dịch vụ phụ.
-- Don't: đưa banner quảng cáo lên trên ô tìm kiếm hoặc 2 thẻ chính.
-- Vì sao: 80% lượt dùng là đặt xe/đặt món.
+### Phi mục tiêu (không làm)
 
-**P2. Mềm mại và thân thiện, nhưng không đánh đổi độ rõ.**
-Bo góc lớn, minh họa 3D pastel, giọng văn gần gũi ("Đặt món yêu thích cho bữa ăn hôm nay nhé.").
-- Do: dùng minh họa để nhận diện dịch vụ; chữ vẫn là thứ chính.
-- Don't: minh họa che chữ, hoặc dùng minh họa thay nhãn.
+- Đồ ăn, giao hàng, mua sắm, phim, siêu app.
+- Membership, nhiệm vụ, gamification môi trường.
+- App tự đặt giá hoặc surge.
+- Đấu giá kín nhiều vòng phức tạp.
+- Mạng xã hội, feed tin tức.
+- Ví crypto.
 
-**P3. Một màu thương hiệu = một ý nghĩa "hành động".**
-Teal (xanh ngọc) dành cho nút chính, link, trạng thái đang chọn, giá. Các màu khác chỉ mang nghĩa ngữ nghĩa: vàng = ưu đãi/mới/cảnh báo nhẹ, hồng = an toàn/khẩn cấp, xanh lá = môi trường/hội viên.
-- Don't: tô màu trang trí tùy hứng; thêm màu thứ hai làm nút chính.
+## 4. Mô hình giá — trái tim sản phẩm
 
-**P4. Kính mờ (glass) chỉ ở lớp nổi.**
-Tab bar và ô tìm kiếm trên nền bản đồ dùng hiệu ứng kính. Nội dung chính (thẻ, danh sách, form) nằm trên nền đặc.
-- Don't: đặt chữ nhỏ trực tiếp lên kính mờ không có lớp nền đảm bảo contrast.
+### 4.1 Nguyên tắc
 
-**P5. Không bao giờ để màn hình "trống câm".**
-Mọi danh sách đều có trạng thái rỗng gồm minh họa + một câu giải thích + (nếu hợp lý) một nút hành động.
+1. **Không có giá do app quyết định.** Không có “giá cước chuẩn” bắt buộc.
+2. Passenger có thể chọn:
+   - **Đặt giá**: nhập số tiền mình muốn trả.
+   - **Để tài xế báo giá**: không nhập giá, tài xế gửi offer.
+3. Driver có thể:
+   - **Nhận ngay** mức giá passenger đưa.
+   - **Trả giá** (counter-offer) cao hơn/thấp hơn.
+   - **Gửi báo giá** nếu passenger mở.
+4. **Giá chốt khi passenger chọn offer.** Từ lúc đó giá bị khóa, không đổi trừ khi hai bên đồng ý phụ phí.
+5. **Không phí ẩn.** Giá chốt phải bao gồm:
+   - Cước đã thỏa thuận.
+   - Phí nền tảng (nếu bật, hiển thị riêng).
+   - Toll/parking chỉ được thêm nếu khai báo trước và passenger xác nhận.
+6. **Không có surge.** Nếu cầu cao, tài xế tự trả giá cao hơn; app không nhân giá.
+7. **Giá tham khảo** (nếu có) chỉ là dữ liệu lịch sử ẩn sau “Tham khảo”, không bắt buộc, không tự điền.
+8. **Tiền tệ VND**, hiển thị `120.000đ`.
 
-**P6. Tin cậy khi đụng tới tiền và danh tính.**
-Che thông tin nhạy cảm (chỉ 4 số cuối thẻ, `**3286` cho ví), hiển thị rõ trạng thái xác thực, có huy hiệu pháp lý ở cuối trang cài đặt.
+### 4.2 Các loại offer
 
-## 3. Thứ tự ưu tiên khi các quy tắc xung đột
+| Loại | Ai tạo | Khi nào | Hiệu lực |
+|---|---|---|---|
+| `ask` | Passenger | Nhập giá trước | 2 phút, có thể gia hạn 1 lần |
+| `open` | Passenger | Không nhập giá | 3 phút |
+| `accept` | Driver | Nhận giá ask | Khóa ngay |
+| `counter` | Driver | Đề xuất giá khác | 90 giây |
+| `quote` | Driver | Báo giá cho open | 90 giây |
 
-1. An toàn và pháp lý (Safety, huy hiệu Bộ Công Thương, điều khoản)
-2. Accessibility (contrast, vùng chạm, cỡ chữ động)
-3. Nguyên tắc P1-P6
-4. Token và component trong tài liệu
-5. Thẩm mỹ cá nhân của AI/designer
+### 4.3 Luồng giá tối thiểu
 
-Ví dụ: muốn dùng chữ trắng trên nền teal nhạt cho đẹp nhưng contrast < 4.5:1 → ưu tiên 2 thắng, đổi sang chữ đậm hoặc nền teal đậm hơn (xem lưu ý contrast ở `content-and-states.md`).
-
-## 4. Luật cứng cho AI (vi phạm = làm lại)
-
-1. **Chỉ dùng token trong `tokens.json`.** Không hardcode hex, px, ms.
-2. **Chỉ có 1 nút chính (primary) nổi bật mỗi màn hình/mỗi vùng cuộn.**
-3. **Lưới 4pt**; lề trang 16pt; khoảng cách giữa thẻ cùng hàng 8-12pt.
-4. **Vùng chạm tối thiểu 44x44pt.**
-5. **Mọi component tương tác phải có đủ trạng thái**: default, pressed, disabled, loading; thêm focus và error cho input.
-6. **Nhãn tiếng Việt có dấu đầy đủ**, thiết kế phải chịu được nhãn dài gấp 1.5 lần (ví dụ "Đưa đón sân bay" xuống 2 dòng; tên món bị cắt có dấu "…").
-7. **Tiền tệ**: dùng dấu chấm ngăn cách nghìn và hậu tố `đ`, ví dụ `69.800đ`. Giá gốc gạch ngang nằm cạnh giá khuyến mãi. (Ảnh có chỗ lẫn `34,700 VNĐ`, xem mục 7: không bắt chước.)
-8. **Ngày** dạng `dd/MM` (cùng năm) hoặc `dd/MM/yyyy`; **thời lượng** dạng `21 phút`.
-9. **Không dùng emoji thay icon chức năng.** Emoji chỉ để trang trí tiêu đề thông báo/ưu đãi.
-10. **Mỗi màn hình chỉ dùng một kiểu thanh đầu trang** (xem `components.md` mục TopBar) và cùng một kiểu nút Back toàn app.
-
-## 5. Checklist nghiệm thu (AI phải tự chấm và báo cáo từng dòng)
-
-- [ ] Mọi màu, cỡ chữ, spacing, radius, shadow đều lấy từ token
-- [ ] Có đúng 1 CTA chính nổi bật
-- [ ] Đủ trạng thái: loading, rỗng, lỗi, offline (nếu màn hình có dữ liệu)
-- [ ] Contrast chữ ≥ 4.5:1 (chữ lớn ≥ 3:1), đã kiểm tra chữ trắng trên teal
-- [ ] Vùng chạm ≥ 44pt, khoảng cách giữa các vùng chạm ≥ 8pt
-- [ ] Hoạt động với Dynamic Type 130% mà không vỡ layout
-- [ ] Có nhãn accessibility cho icon, ảnh, nút chỉ có icon
-- [ ] Nhãn/microcopy đúng giọng văn (xem `content-and-states.md`)
-- [ ] Safe area (notch, home indicator) được tôn trọng; tab bar nổi không che nội dung cuối trang
-- [ ] Không dùng anti-pattern nào trong danh sách
-- [ ] Không chép asset/logo/mascot của app khác
-
-## 6. Quy trình làm việc đề xuất
-
-1. Đọc tài liệu → 2. Nêu lại các ràng buộc áp dụng cho yêu cầu (3-5 dòng) → 3. Thiết kế → 4. Tự chấm checklist (mục 5) → 5. Liệt kê chỗ lệch tài liệu (nếu có) và lý do → 6. Đề xuất cập nhật tài liệu nếu phát hiện quy tắc còn thiếu.
-
-## 7. Điểm không nhất quán thấy trong ảnh (không sao chép, nên chuẩn hóa)
-
-| # | Phát hiện | Khuyến nghị |
-|---|---|---|
-| 1 | Nút Back có 2 kiểu: mũi tên trần (Cập nhật tài khoản, Thanh toán, Safety) và nút vuông trắng bo góc (Trung tâm hỗ trợ, Hội viên) | Chọn 1 kiểu cho toàn app |
-| 2 | Trường "Nhóm khách hàng" lại có placeholder "Chọn danh xưng" (trùng trường Xưng hô) | Sửa copy: "Chọn nhóm khách hàng" |
-| 3 | "Safety Centre" tiếng Anh giữa app tiếng Việt, trong khi Home dùng "Trung tâm an toàn" | Thống nhất tên theo ngôn ngữ đã chọn |
-| 4 | Tiền tệ lúc `34,700 VNĐ` (Hồ sơ), lúc `24.200đ` (Thanh toán) | Một định dạng: `34.700đ` |
-| 5 | Hồ sơ dùng icon 3D, Tiện ích & Ưu đãi dùng icon phẳng trong ô xanh lá, Cài đặt dùng icon outline | Quy định rõ: 3D = dịch vụ/tính năng chính, outline = cài đặt/danh sách, phẳng màu = tiện ích phụ |
-| 6 | Nút "Xóa tài khoản" là chữ đen đậm thường, không có màu cảnh báo | Hành động phá hủy nên có màu error và bước xác nhận |
-| 7 | Hai biến thể teal cho nút chính (`#5EC9D1` nhạt và `#2CCBD3` đậm) | Chọn 1 màu nút chính, 1 màu cho trạng thái pressed |
-| 8 | Safety Centre dùng ảnh chân dung người thật làm minh họa, khác hẳn phong cách 3D còn lại | Dùng minh họa cùng phong cách, tránh dùng ảnh stock |
-
-## 8. Câu hỏi còn mở (cần bạn quyết)
-
-1. Dark mode có làm không? Ảnh chỉ có light mode.
-2. "Chế độ tối giản" cho người cao tuổi hoạt động thế nào (chữ to hơn, ít dịch vụ hơn)? Ảnh chỉ thấy dòng cài đặt.
-3. Màn hình đặt xe, chọn điểm đón, theo dõi chuyến chưa có ảnh, cần bổ sung để viết `screens.md` đầy đủ.
-4. Font chính thức là gì (xem `tokens.json`, mục typography)?
-5. App của bạn là app gì, khác biệt gì so với app tham chiếu? Nếu trùng lĩnh vực, hãy chọn một màu thương hiệu và bộ minh họa khác.
-
-## 9. Prompt mẫu để đưa cho AI
-
+```text
+Passenger tạo request
+  → chọn "Đặt giá" hoặc "Để tài xế báo giá"
+  → hệ thống gửi đến tài xế gần
+  → tài xế accept / counter / quote
+  → passenger xem offer list
+  → chọn 1 offer
+  → khóa giá + escrow (nếu online) + tạo Trip
 ```
-Hãy đọc DESIGN.md, tokens.json, components.md, screens.md, content-and-states.md trong thư mục này.
-Nhiệm vụ: thiết kế màn hình <TÊN MÀN HÌNH> cho <MỤC ĐÍCH>.
-Trước khi thiết kế: liệt kê 5 ràng buộc từ tài liệu áp dụng cho màn này.
-Sau khi thiết kế: tự chấm checklist nghiệm thu (DESIGN.md mục 5), báo cáo từng dòng Đạt/Không đạt và lý do.
-Nếu phải lệch tài liệu, nêu rõ chỗ lệch và đề xuất sửa tài liệu thay vì lặng lẽ lệch.
-```
+
+## 5. Nguyên tắc thiết kế
+
+### P1. Map là bối cảnh, offer là nhân vật chính
+
+Home và tracking dùng bản đồ làm nền. Nhưng khi có offer, **offer list/sheet nổi lên trên map** và là nơi mắt nhìn đầu tiên. Không để banner khuyến mãi che offer.
+
+### P2. Giá phải luôn nhìn thấy cùng ngữ cảnh
+
+Mỗi offer phải có:
+
+- Giá.
+- ETA đến điểm đón.
+- Thời gian chuyến.
+- Tài xế + xe.
+- Uy tín/KYC.
+- Chênh lệch so với giá passenger đưa (nếu counter).
+
+Không có offer chỉ có mỗi con số.
+
+### P3. Một màn hình, một quyết định
+
+- Home: đặt chuyến.
+- Offers: chọn tài xế.
+- Tracking: theo dõi/an toàn.
+- Completion: thanh toán/đánh giá.
+Không trộn ba quyết định vào một màn.
+
+### P4. Tin cậy hiển thị đúng lúc
+
+- Trước khi chọn: KYC, sao, số chuyến, tỷ lệ hoàn thành.
+- Trước khi trả tiền: escrow, phương thức, huỷ/hoàn.
+- Trong chuyến: chia sẻ, SOS, che số.
+- Sau chuyến: biên nhận, tranh chấp.
+
+### P5. Nói bằng tiền, không nói bằng thuật ngữ
+
+- “Tài xế đề nghị thêm 20.000đ” thay vì “counter-offer adjustment”.
+- “Tiền đang được giữ” thay vì “escrow authorized”.
+- “Chuyến đã hủy” thay vì “trip state cancelled_by_driver”.
+
+### P6. Không bao giờ để người dùng bối rối vì trạng thái
+
+Mọi trạng thái có:
+
+- Tên trạng thái.
+- Việc đang xảy ra.
+- Việc người dùng cần làm.
+- Thời gian chờ/CTA.
+
+### P7. Một tay, ngoài trời, mạng yếu
+
+- CTA trong 1/3 dưới màn hình.
+- Bottom sheet thay vì modal nhỏ.
+- Text ≥ 14pt; touch ≥ 44pt.
+- Offline banner + cache; không mất request đã gửi.
+
+### P8. Không giả lập sự sang trọng bằng gradient
+
+- Dùng ảnh thật/ảnh map/typography.
+- Hạn chế gradient trang trí.
+- Không dùng icon 3D/minh họa mascot của app khác.
+- Không dùng teal làm nhận diện chính.
+
+## 6. Hướng thị giác
+
+### Từ khoá
+
+> **Marketplace rõ ràng · đô thị · tin cậy · hơi editorial**
+
+### Palette
+
+| Vai trò | Token | Hex | Dùng |
+|---|---|---|---|
+| Ink | `color.ink` | `#071A33` | Nền tối, heading, tab bar |
+| Primary | `color.primary` | `#1F5EFF` | CTA, active, link |
+| Primary deep | `color.primaryDeep` | `#1747CC` | Pressed, gradient CTA |
+| Offer/attention | `color.accent` | `#FFB020` | Giá đề nghị, countdown, cảnh báo nhẹ |
+| Trust | `color.mint` | `#00C2A8` | KYC, escrow, hoàn tất |
+| Background | `color.bg` | `#F6F8FB` | Nền chính |
+| Surface | `color.surface` | `#FFFFFF` | Card/input |
+| Line | `color.line` | `#E4EAF3` | Viền |
+| Muted | `color.muted` | `#64748B` | Metadata |
+| Danger | `color.danger` | `#E5484D` | Huỷ, lỗi, xóa |
+
+**Không dùng teal `#5EC9D1` của Green SM.**
+
+### Typography
+
+- **Be Vietnam Pro** — đã bundle; hỗ trợ tiếng Việt.
+- Display 34/38, H1 28/34, H2 22/28, body 15/22, caption 12/16.
+- Số tiền dùng `fontFeature.tabularFigures`.
+- Không dùng font mặc định Roboto.
+
+### Hình ảnh
+
+- Ảnh thật: đường phố Việt Nam, xe, tài xế, điểm đón.
+- Map tile thật; marker rõ.
+- Avatar thật (nếu có), fallback chữ cái.
+- Không dùng ảnh stock nước ngoài cho địa điểm Việt Nam.
+
+### Icon
+
+- Line icon 24pt, stroke 1.8–2.
+- Icon theo bộ Lucide/Phosphor (chọn một bộ, không trộn).
+- Không dùng emoji thay icon chức năng.
+
+### Motion
+
+- Base 200ms, sheet 280ms, success 400ms.
+- Map camera bay 500ms.
+- Offer mới: slide/fade + badge “Mới”.
+- Tôn trọng Reduce Motion.
+
+## 7. Navigation
+
+### Passenger
+
+Tab bar nổi 4 tab, chỉ icon + label khi accessibility:
+
+1. **Trang chủ** — map + đặt chuyến.
+2. **Chuyến** — đang chạy/lịch sử.
+3. **Hộp thư** — chat, thông báo, offer.
+4. **Tài khoản** — KYC, ví, phương thức, an toàn, hỗ trợ.
+
+Nút chính “Đặt chuyến” nằm trong home sheet, không phải tab.
+
+### Driver
+
+Cùng app, chuyển vai trò:
+
+1. **Nhận chuyến** — online/offline, radar request.
+2. **Chuyến của tôi** — active/history.
+3. **Thu nhập** — ví, rút tiền, thống kê.
+4. **Tài khoản** — KYC, xe, đánh giá, hỗ trợ.
+
+### Admin
+
+Web sidebar:
+
+- Tổng quan
+- Live ops
+- KYC
+- Chuyến
+- Tranh chấp
+- Người dùng
+- Tài xế
+- Thanh toán/escrow
+- Khuyến mãi
+- Hỗ trợ
+- Cấu hình
+- Audit
+
+## 8. Luật cứng
+
+1. Chỉ dùng token trong `tokens.json`; không hardcode hex/px/ms.
+2. Mỗi màn/vùng cuộn có tối đa **1 primary CTA**.
+3. Grid 4pt; lề 16; khe card 12; section cách 24.
+4. Touch ≥ 44×44; khoảng cách touch ≥ 8.
+5. Mọi input có label ngoài, helper/error, trạng thái focus/disabled.
+6. Mọi list có loading/rỗng/lỗi/offline.
+7. Không dùng màu làm tín hiệu duy nhất; thêm icon/chữ.
+8. Không hiển thị đầy đủ số điện thoại/CCCD/thẻ.
+9. Không chép asset/logo/mascot/illustration của app khác.
+10. Không tự thêm phí hoặc đổi giá sau khi chốt.
+11. Không cho driver nhận chuyến khi KYC chưa duyệt.
+12. Không cho passenger tạo chuyến khi chưa xác thực số điện thoại.
+13. Không cho chat trước khi match ngoài template an toàn.
+14. Không hiển thị giá “từ ...” như thể là giá cố định.
+15. Không dùng chữ nhỏ hơn 12pt.
+
+## 9. Ưu tiên khi xung đột
+
+1. An toàn/pháp lý.
+2. Accessibility.
+3. Quy tắc giá minh bạch.
+4. Trạng thái rõ ràng.
+5. Token/component.
+6. Thẩm mỹ.
+
+## 10. Checklist nghiệm thu
+
+- [ ] Giá cuối do người dùng chốt, app không tự đặt.
+- [ ] Offer hiển thị đủ giá, ETA, tài xế, xe, uy tín.
+- [ ] Có trạng thái loading/rỗng/lỗi/offline.
+- [ ] Có countdown/hết hạn cho offer.
+- [ ] Có xác nhận trước khi huỷ/thanh toán.
+- [ ] Escrow/phương thức tiền hiển thị trước khi chốt.
+- [ ] KYC/uy tín hiển thị trước khi chọn tài xế.
+- [ ] Một primary CTA.
+- [ ] Contrast ≥ 4.5:1; touch ≥ 44.
+- [ ] Dynamic Type 130% không vỡ.
+- [ ] Không hardcode token.
+- [ ] Không có asset của app khác.
+- [ ] Có microcopy cho trạng thái chờ/offer hết hạn/tài xế huỷ.
+- [ ] Có biên nhận sau chuyến.
+- [ ] Có đường vào tranh chấp/hỗ trợ.
+
+## 11. Quyết định mặc định (có thể đổi sau)
+
+- Brand primary: cobalt; accent: amber; trust: mint.
+- Font: Be Vietnam Pro.
+- Platform fee MVP: **0%**; nếu bật, hiển thị riêng.
+- Offer validity: ask 2 phút; open 3 phút; counter/quote 90 giây.
+- Tối đa 5 offer active/tài xế; tối đa 20 offer/request.
+- Cash và online đều hỗ trợ; online dùng escrow.
+- Không có đấu giá auto; người dùng chốt thủ công.
+- Không có multi-stop trong MVP; P1.
+- Không có shared ride trong MVP; P2.
+- Dark mode P1.
+- Admin và app dùng cùng token, khác density.
+
+Chi tiết mở: xem `decisions.md`.

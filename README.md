@@ -8,6 +8,9 @@
 
 ## Giao diện
 
+> **Thiết kế mới cho mô hình chợ chuyến đi thương lượng giá nằm tại [docs/desgin/README.md](docs/desgin/README.md).**
+> Phần mô tả bên dưới là app hiện tại (carpooling/Daily, giá cố định) — chưa phải UI đích.
+
 - Design system riêng: palette navy/electric blue, thang chữ, radius 20–28, shadow mềm, trạng thái màu thống nhất.
 - Mobile-first: app bar gọn, bottom nav nổi 5 tab, sticky CTA, bottom sheet, safe-area và vùng chạm ≥ 44px.
 - Trải nghiệm: skeleton loading, pull-to-refresh, empty state có hành động, transition mượt, haptic feedback.

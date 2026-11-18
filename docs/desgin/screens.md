@@ -1,125 +1,394 @@
-# screens.md — Cấu trúc các màn hình mẫu (golden screens)
+# screens.md — Danh mục và đặc tả màn hình
 
-> Mô tả từ trên xuống dưới. Dùng làm khuôn khi thiết kế màn mới tương tự. Tên component trỏ về `components.md`. Lề trang = `spacing.pageGutter` (16) nếu không nói khác.
-> Màn chưa có trong ảnh (đặt xe, chọn điểm đón, theo dõi chuyến, giỏ hàng, thanh toán đơn, đánh giá) cần chụp thêm để mô tả.
+> Kích thước tham chiếu: iPhone 390×844pt, safe area. Android tương đương. Nội dung cuộn có padding đáy cho tab bar.
+> Component name → `components.md`; token → `tokens.json`.
 
-## Sơ đồ điều hướng (IA)
+## 1. Screen inventory
 
+### Passenger
+
+| ID | Màn | Ưu tiên | Ghi chú |
+|---|---|---|---|
+| P01 | Home map | P0 | Map-first, search, đặt chuyến |
+| P02 | Chọn điểm đón | P0 | GPS/search/pin |
+| P03 | Chọn điểm đến | P0 | Search/saved/recent |
+| P04 | Cấu hình chuyến | P0 | Giá, loại xe, giờ, ghi chú |
+| P05 | Xác nhận gửi yêu cầu | P0 | Bottom sheet tổng kết |
+| P06 | Đang tìm tài xế | P0 | Radar, timer, 0 offer |
+| P07 | Danh sách offer | P0 | Trái tim sản phẩm |
+| P08 | Driver profile | P0 | Trust + chọn |
+| P09 | Driver đang đến | P0 | Tracking, liên hệ |
+| P10 | Tài xế đã đến | P0 | Biển số, timer |
+| P11 | Trong chuyến | P0 | Map, safety |
+| P12 | Hoàn tất / thanh toán | P0 | Escrow/cash |
+| P13 | Biên nhận | P0 | Ticket |
+| P14 | Đánh giá + tip | P0 | Rating |
+| P15 | Chuyến của tôi | P0 | Active/scheduled/history |
+| P16 | Chi tiết chuyến | P0 | Timeline |
+| P17 | Hộp thư | P0 | Chat/notification |
+| P18 | Chat | P0 | Masked call |
+| P19 | Thông báo | P0 | List/filter |
+| P20 | Tài khoản | P0 | Trust center |
+| P21 | KYC | P0 | CCCD/selfie |
+| P22 | Phương thức thanh toán | P0 | Card/bank/wallet/cash |
+| P23 | Ví & giao dịch | P0 | Balance/history |
+| P24 | An toàn | P0 | Share/SOS/contacts |
+| P25 | Hỗ trợ | P0 | FAQ/chat/ticket |
+| P26 | Tranh chấp | P0 | Evidence/status |
+| P27 | Địa điểm đã lưu | P1 | Home/work |
+| P28 | Đặt lịch | P1 | Date/time |
+| P29 | Promo | P1 | List/detail |
+| P30 | Referral | P1 | Invite |
+| P31 | Cài đặt | P1 | Language, privacy |
+| P32 | Onboarding | P1 | 3 slides |
+| P33 | Lost item | P1 | Report |
+| P34 | Multi-stop | P2 | — |
+| P35 | Shared ride | P2 | — |
+
+### Driver
+
+| ID | Màn | Ưu tiên |
+|---|---|---|
+| D01 | Online/Offline + radar | P0 |
+| D02 | Request detail | P0 |
+| D03 | Gửi giá / counter | P0 |
+| D04 | Offer đang chờ | P0 |
+| D05 | Chuyến active | P0 |
+| D06 | Đã đến pickup | P0 |
+| D07 | Đang chạy | P0 |
+| D08 | Hoàn tất | P0 |
+| D09 | Thu nhập | P0 |
+| D10 | Rút tiền | P0 |
+| D11 | Lịch sử chuyến | P0 |
+| D12 | KYC onboarding | P0 |
+| D13 | Xe & giấy tờ | P0 |
+| D14 | Đánh giá | P0 |
+| D15 | Hỗ trợ | P0 |
+| D16 | Heatmap | P1 |
+| D17 | Scheduled | P1 |
+| D18 | Incentives | P1 |
+
+### Admin
+
+Xem `admin.md`.
+
+## 2. Golden screens — Passenger
+
+### P01. Home map
+
+**Mục tiêu:** đặt chuyến trong 1–2 chạm.
+
+```text
+┌─────────────────────────────┐
+│ [Avatar]  Xin chào, Minh  🔔 │
+│                             │
+│        MAP + MARKER         │
+│      (pickup hiện tại)      │
+│                             │
+│  ┌───────────────────────┐  │
+│  │ Bạn muốn đi đâu?      │  │
+│  │  ● Điểm đón           │  │
+│  │  ○ Điểm đến           │  │
+│  │ [Bây giờ] [Đặt lịch]  │  │
+│  │ [ Tiếp tục ]          │  │
+│  └───────────────────────┘  │
+│  Gần đây: Sân bay · Công ty │
+│  [Ưu đãi nhỏ, không banner] │
+│  [Tab bar nổi]              │
+└─────────────────────────────┘
 ```
-Tab bar nổi
-├─ Trang chủ
-│   ├─ Tìm kiếm → (kết quả)
-│   ├─ Đặt xe / Đặt đồ ăn / Xe máy / Liên tỉnh / Giao hàng / Đưa đón sân bay
-│   ├─ Hội viên (Green Pass / Plus / VIP / Tùy chọn)
-│   ├─ Mua xe VinFast / VinBus / Thuê xe tự lái
-│   └─ Xem ưu đãi
-├─ Hoạt động  [chip: Di chuyển | Đồ ăn | Giao hàng | Xe theo giờ]
-├─ Thông báo  [chip: Tất cả | Ưu đãi]
-├─ Tài khoản
-│   ├─ Cập nhật tài khoản (hồ sơ, xác thực, xóa tài khoản)
-│   ├─ Green Race (tiến trình chi tiết)
-│   ├─ Gia đình / Doanh nghiệp
-│   ├─ Tác vụ: Thanh toán, Mã khuyến mại, Trung tâm hỗ trợ, Trung tâm an toàn
-│   ├─ Tiện ích & Ưu đãi: Hạng thành viên, Hội viên, Thẻ quà tặng, Giới thiệu bạn bè
-│   ├─ Hỗ trợ & Hợp tác: Trở thành tài xế, Đóng góp bản đồ
-│   └─ Cài đặt chung: Quốc gia, Ngôn ngữ, Chế độ tối giản, Đăng nhập & bảo mật, Địa chỉ đã lưu, Hóa đơn, Đánh giá ứng dụng, Hợp đồng sử dụng dịch vụ, Kiểm soát quyền riêng tư, Đăng xuất
-└─ (Nút Trophy) → Green Race
+
+- Nền: map thật, dim nhẹ 10% để chữ nổi.
+- Top: avatar + greeting + notification.
+- Bottom sheet: search + two location rows + time chips + CTA `Tiếp tục`.
+- Recent places chips.
+- Active trip banner nếu có chuyến đang chạy.
+- Không banner quảng cáo lớn.
+- States: location denied → “Bật vị trí để tìm tài xế gần bạn” + nhập tay; offline banner.
+
+### P04. Cấu hình chuyến + giá
+
+**Mục tiêu:** người dùng đặt giá hoặc mở quote.
+
+```text
+TopBar: Chuyến của bạn
+─────────────────────
+Route card: Điểm đón → Điểm đến  [Sửa]
+Thời gian: Bây giờ / Đặt lịch
+Loại xe: [4 chỗ] [7 chỗ] [Xe máy]
+─────────────────────
+Giá bạn muốn trả
+[ 120.000đ ]  [−10k] [+10k]
+○ Để tài xế báo giá
+Ghi chú: [________________]
+─────────────────────
+[Thanh toán: Ví Sharee ▾]
+[Chính sách huỷ]
+[ Tìm tài xế ]
 ```
 
----
+- Input giá là trọng tâm, font 28–34, tabular.
+- Stepper 10k; long press tăng nhanh.
+- “Để tài xế báo giá” là radio/segmented, khi chọn input disabled.
+- Hiển thị “Giá cuối do bạn và tài xế thống nhất”.
+- CTA disabled nếu chưa có điểm đến/giá hợp lệ (nếu ask).
+- Error: giá < 1.000đ hoặc > 10.000.000đ.
+- Không tự điền giá.
 
-## S1. Trang chủ (Home)
+### P05. Xác nhận gửi yêu cầu
 
-- **Nền**: bản đồ mờ + lớp gradient trắng-xám từ trên xuống; nội dung cuộn.
-- **Từ trên xuống**:
-  1. SearchBar (cách status bar ~36)
-  2. Dòng gợi ý AI: icon lấp lánh + câu cá nhân hóa `section` + nút "⋯" phải (ẩn/tuỳ chỉnh gợi ý)
-  3. Hàng FoodCard cuộn ngang (3 thẻ, peek) + nút Soft white "Xem ưu đãi"
-  4. 2 ServiceHeroCard (Đặt xe có huy hiệu −25%, Đặt đồ ăn)
-  5. SectionHeader "Dịch vụ khác" + "Xem tất cả" → lưới ServiceTile 4 cột x 2 hàng
-  6. BannerCarousel + PageDots
-  7. SectionHeader "Gợi ý quán ngon" → thẻ quán cuộn ngang (ảnh poster lớn ~160x230, tên quán 2 dòng)
-  8. Padding đáy cho tab bar
-- **Khi cuộn**: SearchBar bám đỉnh, nền chuyển sang kính mờ; nội dung trượt dưới nó.
-- **Hành động chính**: chạm thẻ Đặt xe hoặc Đặt đồ ăn.
-- **Trạng thái**: loading = skeleton cho FoodCard/banner (không skeleton cho thẻ dịch vụ vì tĩnh); không có gợi ý cá nhân → ẩn khối 2-3, giữ nguyên thứ tự còn lại; offline = banner đầu trang + dữ liệu cache.
+Bottom sheet 60%:
 
-## S2. Hoạt động
+- Route + ETA.
+- Giá.
+- Phương thức.
+- Chính sách huỷ.
+- Checkbox “Tôi đồng ý giá và chính sách”.
+- CTA `Gửi yêu cầu`.
+- Secondary `Sửa`.
 
-- TopBar A "Hoạt động" + icon tìm kiếm phải; FilterChips (4 chip, cuộn ngang).
-- Có dữ liệu: danh sách chuyến/đơn theo thời gian `[ĐỀ XUẤT: thẻ có trạng thái, điểm đi-đến, giá, nút Đặt lại]`.
-- **Rỗng** (đã có trong ảnh): minh họa xe ngủ + "Lịch sử di chuyển của bạn sẽ hiển thị tại đây. Đặt xe vi vu ngay!" + Primary "Đặt Xe Ngay". Nền `neutral.bg`.
+### P06. Đang tìm tài xế
 
-## S3. Thông báo
+- Full map + radar pulse.
+- Bottom sheet:
+  - “Đang tìm tài xế gần bạn”.
+  - Timer 2:00.
+  - Số tài xế đã nhận request.
+  - `Huỷ yêu cầu`.
+- Khi có offer: card “Có 2 tài xế gửi giá” + CTA `Xem giá`.
+- 0 offer sau 30s:
+  - “Chưa có ai nhận. Bạn có thể tăng giá hoặc mở quote.”
+- Hết hạn:
+  - “Chưa tìm được tài xế.”
+  - `Tăng giá` / `Mở quote` / `Huỷ`.
+- Không auto-raise giá.
 
-- TopBar A "Thông báo" + icon đánh dấu tất cả đã đọc; FilterChips (Tất cả | Ưu đãi).
-- Danh sách NotificationItem, mới nhất trên cùng; nhóm theo ngày `[ĐỀ XUẤT]`.
-- Mỗi mục có tối đa 1 nút hành động và 1 banner. Banner đã dùng lại cùng hình ảnh với Home, hãy ưu tiên tái sử dụng asset.
-- Trạng thái: loading skeleton; rỗng "Chưa có thông báo nào"; lỗi tải có nút "Thử lại".
+### P07. Danh sách offer
 
-## S4. Tài khoản (Hồ sơ)
+**Mục tiêu:** chọn tài xế.
 
-- Nền gradient `pageTopProfile`.
-- Từ trên xuống: avatar 3D 72 (có huy hiệu cảnh báo nếu chưa xác thực) + tên `title` + chevron + số điện thoại `bodySm`; chip hạng "Member"; carousel InfoCard (nhắc xác thực danh tính, nhắc xác thực email) + dots; StatCard Green Race; 2 thẻ dịch vụ Gia đình/Doanh nghiệp (kiểu ServiceHeroCard thấp hơn); nhóm "Tác vụ" (ActionGridItem 2x2); nhóm "Tiện ích & Ưu đãi" (2x2) + PromoStrip; nhóm "Hỗ trợ & Hợp tác" (ListRow); nhóm "Cài đặt chung" (ListRow) + Đăng xuất + phiên bản + huy hiệu Bộ Công Thương.
-- Quy tắc: số điện thoại có thể che một phần `[ĐỀ XUẤT]` khi chụp màn hình chia sẻ.
+```text
+┌─────────────────────────────┐
+│ ←  Hà Nội → Hải Phòng       │
+│ Giá bạn đưa: 120.000đ       │
+│ 2:14 còn lại  [Làm mới]     │
+│ [Giá thấp] [Đến sớm] [Uy tín]│
+│                             │
+│ ┌─────────────────────────┐ │
+│ │ 120.000đ   Đến sau 4'   │ │
+│ │ Minh · 4.9★ · 128 chuyến│ │
+│ │ KYC ✓ · Toyota Vios     │ │
+│ │ [Chọn tài xế]           │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ 140.000đ  +20.000đ      │ │
+│ │ Hằng · 4.8★ · 96 chuyến │ │
+│ │ Đề nghị giá             │ │
+│ └─────────────────────────┘ │
+└─────────────────────────────┘
+```
 
-## S5. Cập nhật tài khoản
+- Header sticky: route + giá passenger + countdown.
+- Sort chips.
+- Offer card:
+  - Giá lớn.
+  - ETA.
+  - Driver name, rating, trips, KYC.
+  - Vehicle.
+  - Chênh lệch nếu counter (amber).
+  - Nút chọn.
+- Tap card → P08.
+- Empty: “Chưa có tài xế gửi giá. Thử tăng giá hoặc mở quote.”
+- Expired: card mờ + label.
+- Pull-to-refresh; live update qua SignalR.
 
-- TopBar B "Cập nhật tài khoản". Avatar 72 + nút sửa (bút) góc dưới phải; tên; số điện thoại; huy hiệu "Chưa xác thực".
-- Carousel thẻ xác thực (danh tính, email) + dots.
-- Nhóm "Thông tin cơ bản": Select Xưng hô, Select Nhóm khách hàng, TextField Họ Tên, Select Giới tính, DatePicker Ngày sinh, Select Quốc tịch, TextField read-only Số điện thoại, TextField Email (không bắt buộc) + helper text.
-- Đáy cố định: Button Primary "Cập nhật" (disabled đến khi có thay đổi) + Destructive text "Xóa tài khoản".
-- Cần: validate khi rời ô (blur), thông báo lỗi dưới ô, xác nhận 2 bước trước khi xóa tài khoản.
+### P08. Driver profile
 
-## S6. Phương thức thanh toán
+Bottom sheet 80%:
 
-- TopBar B + link "Lịch sử" phải.
-- Nhóm: Thẻ tín dụng/Ghi nợ (PaymentMethodRow x N), Ví điện tử (Apple Pay, MoMo, ShopeePay), Phương thức đề xuất (Thẻ ví nội bộ + Nạp tiền), Text link "Thêm phương thức thanh toán".
-- Trạng thái: rỗng nhóm → chỉ hiển thị tiêu đề nhóm cùng nút thêm; thẻ hết hạn → chip lỗi; chọn mặc định = dấu tích/nhãn "Mặc định" `[ĐỀ XUẤT]`.
+- Avatar, tên, hạng uy tín.
+- Sao, số chuyến, tỷ lệ hoàn thành, năm tham gia.
+- KYC badge.
+- Xe: ảnh, hãng, màu, biển số (che 1 phần? Hiển thị đủ khi đã chọn).
+- Giá + ETA.
+- Đánh giá gần đây (3).
+- CTA `Chốt chuyến`.
+- Secondary `Nhắn tin` (template an toàn trước match).
+- Report.
 
-## S7. Trung tâm hỗ trợ
+### P09–P10. Driver đang đến / đã đến
 
-- TopBar B (Back kiểu nút vuông trắng) "Trung tâm hỗ trợ".
-- Từ trên xuống: SupportGreeting + ChatInput; SafetyCard "Hỗ trợ an toàn chuyến" (luôn hiển thị nổi bật); thẻ danh sách "Bạn cần hỗ trợ gì?" (Di chuyển, Giao hàng, Đồ ăn, Tài khoản và dịch vụ, mỗi dòng có icon 3D 40 + chevron); thẻ "Yêu cầu của tôi" (icon + mô tả + chevron).
-- Nền `neutral.bg`; các khối là thẻ trắng `radius.xl` cách nhau 16.
+- Full map, route driver → pickup.
+- Bottom sheet:
+  - Driver card, ETA, biển số.
+  - `Nhắn tin`, `Gọi`.
+  - “Tài xế đã đến” state: nút `Tôi đã lên xe` (optional), timer chờ.
+- Safety row: `Chia sẻ chuyến`, `SOS`.
+- States: driver delayed >5 phút → banner + huỷ miễn phí.
+- Driver cancelled → “Tài xế đã huỷ. Tìm tài xế khác?”.
 
-## S8. Ưu đãi của tôi
+### P11. Trong chuyến
 
-- TopBar C: tiêu đề + mô tả + minh họa điện thoại/voucher phải; dưới là vùng nền `bg`.
-- Tiêu đề phụ "🎁 Ưu đãi xịn, dùng ngay!" + link "Lịch sử" kèm icon đồng hồ; FilterChips (Tất cả, Di chuyển, Đồ ăn).
-- Danh sách voucher `[ĐỀ XUẤT: thẻ vé có phần cắt răng cưa, giá trị lớn, điều kiện, hạn dùng, nút Dùng ngay]`.
-- **Rỗng** (đã có): minh họa vé % + "Bạn chưa có mã ưu đãi nào. Hãy quay lại sau nhé."
+- Map full; route line.
+- Bottom sheet:
+  - ETA + remaining distance.
+  - Driver card.
+  - Actions: Chat, Call, Share, SOS.
+  - `Kết thúc` chỉ driver (passenger không thấy).
+- Nếu passenger: “Chuyến đang diễn ra” + support.
+- Nếu lệch route: amber banner.
 
-## S9. Safety Centre
+### P12–P13. Hoàn tất / thanh toán / biên nhận
 
-- TopBar C đơn giản (Back + tiêu đề lớn) + hero có minh họa khiên và avatar xác thực trên nền bản đồ xanh.
-- Thẻ danh sách 4 dòng: Bảo hiểm chuyến (áp dụng mọi chuyến), Camera S2S (tùy chỉnh từng chuyến), Theo dõi chuyến (tùy chỉnh từng chuyến), Liên hệ khẩn cấp. Mỗi dòng: icon outline, tiêu đề, mô tả, chevron.
-- Ưu tiên pháp lý/an toàn: cho phép thao tác khi mạng yếu, không đặt quảng cáo.
+- Success header: “Chuyến đã hoàn tất”.
+- Fare breakdown:
+  - Cước.
+  - Phụ phí.
+  - Phí nền tảng.
+  - Tip.
+  - Tổng.
+- Payment:
+  - Online: “Đã thanh toán bằng Ví Sharee” / “Đang giải ngân cho tài xế”.
+  - Cash: “Bạn đã trả tiền mặt?” → `Xác nhận`.
+- CTA `Đánh giá tài xế`; secondary `Biên nhận`.
+- Receipt ticket:
+  - Mã chuyến, route, thời gian, giá, phương thức.
+  - QR (token ký).
+  - Nút chia sẻ/tải.
 
-## S10. Hội viên (Membership)
+### P14. Đánh giá + tip
 
-- TopBar C Back nút vuông + "Lịch sử"; nền gradient `pageTopMembership`.
-- Tiêu đề lớn căn giữa "Tìm gói hội viên phù hợp với bạn"; PlanTabs; thẻ gợi ý; hero 3D giữa; tên gói `titleLarge` + khẩu hiệu; BenefitCard; 2 ListRow thẻ trắng (Điều khoản sử dụng gói, Hướng dẫn sử dụng gói).
-- StickyCTABar: "1 tháng dùng thử / 20.750đ/tháng" + Primary "Bắt đầu dùng thử".
-- Quy tắc minh bạch giá: hiển thị rõ giá sau dùng thử, điều kiện gia hạn tự động `[ĐỀ XUẤT: bắt buộc]`.
+- 5 sao lớn.
+- Tag chips.
+- Comment.
+- Tip chips 10k/20k/50k/khác.
+- `Gửi đánh giá`.
+- Skip.
 
-## S11. Đóng góp bản đồ
+### P15–P16. Chuyến của tôi / chi tiết
 
-- Hero header gradient `heroMapContribute` + minh họa bản đồ + tiêu đề trắng/mô tả.
-- 3 ListRow (icon xám trong vòng tròn 48, tiêu đề đậm + mô tả, chevron) có đường kẻ; thẻ "Bảng xếp hạng" nền xám nhạt với icon cúp vàng; "Đóng góp của tôi >" + EmptyState nhỏ "Chưa có đóng góp nào…".
+- Tabs: Đang chạy | Đã lịch | Lịch sử.
+- Card: route, ngày, giá, driver, status.
+- Active trip banner.
+- Detail: timeline, payment, receipt, support, report.
+- Empty state.
 
-## S12. Thông báo kiểu lưới trang chủ cuộn (biến thể của S1)
+### P17–P19. Hộp thư / chat / thông báo
 
-- Khi cuộn xuống, SearchBar nổi lên đầu, thẻ Đặt xe/Đặt đồ ăn trượt dưới SearchBar bị cắt đẹp (xem ảnh). Khi AI dựng cần giữ: SearchBar z-index trên nội dung, nội dung có padding đầu cho không bị che lúc chưa cuộn.
+- Chat list with driver/avatar, last message, unread.
+- Chat:
+  - Template messages before match.
+  - Text after match.
+  - Masked call button.
+  - Safety banner.
+- Notifications filter: Tất cả | Chuyến | Khuyến mãi.
+- Mark all read.
 
----
+### P20–P26. Account / KYC / payment / safety / support / dispute
 
-## Mẫu bố cục tổng quát
+- Profile: trust center, KYC status, stats, menu groups.
+- KYC: CCCD/selfie upload, status.
+- Payment methods: card/bank/wallet/cash, default, masked numbers.
+- Wallet: balance, top-up, transactions.
+- Safety: share trip default, emergency contacts, SOS instructions.
+- Support: FAQ, chat, ticket.
+- Dispute: type, description, evidence, status.
 
-| Loại màn | TopBar | Nền | Khối chính | Đáy |
+## 3. Golden screens — Driver
+
+### D01. Online + radar
+
+```text
+Top: Chế độ tài xế [Online ●]
+Map + radar + request pins
+Bottom sheet:
+  “3 chuyến quanh bạn”
+  Request cards: pickup distance, giá, dropoff
+  [Bật online] khi offline
+```
+
+- Offline: map mờ, CTA bật online, nhắc KYC.
+- KYC chưa duyệt: chặn, CTA `Hoàn tất xác thực`.
+- Filter chips.
+
+### D02–D03. Request detail / offer
+
+- Passenger rating.
+- Pickup/dropoff map.
+- Giá passenger.
+- ETA đến pickup.
+- Note.
+- `Nhận giá`, `Trả giá`, `Bỏ qua`.
+- Counter input with difference.
+- Countdown.
+- Không hiển thị SĐT đầy đủ.
+
+### D05–D08. Active trip
+
+- Navigate.
+- Arrived → timer.
+- Start → in progress.
+- Complete → fare summary.
+- Cash collect step.
+- Safety.
+
+### D09–D10. Earnings / withdraw
+
+- Today/week/month.
+- Balance.
+- Transactions.
+- Withdraw to bank.
+- Fee.
+- Pending.
+
+### D12–D13. KYC / vehicle
+
+- Progress checklist.
+- Upload each doc.
+- Status pending/rejected.
+- Expiry.
+- Vehicle list.
+
+## 4. Admin
+
+Xem `admin.md`. Key screens:
+
+- A01 Dashboard.
+- A02 Live ops map.
+- A03 SOS detail.
+- A04 KYC queue/detail.
+- A05 Trips list/detail.
+- A06 Disputes queue/detail.
+- A07 Users/drivers.
+- A08 Payments/escrow.
+- A09 Promotions.
+- A10 Config.
+- A11 Audit.
+
+## 5. Screen state matrix
+
+| Screen | Loading | Empty | Error | Offline |
 |---|---|---|---|---|
-| Tab gốc (danh sách) | A | `bg` | FilterChips + danh sách | Tab bar nổi |
-| Cài đặt/danh sách | B | `bg` hoặc gradient nhẹ | Nhóm ListRow | Tab bar nổi hoặc không |
-| Form | B | `bg` | TextField xếp dọc | Nút cố định đáy |
-| Marketing/gói | C | gradient | Hero + thẻ lợi ích | StickyCTABar |
-| Rỗng | giữ nguyên | `bg` | EmptyState | Tab bar nổi |
+| Home | skeleton sheet | location prompt | retry | banner |
+| Offers | skeleton cards | no offer CTA | retry | cache + banner |
+| Trips | skeleton | empty CTA | retry | cache |
+| Chat | skeleton | “Bắt đầu trò chuyện” | retry | queue messages |
+| Driver radar | skeleton | “Chưa có chuyến” | retry | offline |
+| Earnings | skeleton | “Chưa có thu nhập” | retry | cache |
+| Admin queues | skeleton rows | empty state | error | N/A |
+
+## 6. Responsive
+
+- 360pt: giảm padding 12, offer card 1 cột, ẩn 1 số metadata.
+- 390–430: chuẩn.
+- Tablet/web: passenger app max-width 480, admin full.
+- Driver app: map + list split ở tablet (P1).
+
+## 7. Motion per screen
+
+- Home sheet: 280ms.
+- Offer mới: fade/slide 200ms + badge.
+- Accept: card scale 0.98 → success tick.
+- Map camera: 500ms ease.
+- Receipt: fade + ticket slide.
+- Success: subtle check, không confetti quá 600ms.
