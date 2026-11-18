@@ -127,27 +127,27 @@ class AppScope extends InheritedNotifier<AppState> {
 }
 
 class AppTheme {
-  static const primary = Color(0xFF1F5EFF);
-  static const primaryDark = Color(0xFF1747CC);
-  static const primarySoft = Color(0xFFEBF0FF);
-  static const accent = Color(0xFFFFB020);
-  static const mint = Color(0xFF00C2A8);
-  static const ink = Color(0xFF071A33);
-  static const muted = Color(0xFF64748B);
-  static const mutedLight = Color(0xFF94A3B8);
-  static const bg = Color(0xFFF6F8FB);
+  static const primary = Color(0xFF0E7F88);
+  static const primaryDark = Color(0xFF0A646C);
+  static const primarySoft = Color(0xFFE6F7F8);
+  static const accent = Color(0xFFD4A82C);
+  static const mint = Color(0xFF2CCBD3);
+  static const ink = Color(0xFF1E2528);
+  static const muted = Color(0xFF6B7479);
+  static const mutedLight = Color(0xFF9AA2A7);
+  static const bg = Color(0xFFF4F6F8);
   static const sand = Color(0xFFF6F1E7);
   static const surface = Colors.white;
   static const surfaceAlt = Color(0xFFFBFCFE);
-  static const line = Color(0xFFE4EAF3);
-  static const success = Color(0xFF0FA968);
+  static const line = Color(0xFFE3E7EA);
+  static const success = Color(0xFF2E9E6A);
   static const successSoft = Color(0xFFE6F8F0);
   static const warning = Color(0xFFB45309);
-  static const danger = Color(0xFFE5484D);
+  static const danger = Color(0xFFD64545);
   static const dangerSoft = Color(0xFFFDECEC);
 
   static const gradient = LinearGradient(
-    colors: [Color(0xFF071A33), Color(0xFF133B8F), Color(0xFF1F5EFF)],
+    colors: [Color(0xFF0B1B22), Color(0xFF0E4F55), Color(0xFF0E7F88)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

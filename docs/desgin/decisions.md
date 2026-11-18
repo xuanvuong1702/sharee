@@ -16,8 +16,8 @@
 | D08 | MVP platform fee 0% | Chưa có mô hình doanh thu | 2026-11-19 |
 | D09 | Một passenger/chuyến MVP | Giảm phức tạp | 2026-11-19 |
 | D10 | Không multi-stop/shared ride MVP | P1/P2 | 2026-11-19 |
-| D11 | Bỏ super-app, Green SM teal/3D | Khác sản phẩm/bản quyền | 2026-11-19 |
-| D12 | Brand cobalt + amber + mint | Offer/trust/action tách vai trò | 2026-11-19 |
+| D11 | Bỏ super-app; adopt visual teal/3D Green SM, asset riêng | Giữ cá tính Green SM nhưng không copy asset/IA super-app | 2026-11-19 |
+| D12 | Brand teal pastel + primaryDeep + amber + mint | Offer/trust/action tách vai trò | 2026-11-19 |
 | D13 | Font Be Vietnam Pro | Tiếng Việt tốt, đã bundle | 2026-11-19 |
 | D14 | Passenger KYC bắt buộc cho online hạn mức cao | Giảm gian lận | 2026-11-19 |
 | D15 | Driver KYC bắt buộc trước online | An toàn | 2026-11-19 |

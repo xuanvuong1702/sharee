@@ -145,7 +145,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               height: 300 + top,
               decoration: const BoxDecoration(
-                gradient: AppTheme.gradient,
+                gradient: LinearGradient(
+                  colors: [Color(0xFFD9F3F4), Color(0xFFEAF8F9), AppTheme.bg],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(34)),
               ),
             ),
@@ -159,15 +163,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
+                      color: Colors.white.withValues(alpha: 0.72),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      border: Border.all(color: Colors.white),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       (user?.fullName.isNotEmpty == true ? user!.fullName[0] : 'B').toUpperCase(),
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
+                          color: AppTheme.primary, fontSize: 17, fontWeight: FontWeight.w800),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -176,14 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Xin chào, ${user?.fullName.split(' ').first ?? 'bạn'}',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontSize: 11.5,
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: AppTheme.muted,
                                 fontWeight: FontWeight.w500)),
                         const SizedBox(height: 2),
                         const Text('Bạn muốn đi đâu?',
                             style: TextStyle(
-                                fontSize: 18, color: Colors.white, fontWeight: FontWeight.w900)),
+                                fontSize: 18, color: AppTheme.ink, fontWeight: FontWeight.w800)),
                       ],
                     ),
                   ),
@@ -360,6 +364,66 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _HeroServiceCard(
+                      title: 'Đặt chuyến',
+                      subtitle: 'Tài xế gần bạn',
+                      image: 'assets/icons3d/taxi.png',
+                      colors: const [Color(0xFFD9F3F4), Color(0xFFEAF8F9)],
+                      onTap: _search,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _HeroServiceCard(
+                      title: 'Đặt lịch',
+                      subtitle: 'Chọn giờ đi',
+                      image: 'assets/icons3d/calendar.png',
+                      colors: const [Color(0xFFFFF8E1), Color(0xFFFBEFB0)],
+                      onTap: _pickDate,
+                    ),
+                  ),
+                ],
+              ),
+              const SectionHeader('Dịch vụ'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ServiceTile3D(
+                      label: 'Xe máy',
+                      image: 'assets/icons3d/motorcycle.png',
+                      onTap: _search,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ServiceTile3D(
+                      label: '4 chỗ',
+                      image: 'assets/icons3d/taxi.png',
+                      onTap: _search,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ServiceTile3D(
+                      label: 'Sân bay',
+                      image: 'assets/icons3d/airplane.png',
+                      onTap: _search,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ServiceTile3D(
+                      label: 'An toàn',
+                      image: 'assets/icons3d/shield.png',
+                      onTap: _search,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -484,11 +548,13 @@ class _HeaderIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: 0.14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white.withValues(alpha: 0.72),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(13),
+          side: const BorderSide(color: Colors.white)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(13),
         child: SizedBox(
           width: 40,
           height: 40,
@@ -496,7 +562,7 @@ class _HeaderIcon extends StatelessWidget {
             count: badge,
             isLabelVisible: badge > 0,
             backgroundColor: AppTheme.accent,
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: AppTheme.ink, size: 20),
           ),
         ),
       ),
@@ -552,6 +618,169 @@ class _DateQuick extends StatelessWidget {
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
                 color: active ? Colors.white : AppTheme.muted)),
+      ),
+    );
+  }
+}
+
+class _HeroServiceCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String image;
+  final List<Color> colors;
+  final VoidCallback onTap;
+
+  const _HeroServiceCard({
+    required this.title,
+    required this.subtitle,
+    required this.image,
+    required this.colors,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 102,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: colors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            ),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 13, 70, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                      const SizedBox(height: 3),
+                      Text(subtitle,
+                          style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+                      const Spacer(),
+                      const Row(
+                        children: [
+                          Text('Mở',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.primary)),
+                          SizedBox(width: 3),
+                          Icon(Icons.arrow_forward_rounded,
+                              size: 12, color: AppTheme.primary),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  right: 4,
+                  bottom: 2,
+                  child: _FloatingIcon(image: image, size: 72),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingIcon extends StatefulWidget {
+  final String image;
+  final double size;
+  const _FloatingIcon({required this.image, required this.size});
+
+  @override
+  State<_FloatingIcon> createState() => _FloatingIconState();
+}
+
+class _FloatingIconState extends State<_FloatingIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _float;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+    _float = Tween<double>(begin: -2, end: 2)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      return Image.asset(widget.image, width: widget.size, height: widget.size);
+    }
+    return AnimatedBuilder(
+      animation: _float,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, _float.value),
+        child: child,
+      ),
+      child: Image.asset(widget.image, width: widget.size, height: widget.size),
+    );
+  }
+}
+
+class _ServiceTile3D extends StatelessWidget {
+  final String label;
+  final String image;
+  final VoidCallback onTap;
+
+  const _ServiceTile3D({required this.label, required this.image, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppTheme.line),
+            boxShadow: AppTheme.softShadow,
+          ),
+          child: Column(
+            children: [
+              Image.asset(image, width: 40, height: 40, fit: BoxFit.contain),
+              const SizedBox(height: 5),
+              Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
       ),
     );
   }

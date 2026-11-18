@@ -5,12 +5,12 @@
 @font-face { font-family: BeVietnamPro; src: url('/fonts/BeVietnamPro-ExtraBold.ttf') format('truetype'); font-weight: 800; font-display: swap; }
 
 :root {
-  --ink: #071a33;
+  --ink: #1e2528;
   --muted: #64748b;
-  --line: #e4eaf3;
-  --bg: #f6f8fb;
-  --primary: #1f5eff;
-  --primary-dark: #1747cc;
+  --line: #e3e7ea;
+  --bg: #f4f6f8;
+  --primary: #0e7f88;
+  --primary-dark: #0a646c;
   --success: #0fa968;
   --danger: #e5484d;
   --warn: #b45309;

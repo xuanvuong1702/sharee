@@ -30,30 +30,34 @@
 
 **Precondition:** đã đăng nhập, location permission (hoặc nhập tay).
 
-1. Home map, bottom sheet:
+1. Home discovery:
+   - Search “Bạn muốn đi đâu?”.
+   - Hoặc chọn hero card `Đặt chuyến ngay` / `Đặt lịch`.
+   - Dịch vụ: xe máy, 4 chỗ, 7 chỗ, sân bay.
+2. Map picker:
    - Điểm đón (GPS hoặc search).
    - Điểm đến.
    - Thời gian: Bây giờ / Đặt lịch.
    - Loại xe.
-2. Nhập giá:
+3. Nhập giá:
    - Text field “Giá bạn muốn trả”.
    - Stepper ±10.000.
    - Không tự điền giá app.
    - Hiển thị “Tài xế có thể trả giá khác”.
-3. Ghi chú (optional): “Tôi có 2 vali”.
-4. Chọn “Tìm tài xế”.
-5. Confirm sheet:
+4. Ghi chú (optional): “Tôi có 2 vali”.
+5. Chọn “Tìm tài xế”.
+6. Confirm sheet:
    - Route, giá, phương thức thanh toán, chính sách huỷ.
    - CTA “Gửi yêu cầu”.
-6. Request `searching`:
+7. Request `searching`:
    - Map hiện vòng radar.
    - Bottom sheet: “Đang tìm tài xế gần bạn”.
    - Timer + huỷ.
    - Khi có offer đầu tiên → auto mở Offers.
-7. Nếu hết 2 phút không offer:
+8. Nếu hết 2 phút không offer:
    - “Chưa có tài xế nhận giá này.”
    - Gợi ý: tăng giá / mở quote / đổi loại xe / huỷ.
-8. Không được tự đổi giá.
+9. Không được tự đổi giá.
 
 ## F3. Đặt chuyến — mở quote
 

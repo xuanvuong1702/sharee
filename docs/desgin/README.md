@@ -24,6 +24,7 @@
 | `DESIGN.md` | Triết lý, nguyên tắc, luật cứng, checklist | Trước khi thiết kế/kỷ luật |
 | `product.md` | Mô hình thương lượng, actor, business rules, feature matrix | Trước khi vẽ luồng |
 | `research.md` | Phân tích 18 ảnh Green SM, benchmark, điều nên/chưa nên học | Trước khi chọn phong cách |
+| `motion.md` | Animation Green SM + đặc tả chuyển động | Khi làm animation |
 | `ia.md` | Sitemap hành khách, tài xế, admin | Trước khi dựng màn |
 | `flows.md` | Luồng đầu-cuối và edge cases | Trước khi dựng flow |
 | `screens.md` | Danh mục màn hình + đặc tả golden screens | Khi dựng màn |
@@ -78,7 +79,7 @@ Trước khi tạo/sửa màn hình:
 
 - Bỏ mô hình super-app (đồ ăn, giao hàng, membership, Green Race).
 - Bỏ giá cố định do app đặt; thay bằng offer/counter-offer.
-- Bỏ teal/3D mascot; chuyển sang ink + cobalt + amber, ảnh thật/line icon.
+- Adopt teal pastel/3D icon/floating tab của Green SM; asset riêng, không copy logo/mascot.
 - Bỏ tab bar 5 icon trôi; dùng 4 tab + vai trò tài xế.
 - Bổ sung toàn bộ state machine cho offer, trip, payment, cancellation, dispute.
 - Bổ sung admin live ops, KYC, tranh chấp, escrow.

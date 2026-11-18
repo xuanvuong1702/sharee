@@ -48,10 +48,23 @@
 
 **Kết luận:** đây là UI của một super-app tối ưu cho khám phá dịch vụ và khuyến mãi. Sharee cần UI tối ưu cho **ra quyết định giá và chọn tài xế**, nên cấu trúc phải khác.
 
-## 4. Benchmark đúng cho Sharee
+## 4. Quyết định hướng đi (cập nhật 2026-11-19)
+
+Chủ dự án chọn **dùng ngôn ngữ thị giác và animation của Green SM** cho Sharee.
+
+Điều đó có nghĩa:
+
+- **Adopt**: teal pastel, card mềm, 3D icon, floating glass tab bar, search nổi, bottom sheet, nhịp animation nhẹ.
+- **Không adopt**: logo, mascot, illustration, screenshot, tên dịch vụ, giá cố định, super-app, trophy/gamification.
+- **Giữ nguyên**: mô hình thương lượng giá, IA ride-hailing, trust/payment/safety.
+
+> Công thức: **Visual + motion Green SM × mô hình giá inDrive × map Bolt × trust BlaBlaCar × admin Linear.**
+
+## 5. Benchmark đúng cho Sharee
 
 | App | Học gì | Không học |
 |---|---|---|
+| **Green SM** | Teal pastel, card mềm, 3D icon, floating tab bar, search nổi, animation nhẹ | Logo/mascot/asset, super-app, giá cố định, trophy |
 | **inDrive** | Mô hình offer/counter, hiển thị giá hai chiều, chọn tài xế | UI quá dày, màu vàng/đen |
 | **BlaBlaCar** | Trust card, route, ghế, huỷ, review | Giá cố định |
 | **Bolt / Grab** | Map-first, bottom sheet, live tracking, driver card | Super-app, voucher |
@@ -63,33 +76,36 @@
 
 ### Kết luận benchmark
 
-> **inDrive cho mô hình giá + Bolt cho map/tracking + BlaBlaCar cho trust + Linear cho admin.**
+> **Green SM cho look & motion + inDrive cho giá + Bolt cho map + BlaBlaCar cho trust + Linear cho admin.**
 
-## 5. Điều nên học từ Green SM
+## 6. Điều nên học từ Green SM
 
 ### Học
 
-- Search nổi trên map và sticky khi cuộn.
-- Card dịch vụ chính to, rõ, ít chữ.
+- Teal pastel và trạng thái active phát sáng.
+- Card dịch vụ chính to, rõ, ít chữ; 3D icon.
+- Floating glass tab bar + nút tròn tách riêng.
+- Search nổi, sticky khi cuộn.
 - Bottom sheet thay modal.
 - Empty state có minh hoạ + CTA.
 - Filter chips ngang.
 - Form có nhãn ngoài, helper, sticky CTA.
 - Che thông tin nhạy cảm.
 - Một kiểu back, một kiểu tiền, một kiểu ngày.
+- Animation mềm 150–300ms, tab indicator spring.
 - Accessibility được đặt trước thẩm mỹ.
 
-### Không học
+### Không copy
 
-- Mật độ banner/khuyến mãi.
-- Màu teal và 3D icon của Green SM.
-- Super-app services.
-- Trophy/gamification.
+- Logo, mascot, bộ 3D, ảnh banner, screenshot.
+- Super-app services (đồ ăn, giao hàng, thuê xe, mua xe).
+- Giá cố định do app đặt.
+- Trophy/Green Race/gamification.
 - Hồ sơ dài 20 mục.
-- Tab bar 5 thành phần.
 - Home ưu tiên đồ ăn/quán.
+- Mật độ banner/khuyến mãi dày.
 
-## 6. Khác biệt cốt lõi của Sharee
+## 7. Khác biệt cốt lõi của Sharee
 
 | Green SM | Sharee |
 |---|---|
@@ -98,12 +114,12 @@
 | Một lựa chọn | Nhiều offer để chọn |
 | Surge ngầm | Không surge |
 | Super-app | Chỉ chuyến đi |
-| Teal/3D | Ink/cobalt/amber, ảnh thật |
+| Teal/3D pastel | **Cùng ngôn ngữ thị giác, asset riêng** |
 | Một chiều | Thương lượng hai chiều |
 
-## 7. Nguyên tắc research
+## 8. Nguyên tắc research
 
 - Không copy asset, logo, mascot, illustration, screenshot.
-- Không copy nguyên layout Green SM; chỉ copy pattern đã được chứng minh.
-- Mọi pattern phải chứng minh được lợi ích cho **chọn giá/chọn tài xế**.
+- Được copy **pattern thị giác/animation** đã được chứng minh.
+- Mọi pattern phải phục vụ **chọn giá/chọn tài xế**, không chỉ để giống app.
 - Nếu pattern chỉ để “trông giống app xịn”, bỏ.

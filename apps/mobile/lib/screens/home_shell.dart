@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -64,63 +66,107 @@ class _HomeShellState extends State<HomeShell> {
     }
 
     return Scaffold(
+      extendBody: true,
       body: IndexedStack(index: _index, children: _screens),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-        color: AppTheme.bg,
         child: SafeArea(
           top: false,
-          child: Container(
-            height: 66,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: AppTheme.line),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0A1A2F).withValues(alpha: 0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(
+                      height: 64,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.ink.withValues(alpha: 0.08),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          _GlassTabItem(
+                            icon: Icons.home_outlined,
+                            activeIcon: Icons.home_rounded,
+                            label: 'Trang chủ',
+                            active: _index == 0,
+                            onTap: () => _select(0),
+                          ),
+                          _GlassTabItem(
+                            icon: Icons.confirmation_number_outlined,
+                            activeIcon: Icons.confirmation_number_rounded,
+                            label: 'Chuyến đi',
+                            active: _index == 1,
+                            onTap: () => _select(1),
+                          ),
+                          _GlassTabItem(
+                            icon: Icons.route_outlined,
+                            activeIcon: Icons.route_rounded,
+                            label: 'Daily',
+                            active: _index == 3,
+                            onTap: () => _select(3),
+                          ),
+                          _GlassTabItem(
+                            icon: Icons.person_outline_rounded,
+                            activeIcon: Icons.person_rounded,
+                            label: 'Tài khoản',
+                            active: _index == 4,
+                            onTap: () => _select(4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
-                  label: 'Trang chủ',
-                  active: _index == 0,
-                  onTap: () => _select(0),
+              ),
+              const SizedBox(width: 10),
+              Semantics(
+                button: true,
+                label: 'Đăng chuyến',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _select(2),
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2CCBD3), Color(0xFF0E7F88)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2CCBD3).withValues(alpha: 0.38),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        _index == 2 ? Icons.close_rounded : Icons.add_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.confirmation_number_outlined,
-                  activeIcon: Icons.confirmation_number_rounded,
-                  label: 'Chuyến đi',
-                  active: _index == 1,
-                  onTap: () => _select(1),
-                ),
-                _PublishItem(
-                  active: _index == 2,
-                  onTap: () => _select(2),
-                ),
-                _NavItem(
-                  icon: Icons.route_outlined,
-                  activeIcon: Icons.route_rounded,
-                  label: 'Daily',
-                  active: _index == 3,
-                  onTap: () => _select(3),
-                ),
-                _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Tài khoản',
-                  active: _index == 4,
-                  onTap: () => _select(4),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -134,14 +180,14 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _GlassTabItem extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
   final bool active;
   final VoidCallback onTap;
 
-  const _NavItem({
+  const _GlassTabItem({
     required this.icon,
     required this.activeIcon,
     required this.label,
@@ -152,81 +198,40 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 44,
-              height: 30,
-              decoration: BoxDecoration(
-                color: active ? AppTheme.primarySoft : Colors.transparent,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(
-                active ? activeIcon : icon,
-                size: 21,
-                color: active ? AppTheme.primary : AppTheme.mutedLight,
+      child: Tooltip(
+        message: label,
+        child: Semantics(
+          button: true,
+          selected: active,
+          label: label,
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const StadiumBorder(),
+            child: Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                decoration: BoxDecoration(
+                  color: active ? AppTheme.primarySoft : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.18),
+                            blurRadius: 14,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  active ? activeIcon : icon,
+                  size: 22,
+                  color: active ? AppTheme.primary : AppTheme.muted,
+                ),
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                color: active ? AppTheme.primary : AppTheme.mutedLight,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PublishItem extends StatelessWidget {
-  final bool active;
-  final VoidCallback onTap;
-
-  const _PublishItem({required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF1F63F0), Color(0xFF0B3FC0)]),
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: active ? 0.4 : 0.25),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 2),
-            Text('Đăng',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: active ? AppTheme.primary : AppTheme.mutedLight,
-                )),
-          ],
+          ),
         ),
       ),
     );

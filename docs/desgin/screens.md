@@ -74,37 +74,68 @@ Xem `admin.md`.
 
 ## 2. Golden screens — Passenger
 
-### P01. Home map
+### P01. Home discovery
 
-**Mục tiêu:** đặt chuyến trong 1–2 chạm.
+**Mục tiêu:** tạo cảm giác Green SM, đưa người dùng vào đặt chuyến nhanh.
 
 ```text
 ┌─────────────────────────────┐
-│ [Avatar]  Xin chào, Minh  🔔 │
+│ [Avatar] Xin chào, Minh  🔔 │
 │                             │
-│        MAP + MARKER         │
-│      (pickup hiện tại)      │
+│  Bạn muốn đi đâu?        🔍 │
+│                             │
+│  Tài xế gần bạn đang mở     │
+│  chuyến · 12 tuyến mới      │
+│                             │
+│  ┌─────────────┐ ┌────────┐ │
+│  │ Đặt chuyến  │ │ Đặt lịch│ │
+│  │ 3D car      │ │ 3D clock│ │
+│  └─────────────┘ └────────┘ │
+│                             │
+│  Dịch vụ       Xem tất cả  │
+│  [Xe máy] [4 chỗ] [7 chỗ]  │
+│  [Sân bay] [Liên tỉnh] ... │
 │                             │
 │  ┌───────────────────────┐  │
-│  │ Bạn muốn đi đâu?      │  │
-│  │  ● Điểm đón           │  │
-│  │  ○ Điểm đến           │  │
-│  │ [Bây giờ] [Đặt lịch]  │  │
-│  │ [ Tiếp tục ]          │  │
+│  │ An tâm mỗi chuyến     │  │
+│  │ KYC · Escrow · SOS    │  │
 │  └───────────────────────┘  │
-│  Gần đây: Sân bay · Công ty │
-│  [Ưu đãi nhỏ, không banner] │
-│  [Tab bar nổi]              │
+│                             │
+│  [Tab bar kính]  (Đặt xe)  │
 └─────────────────────────────┘
 ```
 
-- Nền: map thật, dim nhẹ 10% để chữ nổi.
-- Top: avatar + greeting + notification.
-- Bottom sheet: search + two location rows + time chips + CTA `Tiếp tục`.
-- Recent places chips.
-- Active trip banner nếu có chuyến đang chạy.
-- Không banner quảng cáo lớn.
-- States: location denied → “Bật vị trí để tìm tài xế gần bạn” + nhập tay; offline banner.
+- Nền: gradient pastel teal/trắng + texture nhẹ; không full map.
+- Search bar nổi, sticky khi cuộn, chuyển glass.
+- Dòng gợi ý cá nhân hóa, không bán giá.
+- 2 hero card: Đặt chuyến ngay (teal pastel, 3D car), Đặt lịch (vàng pastel, 3D clock).
+- Lưới dịch vụ 4 cột: xe máy, 4 chỗ, 7 chỗ, sân bay, liên tỉnh, xe sang, doanh nghiệp, gần đây.
+- Trust strip: KYC/escrow/SOS.
+- Promo strip nhỏ, không che CTA.
+- Active trip banner nếu có.
+- Tab bar kính + nút tròn Đặt chuyến.
+- States: location denied → CTA bật vị trí; offline banner; loading skeleton cho hero.
+- Không dùng banner đồ ăn/quán.
+
+### P02. Map picker / chọn điểm
+
+- Mở từ Home “Đặt chuyến” hoặc search.
+- Full map + bottom sheet:
+  - Điểm đón (GPS/search).
+  - Điểm đến.
+  - Bây giờ/Đặt lịch.
+  - CTA `Tiếp tục`.
+- Saved/recent list.
+- Pin kéo thả.
+- Location denied fallback.
+
+### P03. Chọn điểm đến
+
+- Search full-screen, keyboard auto.
+- Gợi ý: gần đây, đã lưu, địa điểm phổ biến.
+- Bản đồ thu nhỏ.
+- Không có kết quả → “Không tìm thấy địa điểm. Thử tên khác.”
+- Mỗi item có icon 3D/line theo loại.
 
 ### P04. Cấu hình chuyến + giá
 

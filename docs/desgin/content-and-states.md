@@ -147,7 +147,7 @@
 11. Countdown không rõ khi hết hạn.
 12. Auto-accept offer thay người dùng.
 13. Chat trước match không giới hạn.
-14. Dùng teal/3D mascot của Green SM.
+14. Dùng logo/mascot/3D asset cụ thể của Green SM.
 15. Hardcode token.
 16. Màn hình trống không CTA.
 17. Loading khác kích thước nội dung.

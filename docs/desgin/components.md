@@ -71,7 +71,7 @@
 ## 8. PrimaryButton / SecondaryButton / TextButton
 
 - Cao 52; radius 16; label 15/600.
-- Primary cobalt; secondary surface + border; destructive text danger.
+- Primary teal đậm; secondary surface + border; destructive text danger.
 - States: default, pressed (scale .98), disabled, loading (spinner, giữ size).
 - 1 primary/vùng.
 
@@ -206,7 +206,7 @@ States:
 
 ## 21. EmptyState
 
-- Illustration line/gradient (không copy 3D Green SM).
+- 3D pastel/asset riêng hoặc line illustration; không copy asset Green SM.
 - Title + body + optional CTA.
 - Dùng cho: no trips, no offers, no messages, no earnings.
 
@@ -279,7 +279,70 @@ States:
 - Chỉ dùng onboarding; tối đa 1/lần.
 - Không che CTA.
 
-## 31. Component rules
+## 31. FloatingTabBar (Green SM style)
+
+**Mục đích:** điều hướng chính, tạo cảm giác nổi và nhẹ.
+
+Anatomy:
+
+```text
+┌──────────────────────────────┐   ╭────╮
+│  ⌂     ◷     ✉     ☺        │   │ +  │
+└──────────────────────────────┘   ╰────╯
+     glass pill, 4 icons            CTA tròn
+```
+
+- Cao 64; pill; blur 20; nền `overlay.glass`; viền trắng 0.7.
+- 4 icon 24; active icon `primaryDeep`, indicator pill `primaryTint` + glow.
+- Indicator di chuyển 250ms spring.
+- Nút tròn 58, gradient teal, icon `+`/car; tách 10px; shadow.
+- Label ẩn; accessibility label + tooltip.
+- Badge chưa đọc: dot đỏ.
+- Ẩn ở màn con/CTA dính đáy.
+- Không thêm tab thứ 5 vào pill.
+
+## 32. ServiceHeroCard (3D)
+
+- 2 card/hàng; cao 100; radius 24.
+- Nền gradient teal pastel (Đặt chuyến) / vàng pastel (Đặt lịch).
+- Tiêu đề 18/700; subtitle 12.
+- 3D icon 64 ở phải, có thể tràn nhẹ.
+- Press scale .98; icon float ±2px (reduce motion off).
+- Không quá 2 hero card trên Home.
+
+## 33. ServiceTile (3D)
+
+- Lưới 4 cột; ô 84×92.
+- Nền trắng; radius 18; border line.
+- 3D icon 40–48; label 12/600, tối đa 2 dòng.
+- Badge góc trên phải (`-25%`, `Mới`) dùng promo.
+- Press scale .98.
+- Không dùng 3D icon cho cài đặt/danh sách.
+
+## 34. ProfileHero
+
+- Nền gradient teal nhạt → bg.
+- Avatar 72 (3D/ảnh), badge KYC.
+- Tên 22/800; SĐT che; chip hạng.
+- Stats row.
+- Card nhắc KYC nếu chưa.
+- Không dùng ảnh 3D mascot của Green SM.
+
+## 35. PromoStrip
+
+- Nền promo pastel; icon 3D/line; tiêu đề 13; CTA text.
+- 1 dòng, không che CTA chính.
+- Không auto-play.
+- Có dismiss nếu là quảng cáo.
+
+## 36. StickySearch
+
+- Search pill 52; nền trắng đặc khi top; glass khi cuộn >8px.
+- Shadow tăng nhẹ; 180ms.
+- Tap mở search full-screen.
+- Không đặt 2 search trên màn.
+
+## 37. Component rules
 
 - Touch ≥44.
 - Label ngoài input.

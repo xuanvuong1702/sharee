@@ -31,7 +31,11 @@ class ProfileScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.fromLTRB(20, top + 14, 20, 46),
             decoration: const BoxDecoration(
-              gradient: AppTheme.gradient,
+              gradient: LinearGradient(
+                colors: [Color(0xFFD9F3F4), Color(0xFFEAF8F9), AppTheme.bg],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
             ),
             child: Column(
@@ -40,21 +44,25 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     const Text('Tài khoản',
                         style: TextStyle(
-                            color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+                            color: AppTheme.ink, fontSize: 19, fontWeight: FontWeight.w800)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.verified_user_rounded, color: Colors.white, size: 13),
+                          const Icon(Icons.verified_user_rounded,
+                              color: AppTheme.primary, size: 13),
                           const SizedBox(width: 4),
                           Text('Cấp ${user.verifiedLevel}/3',
                               style: const TextStyle(
-                                  color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
+                                  color: AppTheme.primary,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -68,8 +76,9 @@ class ProfileScreen extends StatelessWidget {
                       height: 68,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 2),
-                        gradient: const LinearGradient(colors: [Color(0xFF7C9BFF), Color(0xFF2F5BE0)]),
+                        border: Border.all(color: Colors.white, width: 2),
+                        gradient: const LinearGradient(
+                            colors: [Color(0xFF2CCBD3), Color(0xFF0E7F88)]),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -85,23 +94,21 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           Text(user.fullName,
                               style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.ink,
                                   fontSize: 20,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w800,
                                   letterSpacing: -0.3)),
                           const SizedBox(height: 3),
                           Text(user.phone,
-                              style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.7), fontSize: 11.5)),
+                              style: const TextStyle(color: AppTheme.muted, fontSize: 11.5)),
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Color(0xFFFFC46B), size: 14),
+                              const Icon(Icons.star_rounded, color: AppTheme.accent, size: 14),
                               const SizedBox(width: 3),
                               Text(
                                 '${user.ratingAvg.toStringAsFixed(1)} · ${user.ratingCount} đánh giá',
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
+                                style: const TextStyle(color: AppTheme.muted, fontSize: 10),
                               ),
                             ],
                           ),
@@ -111,9 +118,9 @@ class ProfileScreen extends StatelessWidget {
                     IconButton(
                       onPressed: () =>
                           showInfo(context, 'Chức năng chỉnh sửa hồ sơ sẽ mở trong bản cập nhật'),
-                      icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.edit_outlined, color: AppTheme.primary, size: 20),
                       style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.14),
+                        backgroundColor: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -280,7 +287,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Center(
-                  child: Text('Sharee 1.2.3',
+                  child: Text('Sharee 1.3.0',
                       style: TextStyle(fontSize: 9.5, color: AppTheme.mutedLight)),
                 ),
                 const SizedBox(height: 20),

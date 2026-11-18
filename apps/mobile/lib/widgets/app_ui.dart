@@ -111,7 +111,7 @@ class PrimaryButton extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: gradient ?? const LinearGradient(colors: [Color(0xFF2A6BFF), Color(0xFF1747CC)]),
+        gradient: gradient ?? const LinearGradient(colors: [Color(0xFF2CCBD3), Color(0xFF0E7F88)]),
         boxShadow: AppTheme.liftedShadow,
       ),
       child: FilledButton(

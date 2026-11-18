@@ -35,21 +35,21 @@
 }
 
 :root {
-  --sh-navy: #071a33;
-  --sh-navy-soft: #0b2245;
-  --sh-blue: #1f5eff;
-  --sh-blue-dark: #1747cc;
-  --sh-blue-soft: #ebf0ff;
-  --sh-ink: #071a33;
-  --sh-muted: #64748b;
-  --sh-line: #e4eaf3;
-  --sh-bg: #f6f8fb;
+  --sh-navy: #0b1b22;
+  --sh-navy-soft: #0e4f55;
+  --sh-blue: #0e7f88;
+  --sh-blue-dark: #0a646c;
+  --sh-blue-soft: #e6f7f8;
+  --sh-ink: #1e2528;
+  --sh-muted: #6b7479;
+  --sh-line: #e3e7ea;
+  --sh-bg: #f4f6f8;
   --sh-sand: #f6f1e7;
-  --sh-success: #0fa968;
-  --sh-success-soft: #e6f8f0;
-  --sh-warning: #b45309;
+  --sh-success: #2e9e6a;
+  --sh-success-soft: #e3f5e8;
+  --sh-warning: #8a6a12;
   --sh-warning-soft: #fff3e0;
-  --sh-danger: #e5484d;
+  --sh-danger: #d64545;
   --sh-radius-sm: 10px;
   --sh-radius-md: 14px;
   --sh-radius-lg: 20px;

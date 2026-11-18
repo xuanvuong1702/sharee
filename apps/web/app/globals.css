@@ -50,9 +50,9 @@ h1, h2, h3, p { margin-top: 0; }
 
 .home-hero {
   background:
-    radial-gradient(circle at 78% 12%, rgba(31,94,255,0.42), transparent 30%),
+    radial-gradient(circle at 78% 12%, rgba(44,203,211,0.32), transparent 30%),
     radial-gradient(circle at 18% 88%, rgba(0,194,168,0.13), transparent 34%),
-    linear-gradient(135deg, #071a33 0%, #0b2245 52%, #133b8f 100%);
+    linear-gradient(135deg, #0b1b22 0%, #0e4f55 52%, #0e7f88 100%);
   padding: 62px 0 74px;
   position: relative;
   overflow: hidden;

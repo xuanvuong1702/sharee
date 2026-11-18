@@ -230,7 +230,7 @@ Login
 
 ## 15. Design conventions
 
-- Sidebar ink; active cobalt indicator.
+- Sidebar ink; active teal indicator.
 - Font Be Vietnam Pro.
 - Radius 16–20.
 - Table header uppercase 10px.

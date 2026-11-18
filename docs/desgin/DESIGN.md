@@ -151,62 +151,71 @@ Mọi trạng thái có:
 - Text ≥ 14pt; touch ≥ 44pt.
 - Offline banner + cache; không mất request đã gửi.
 
-### P8. Không giả lập sự sang trọng bằng gradient
+### P8. Mềm mại có kiểm soát
 
-- Dùng ảnh thật/ảnh map/typography.
-- Hạn chế gradient trang trí.
-- Không dùng icon 3D/minh họa mascot của app khác.
-- Không dùng teal làm nhận diện chính.
+- Dùng teal pastel, card bo lớn, 3D icon và bóng mềm như Green SM.
+- Gradient chỉ để làm nền/hero, không thay nội dung.
+- Không dùng logo/mascot/3D asset của Green SM; asset phải riêng.
+- Không biến mọi thứ thành pastel: CTA/giá/trạng thái vẫn phải tương phản rõ.
 
 ## 6. Hướng thị giác
 
 ### Từ khoá
 
-> **Marketplace rõ ràng · đô thị · tin cậy · hơi editorial**
+> **Green SM pastel · mềm · tin cậy · đô thị · thân thiện**
 
 ### Palette
 
 | Vai trò | Token | Hex | Dùng |
 |---|---|---|---|
-| Ink | `color.ink` | `#071A33` | Nền tối, heading, tab bar |
-| Primary | `color.primary` | `#1F5EFF` | CTA, active, link |
-| Primary deep | `color.primaryDeep` | `#1747CC` | Pressed, gradient CTA |
-| Offer/attention | `color.accent` | `#FFB020` | Giá đề nghị, countdown, cảnh báo nhẹ |
-| Trust | `color.mint` | `#00C2A8` | KYC, escrow, hoàn tất |
-| Background | `color.bg` | `#F6F8FB` | Nền chính |
-| Surface | `color.surface` | `#FFFFFF` | Card/input |
-| Line | `color.line` | `#E4EAF3` | Viền |
-| Muted | `color.muted` | `#64748B` | Metadata |
-| Danger | `color.danger` | `#E5484D` | Huỷ, lỗi, xóa |
+| Primary vivid | `color.brand.primaryVivid` | `#2CCBD3` | Active, icon, indicator |
+| Primary surface | `color.brand.primary` | `#5EC9D1` | Nền tint, illustration, không dùng chữ trắng nhỏ |
+| Primary deep | `color.brand.primaryDeep` | `#0E7F88` | Nút chính, chữ trên nền sáng, link |
+| Primary text | `color.brand.primaryText` | `#1A8F98` | Link/giá trên nền trắng |
+| Primary tint | `color.brand.primaryTint` | `#E6F7F8` | Card, selected, tonal button |
+| Ink | `color.neutral.ink` | `#1E2528` | Heading |
+| Ink strong | `color.neutral.ink900` | `#0B1B22` | Nền tối, tab bar |
+| Background | `color.neutral.bg` | `#F4F6F8` | Nền chính |
+| Surface | `color.neutral.surface` | `#FFFFFF` | Card/input |
+| Line | `color.neutral.line` | `#E3E7EA` | Viền |
+| Muted | `color.neutral.muted` | `#6B7479` | Metadata |
+| Promo | `color.semantic.promoBg` | `#FBEFB0` | Badge/banner ưu đãi |
+| Safety | `color.semantic.safety` | `#C2410C` | SOS/an toàn |
+| Danger | `color.semantic.danger` | `#D64545` | Huỷ, lỗi, xóa |
 
-**Không dùng teal `#5EC9D1` của Green SM.**
+**Quy tắc tương phản:** chữ trắng chỉ dùng trên `primaryDeep`/`ink900`; không dùng chữ trắng nhỏ trên `primary`/`primaryVivid`.
 
 ### Typography
 
-- **Be Vietnam Pro** — đã bundle; hỗ trợ tiếng Việt.
+- **Be Vietnam Pro** — hỗ trợ tiếng Việt; thay cho Google Sans.
 - Display 34/38, H1 28/34, H2 22/28, body 15/22, caption 12/16.
-- Số tiền dùng `fontFeature.tabularFigures`.
-- Không dùng font mặc định Roboto.
+- Số tiền dùng tabular figures.
+- Không dùng Roboto mặc định.
 
-### Hình ảnh
+### Hình ảnh & 3D
 
 - Ảnh thật: đường phố Việt Nam, xe, tài xế, điểm đón.
-- Map tile thật; marker rõ.
-- Avatar thật (nếu có), fallback chữ cái.
-- Không dùng ảnh stock nước ngoài cho địa điểm Việt Nam.
+- 3D icon pastel cho dịch vụ chính; line icon cho cài đặt.
+- 3D asset phải là bộ riêng hoặc license mở (Fluent Emoji 3D MIT), không lấy của Green SM.
+- Nền 3D: gradient teal nhạt, cùng góc nhìn/ánh sáng.
 
 ### Icon
 
-- Line icon 24pt, stroke 1.8–2.
-- Icon theo bộ Lucide/Phosphor (chọn một bộ, không trộn).
+- 3D: dịch vụ chính (Đặt xe, Đặt lịch, An toàn).
+- Line 24pt: cài đặt/danh sách.
+- Không trộn 3D + line trong cùng nhóm.
 - Không dùng emoji thay icon chức năng.
 
 ### Motion
 
-- Base 200ms, sheet 280ms, success 400ms.
-- Map camera bay 500ms.
-- Offer mới: slide/fade + badge “Mới”.
+- Base 220ms, tab 250ms spring, sheet 280ms, success 400ms, map 500ms.
+- Floating tab bar active indicator trượt.
+- Search glass khi cuộn 180ms.
+- 3D icon float ±2px / 3.2s (chỉ decorative).
+- Offer mới fade/slide + badge.
 - Tôn trọng Reduce Motion.
+
+Chi tiết: `motion.md`.
 
 ## 7. Navigation
 
@@ -214,12 +223,12 @@ Mọi trạng thái có:
 
 Tab bar nổi 4 tab, chỉ icon + label khi accessibility:
 
-1. **Trang chủ** — map + đặt chuyến.
+1. **Trang chủ** — discovery: search, dịch vụ, tuyến gần đây; map nằm trong flow đặt chuyến.
 2. **Chuyến** — đang chạy/lịch sử.
 3. **Hộp thư** — chat, thông báo, offer.
 4. **Tài khoản** — KYC, ví, phương thức, an toàn, hỗ trợ.
 
-Nút chính “Đặt chuyến” nằm trong home sheet, không phải tab.
+Nút tròn **“Đặt chuyến”** tách khỏi tab bar (vị trí giống Trophy của Green SM, nhưng là CTA).
 
 ### Driver
 
@@ -294,7 +303,9 @@ Web sidebar:
 
 ## 11. Quyết định mặc định (có thể đổi sau)
 
-- Brand primary: cobalt; accent: amber; trust: mint.
+- Visual + motion: Green SM pastel/teal/3D, asset riêng.
+- Primary CTA dùng teal đậm `#0E7F88`; `#5EC9D1` chỉ làm nền/tint/active.
+- Offer/accent dùng amber; trust dùng mint.
 - Font: Be Vietnam Pro.
 - Platform fee MVP: **0%**; nếu bật, hiển thị riêng.
 - Offer validity: ask 2 phút; open 3 phút; counter/quote 90 giây.
