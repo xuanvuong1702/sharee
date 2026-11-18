@@ -1,6 +1,6 @@
 # DESIGN.md — Sharee: chợ chuyến đi thương lượng
 
-> **v1.0** — source of truth cho thiết kế lại toàn bộ app.
+> **v1.1** — source of truth, Green SM-inspired cho thiết kế lại toàn bộ app.
 > Đọc `README.md` trước. Bản Green SM cũ nằm ở `_reference-green-sm/`, chỉ để tham khảo.
 
 ## 1. Tầm nhìn

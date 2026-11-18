@@ -1,6 +1,6 @@
 # Sharee Design Docs
 
-> **Trạng thái:** v1.0 — thiết kế lại toàn bộ cho mô hình **chợ chuyến đi thương lượng giá**.
+> **Trạng thái:** v1.1 — thiết kế lại toàn bộ, Green SM visual cho mô hình **chợ chuyến đi thương lượng giá**.
 > **Phạm vi:** tài liệu thiết kế, chưa phải code. Mọi quyết định triển khai phải bám tài liệu này.
 > **Ngôn ngữ:** tiếng Việt có dấu. Code/API dùng tiếng Anh.
 
