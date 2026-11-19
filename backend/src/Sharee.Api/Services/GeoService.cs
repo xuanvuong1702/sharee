@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Sharee.Api.Contracts;
@@ -18,7 +19,11 @@ public sealed class GeoService
         new("Sân bay Nội Bài", "Sân bay Quốc tế Nội Bài, Sóc Sơn, Hà Nội", 21.2187, 105.8042, "airport"),
         new("Phố cổ Hà Nội", "Phố cổ, Hoàn Kiếm, Hà Nội", 21.0341, 105.8500, "attraction"),
         new("Times City", "Times City, Minh Khai, Hai Bà Trưng, Hà Nội", 20.9949, 105.8687, "mall"),
-        new("Vincom Bà Triệu", "Vincom Center Bà Triệu, Hai Bà Trưng, Hà Nội", 21.0114, 105.8491, "mall")
+        new("Vincom Bà Triệu", "Vincom Center Bà Triệu, Hai Bà Trưng, Hà Nội", 21.0114, 105.8491, "mall"),
+        new("Imperia Smart City", "Imperia Smart City, Tây Mỗ, Nam Từ Liêm, Hà Nội", 21.0185, 105.7627, "pin"),
+        new("Công viên Trung tâm", "Công viên Trung tâm Vinhomes Smart City, Nam Từ Liêm, Hà Nội", 21.0180, 105.7635, "attraction"),
+        new("Đại học Quốc gia Hà Nội", "Đại học Quốc gia Hà Nội, Cầu Giấy, Hà Nội", 21.0378, 105.7823, "school"),
+        new("Bến xe Giáp Bát", "Bến xe Giáp Bát, Hoàng Mai, Hà Nội", 20.9757, 105.8412, "bus")
     ];
 
     private readonly IHttpClientFactory _http;
@@ -147,11 +152,24 @@ public sealed class GeoService
 
     private static IReadOnlyList<GeoPlaceDto> FallbackFor(string query)
     {
-        var q = query.ToLowerInvariant();
-        return Fallback.Where(p =>
-                p.Label.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                p.FullName.Contains(q, StringComparison.OrdinalIgnoreCase))
+        var q = Normalize(query);
+        var matches = Fallback.Where(p =>
+                Normalize(p.Label).Contains(q) || Normalize(p.FullName).Contains(q))
             .Take(6)
             .ToList();
+        // A failed/empty upstream should still give the user usable suggestions.
+        return matches.Count > 0 ? matches : Fallback.Take(4).ToList();
+    }
+
+    private static string Normalize(string value)
+    {
+        var form = value.Normalize(NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(form.Length);
+        foreach (var ch in form)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(ch) == UnicodeCategory.NonSpacingMark) continue;
+            sb.Append(ch is 'đ' or 'Đ' ? 'd' : char.ToLowerInvariant(ch));
+        }
+        return sb.ToString().Replace("đ", "d");
     }
 }

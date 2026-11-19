@@ -41,7 +41,7 @@ public static class RideEndpoints
             double lat, double lng, double? radiusKm, HttpContext http, Db db, CancellationToken ct) =>
         {
             if (!ValidPoint(lat, lng)) return Results.BadRequest(new { message = "Toạ độ không hợp lệ." });
-            var radius = Math.Clamp(radiusKm ?? 6, 1, 20);
+            var radius = Math.Clamp(radiusKm ?? 10, 1, 30);
             await using var conn = await db.OpenAsync(ct);
             var rows = await conn.QueryAsync("""
                 select p.driver_id, u.full_name, u.rating_avg, u.rating_count,

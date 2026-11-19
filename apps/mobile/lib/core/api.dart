@@ -598,7 +598,7 @@ class Api {
 
   Future<List<NearbyDriver>> nearbyDrivers(double lat, double lng) async {
     final data = await _send('GET', '/api/drivers/nearby',
-        query: {'lat': lat, 'lng': lng, 'radiusKm': 6}) as List<dynamic>;
+        query: {'lat': lat, 'lng': lng, 'radiusKm': 10}) as List<dynamic>;
     return data.map((e) => NearbyDriver.fromJson(e as Map<String, dynamic>)).toList();
   }
 
