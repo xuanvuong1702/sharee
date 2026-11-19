@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../widgets/app_ui.dart';
 import 'chat_screen.dart';
 import 'notifications_screen.dart';
+import 'ride_booking_screen.dart';
 import 'results_screen.dart';
 
 class RoutePreset {
@@ -49,6 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     if (value != null) setState(() => _date = value);
+  }
+
+  void _openRide() {
+    Navigator.of(context).push(appRoute(const RideBookingScreen()));
   }
 
   void _search() {
@@ -373,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: 'Tài xế gần bạn',
                       image: 'assets/icons3d/taxi.png',
                       colors: const [Color(0xFFD9F3F4), Color(0xFFEAF8F9)],
-                      onTap: _search,
+                      onTap: _openRide,
                     ),
                   ),
                   const SizedBox(width: 10),

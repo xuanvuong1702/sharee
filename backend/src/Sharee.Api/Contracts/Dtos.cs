@@ -227,3 +227,34 @@ public record TripTrackingDto(
     VehicleDto Vehicle, StopDto Pickup, StopDto Dropoff, IReadOnlyList<LatLngDto> Route,
     LivePositionDto? Driver, IReadOnlyList<LivePositionDto> Passengers,
     int EtaMinutes, double DistanceKm, DateTimeOffset? StartedAt);
+
+public record GeoPlaceDto(
+    string Label, string FullName, double Lat, double Lng, string? Kind);
+
+public record NearbyDriverDto(
+    Guid DriverId, string FullName, double Rating, int RatingCount,
+    string? VehicleLabel, string? Plate, double Lat, double Lng, int EtaMinutes);
+
+public record DriverPresenceDto(
+    bool Online, double Lat, double Lng, Guid? VehicleId, DateTimeOffset UpdatedAt);
+
+public record UpdateDriverPresenceRequest(bool Online, double Lat, double Lng, Guid? VehicleId);
+
+public record RideDriverDto(
+    Guid Id, string FullName, string? AvatarUrl, double Rating, int RatingCount,
+    string VehicleLabel, string? Plate, string? Color, string? PhoneMasked);
+
+public record CreateRideRequestDto(
+    string PickupLabel, double PickupLat, double PickupLng,
+    string DropoffLabel, double DropoffLat, double DropoffLng,
+    string VehicleClass, string PaymentMethod, string? Note);
+
+public record CancelRideRequest(string? Reason);
+
+public record RideDto(
+    Guid Id, Guid PassengerId, string PassengerName, double? PassengerRating,
+    string PickupLabel, double PickupLat, double PickupLng,
+    string DropoffLabel, double DropoffLat, double DropoffLng,
+    string VehicleClass, string PaymentMethod, string? Note, string Status,
+    RideDriverDto? Driver, DateTimeOffset CreatedAt, DateTimeOffset? AcceptedAt,
+    DateTimeOffset? ArrivedAt, DateTimeOffset? StartedAt, DateTimeOffset? CompletedAt);

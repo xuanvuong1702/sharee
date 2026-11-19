@@ -1079,3 +1079,210 @@ class ReputationInfo {
         badges: (json['badges'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
       );
 }
+
+class GeoPlace {
+  final String label;
+  final String fullName;
+  final double lat;
+  final double lng;
+  final String? kind;
+
+  const GeoPlace({
+    required this.label,
+    required this.fullName,
+    required this.lat,
+    required this.lng,
+    this.kind,
+  });
+
+  factory GeoPlace.fromJson(Map<String, dynamic> json) => GeoPlace(
+        label: json['label'] as String? ?? 'Vị trí',
+        fullName: json['fullName'] as String? ?? '',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lng: (json['lng'] as num?)?.toDouble() ?? 0,
+        kind: json['kind'] as String?,
+      );
+}
+
+class NearbyDriver {
+  final String driverId;
+  final String fullName;
+  final double rating;
+  final int ratingCount;
+  final String? vehicleLabel;
+  final String? plate;
+  final double lat;
+  final double lng;
+  final int etaMinutes;
+
+  const NearbyDriver({
+    required this.driverId,
+    required this.fullName,
+    required this.rating,
+    required this.ratingCount,
+    required this.lat,
+    required this.lng,
+    required this.etaMinutes,
+    this.vehicleLabel,
+    this.plate,
+  });
+
+  factory NearbyDriver.fromJson(Map<String, dynamic> json) => NearbyDriver(
+        driverId: json['driverId'] as String,
+        fullName: json['fullName'] as String? ?? 'Tài xế',
+        rating: (json['rating'] as num?)?.toDouble() ?? 5,
+        ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
+        vehicleLabel: json['vehicleLabel'] as String?,
+        plate: json['plate'] as String?,
+        lat: (json['lat'] as num?)?.toDouble() ?? 0,
+        lng: (json['lng'] as num?)?.toDouble() ?? 0,
+        etaMinutes: (json['etaMinutes'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class RideDriver {
+  final String id;
+  final String fullName;
+  final String? avatarUrl;
+  final double rating;
+  final int ratingCount;
+  final String vehicleLabel;
+  final String? plate;
+  final String? color;
+  final String? phoneMasked;
+
+  const RideDriver({
+    required this.id,
+    required this.fullName,
+    required this.rating,
+    required this.ratingCount,
+    required this.vehicleLabel,
+    this.avatarUrl,
+    this.plate,
+    this.color,
+    this.phoneMasked,
+  });
+
+  factory RideDriver.fromJson(Map<String, dynamic> json) => RideDriver(
+        id: json['id'] as String,
+        fullName: json['fullName'] as String? ?? 'Tài xế',
+        avatarUrl: json['avatarUrl'] as String?,
+        rating: (json['rating'] as num?)?.toDouble() ?? 5,
+        ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
+        vehicleLabel: json['vehicleLabel'] as String? ?? 'Xe',
+        plate: json['plate'] as String?,
+        color: json['color'] as String?,
+        phoneMasked: json['phoneMasked'] as String?,
+      );
+}
+
+class RideInfo {
+  final String id;
+  final String passengerId;
+  final String passengerName;
+  final double? passengerRating;
+  final String pickupLabel;
+  final double pickupLat;
+  final double pickupLng;
+  final String dropoffLabel;
+  final double dropoffLat;
+  final double dropoffLng;
+  final String vehicleClass;
+  final String paymentMethod;
+  final String? note;
+  final String status;
+  final RideDriver? driver;
+  final DateTime createdAt;
+  final DateTime? acceptedAt;
+  final DateTime? arrivedAt;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+
+  const RideInfo({
+    required this.id,
+    required this.passengerId,
+    required this.passengerName,
+    required this.pickupLabel,
+    required this.pickupLat,
+    required this.pickupLng,
+    required this.dropoffLabel,
+    required this.dropoffLat,
+    required this.dropoffLng,
+    required this.vehicleClass,
+    required this.paymentMethod,
+    required this.status,
+    required this.createdAt,
+    this.passengerRating,
+    this.note,
+    this.driver,
+    this.acceptedAt,
+    this.arrivedAt,
+    this.startedAt,
+    this.completedAt,
+  });
+
+  String get paymentLabel => switch (paymentMethod) {
+        'bank' => 'Chuyển khoản',
+        'wallet' => 'Ví điện tử',
+        _ => 'Tiền mặt',
+      };
+
+  String get statusLabel => switch (status) {
+        'searching' => 'Đang tìm tài xế',
+        'accepted' => 'Tài xế đang đến',
+        'arrived' => 'Tài xế đã đến',
+        'in_progress' => 'Đang di chuyển',
+        'completed' => 'Đã hoàn tất',
+        'cancelled' => 'Đã huỷ',
+        _ => status,
+      };
+
+  factory RideInfo.fromJson(Map<String, dynamic> json) => RideInfo(
+        id: json['id'] as String,
+        passengerId: json['passengerId'] as String? ?? '',
+        passengerName: json['passengerName'] as String? ?? '',
+        passengerRating: (json['passengerRating'] as num?)?.toDouble(),
+        pickupLabel: json['pickupLabel'] as String? ?? '',
+        pickupLat: (json['pickupLat'] as num?)?.toDouble() ?? 0,
+        pickupLng: (json['pickupLng'] as num?)?.toDouble() ?? 0,
+        dropoffLabel: json['dropoffLabel'] as String? ?? '',
+        dropoffLat: (json['dropoffLat'] as num?)?.toDouble() ?? 0,
+        dropoffLng: (json['dropoffLng'] as num?)?.toDouble() ?? 0,
+        vehicleClass: json['vehicleClass'] as String? ?? 'car',
+        paymentMethod: json['paymentMethod'] as String? ?? 'cash',
+        note: json['note'] as String?,
+        status: json['status'] as String? ?? 'searching',
+        driver: json['driver'] == null
+            ? null
+            : RideDriver.fromJson(json['driver'] as Map<String, dynamic>),
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '')?.toLocal() ?? DateTime.now(),
+        acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? '')?.toLocal(),
+        arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '')?.toLocal(),
+        startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '')?.toLocal(),
+        completedAt: DateTime.tryParse(json['completedAt'] as String? ?? '')?.toLocal(),
+      );
+}
+
+class DriverPresence {
+  final bool online;
+  final double lat;
+  final double lng;
+  final String? vehicleId;
+  final DateTime updatedAt;
+
+  const DriverPresence({
+    required this.online,
+    required this.lat,
+    required this.lng,
+    required this.updatedAt,
+    this.vehicleId,
+  });
+
+  factory DriverPresence.fromJson(Map<String, dynamic> json) => DriverPresence(
+        online: json['online'] as bool? ?? false,
+        lat: (json['lat'] as num?)?.toDouble() ?? 21.0278,
+        lng: (json['lng'] as num?)?.toDouble() ?? 105.8342,
+        vehicleId: json['vehicleId'] as String?,
+        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '')?.toLocal() ?? DateTime.now(),
+      );
+}

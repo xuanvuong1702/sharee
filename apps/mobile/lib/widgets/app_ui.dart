@@ -379,8 +379,8 @@ class TripSkeleton extends StatelessWidget {
   }
 }
 
-Route<void> appRoute(Widget page) {
-  return PageRouteBuilder<void>(
+Route<T> appRoute<T>(Widget page) {
+  return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 320),
     reverseTransitionDuration: const Duration(milliseconds: 240),
     pageBuilder: (context, animation, secondary) => page,

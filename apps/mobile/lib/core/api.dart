@@ -97,7 +97,9 @@ class Api {
     if (response.statusCode >= 400) {
       final message = decoded is Map && decoded['error'] != null
           ? decoded['error'].toString()
-          : 'Lỗi ${response.statusCode}';
+          : decoded is Map && decoded['message'] != null
+              ? decoded['message'].toString()
+              : 'Lỗi ${response.statusCode}';
       throw ApiException(message, response.statusCode);
     }
     return decoded;
@@ -580,6 +582,104 @@ class Api {
     final data = await _send('GET', '/api/notifications/unread-count')
         as Map<String, dynamic>;
     return (data['count'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<List<GeoPlace>> geoSearch(String query) async {
+    final data = await _send('GET', '/api/geo/search', query: {'q': query, 'limit': 6})
+        as List<dynamic>;
+    return data.map((e) => GeoPlace.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<GeoPlace> geoReverse(double lat, double lng) async {
+    final data = await _send('GET', '/api/geo/reverse', query: {'lat': lat, 'lng': lng})
+        as Map<String, dynamic>;
+    return GeoPlace.fromJson(data);
+  }
+
+  Future<List<NearbyDriver>> nearbyDrivers(double lat, double lng) async {
+    final data = await _send('GET', '/api/drivers/nearby',
+        query: {'lat': lat, 'lng': lng, 'radiusKm': 6}) as List<dynamic>;
+    return data.map((e) => NearbyDriver.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<DriverPresence> driverPresence() async {
+    final data = await _send('GET', '/api/driver/presence') as Map<String, dynamic>;
+    return DriverPresence.fromJson(data);
+  }
+
+  Future<DriverPresence> setDriverPresence({
+    required bool online,
+    required double lat,
+    required double lng,
+    String? vehicleId,
+  }) async {
+    final data = await _send('PUT', '/api/driver/presence', body: {
+      'online': online,
+      'lat': lat,
+      'lng': lng,
+      'vehicleId': vehicleId,
+    }) as Map<String, dynamic>;
+    return DriverPresence.fromJson(data);
+  }
+
+  Future<List<RideInfo>> incomingRides() async {
+    final data = await _send('GET', '/api/driver/rides/incoming') as List<dynamic>;
+    return data.map((e) => RideInfo.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<RideInfo?> currentDriverRide() async {
+    final data = await _send('GET', '/api/driver/rides/current');
+    if (data == null) return null;
+    return RideInfo.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<RideInfo> createRide({
+    required String pickupLabel,
+    required double pickupLat,
+    required double pickupLng,
+    required String dropoffLabel,
+    required double dropoffLat,
+    required double dropoffLng,
+    required String vehicleClass,
+    required String paymentMethod,
+    String? note,
+  }) async {
+    final data = await _send('POST', '/api/rides', body: {
+      'pickupLabel': pickupLabel,
+      'pickupLat': pickupLat,
+      'pickupLng': pickupLng,
+      'dropoffLabel': dropoffLabel,
+      'dropoffLat': dropoffLat,
+      'dropoffLng': dropoffLng,
+      'vehicleClass': vehicleClass,
+      'paymentMethod': paymentMethod,
+      'note': note,
+    }) as Map<String, dynamic>;
+    return RideInfo.fromJson(data);
+  }
+
+  Future<RideInfo> ride(String id) async {
+    final data = await _send('GET', '/api/rides/$id') as Map<String, dynamic>;
+    return RideInfo.fromJson(data);
+  }
+
+  Future<List<RideInfo>> myRides() async {
+    final data = await _send('GET', '/api/rides/mine') as List<dynamic>;
+    return data.map((e) => RideInfo.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<RideInfo> acceptRide(String id) async {
+    final data = await _send('POST', '/api/rides/$id/accept', body: {}) as Map<String, dynamic>;
+    return RideInfo.fromJson(data);
+  }
+
+  Future<RideInfo> rideAction(String id, String action) async {
+    final data = await _send('POST', '/api/rides/$id/$action', body: {}) as Map<String, dynamic>;
+    return RideInfo.fromJson(data);
+  }
+
+  Future<void> cancelRide(String id, String reason) async {
+    await _send('POST', '/api/rides/$id/cancel', body: {'reason': reason});
   }
 
   void close() => _client.close();

@@ -81,6 +81,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddResponseCompression(o => o.EnableForHttps = true);
 builder.Services.AddHttpClient("twilio", c => c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddHttpClient("payos", c => c.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddHttpClient("geo", c => c.Timeout = TimeSpan.FromSeconds(8));
+builder.Services.AddScoped<GeoService>();
 
 var paymentProvider = config["Payments:Provider"] ?? "mock";
 var payos = config.GetSection("PayOS").Get<PayOsOptions>() ?? new PayOsOptions();
@@ -323,6 +325,7 @@ app.MapChatEndpoints();
 app.MapAdminEndpoints();
 app.MapDailyEndpoints();
 app.MapNotificationEndpoints();
+app.MapRideEndpoints();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificationHub>("/hubs/notifications");
 
