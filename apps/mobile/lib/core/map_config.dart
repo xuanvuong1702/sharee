@@ -1,12 +1,12 @@
 class MapConfig {
   static const String tileUrl = String.fromEnvironment(
     'MAP_TILE_URL',
-    defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    defaultValue: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
   );
 
   static const String attribution = String.fromEnvironment(
     'MAP_ATTRIBUTION',
-    defaultValue: '© OpenStreetMap contributors',
+    defaultValue: '© OpenStreetMap contributors · © CARTO',
   );
 
   static const String userAgent = String.fromEnvironment(
@@ -14,5 +14,6 @@ class MapConfig {
     defaultValue: 'vn.sharee.mobile',
   );
 
-  static bool get isDemoTiles => tileUrl.contains('tile.openstreetmap.org');
+  static bool get isDemoTiles =>
+      tileUrl.contains('tile.openstreetmap.org') || tileUrl.contains('cartocdn.com');
 }

@@ -68,6 +68,7 @@ public sealed class GeoService
                     return FallbackFor(query);
 
                 var list = new List<GeoPlaceDto>();
+                var seen = new HashSet<string>();
                 foreach (var item in doc.RootElement.EnumerateArray())
                 {
                     var full = item.TryGetProperty("display_name", out var dn) ? dn.GetString() ?? "" : "";
@@ -79,6 +80,7 @@ public sealed class GeoService
                     var label = string.IsNullOrWhiteSpace(name)
                         ? full.Split(',')[0].Trim()
                         : name!;
+                    if (!seen.Add(Normalize(label))) continue;
                     list.Add(new GeoPlaceDto(label, full, lat.Value, lon.Value, kind));
                 }
 
