@@ -99,6 +99,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
       final drivers = await AppScope.of(context).api.nearbyDrivers(p.lat, p.lng);
       if (!mounted) return;
       setState(() => _nearby = drivers);
+      if (_dropoff == null) _fitNearby();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -141,6 +142,20 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
     _map.fitCamera(CameraFit.bounds(
       bounds: bounds,
       padding: const EdgeInsets.fromLTRB(40, 130, 40, 400),
+    ));
+  }
+
+  /// Keep pickup + nearby cars in the area not covered by the bottom sheet.
+  void _fitNearby() {
+    final p = _pickup;
+    if (p == null || _nearby.isEmpty) return;
+    final points = <LatLng>[
+      LatLng(p.lat, p.lng),
+      for (final d in _nearby) LatLng(d.lat, d.lng),
+    ];
+    _map.fitCamera(CameraFit.bounds(
+      bounds: LatLngBounds.fromPoints(points),
+      padding: const EdgeInsets.fromLTRB(48, 140, 48, 500),
     ));
   }
 

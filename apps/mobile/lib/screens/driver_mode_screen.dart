@@ -47,7 +47,11 @@ class _DriverModeScreenState extends State<DriverModeScreen> {
       _online = presence.online;
       _lat = presence.lat;
       _lng = presence.lng;
-      if (_online) await _refreshRides();
+      if (_online) {
+        await _refreshRides();
+        _poll?.cancel();
+        _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refreshRides());
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
