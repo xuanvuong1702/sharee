@@ -1,12 +1,13 @@
 class MapConfig {
   static const String tileUrl = String.fromEnvironment(
     'MAP_TILE_URL',
-    defaultValue: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+    defaultValue:
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
   );
 
   static const String attribution = String.fromEnvironment(
     'MAP_ATTRIBUTION',
-    defaultValue: '© OpenStreetMap contributors · © CARTO',
+    defaultValue: 'Esri · HERE · Garmin · © OpenStreetMap contributors',
   );
 
   static const String userAgent = String.fromEnvironment(
@@ -15,5 +16,5 @@ class MapConfig {
   );
 
   static bool get isDemoTiles =>
-      tileUrl.contains('tile.openstreetmap.org') || tileUrl.contains('cartocdn.com');
+      tileUrl.contains('tile.openstreetmap.org') || tileUrl.contains('arcgisonline.com');
 }

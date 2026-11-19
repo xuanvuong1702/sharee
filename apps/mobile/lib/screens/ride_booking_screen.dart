@@ -305,7 +305,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                                   height: 16,
                                   child: CircularProgressIndicator(strokeWidth: 2))
                               : null,
-                          onTap: () => _pick(pickup: false),
+                          onTap: () => _pick(pickup: true),
                         ),
                         const Divider(height: 18),
                         _PointRow(
@@ -313,7 +313,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                           label: 'Điểm đến',
                           value: _dropoff?.label ?? 'Bạn muốn đi đâu?',
                           hint: _dropoff?.fullName,
-                          onTap: () => _pick(pickup: true),
+                          onTap: () => _pick(pickup: false),
                         ),
                         const SizedBox(height: 14),
                         Row(

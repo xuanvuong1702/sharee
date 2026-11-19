@@ -53,7 +53,7 @@ public static class RideEndpoints
                 join users u on u.id = p.driver_id
                 left join vehicles v on v.id = p.vehicle_id
                 where p.online
-                  and p.updated_at > now() - interval '10 minutes'
+                  and p.updated_at > now() - interval '24 hours'
                   and ST_DWithin(p.location, ST_SetSRID(ST_MakePoint(@lng, @lat), 4326)::geography, @radiusM)
                 order by distance_m
                 limit 20
@@ -205,7 +205,7 @@ public static class RideEndpoints
             var drivers = (await conn.QueryAsync<Guid>("""
                 select p.driver_id from driver_presence p
                 join users u on u.id = p.driver_id
-                where p.online and p.updated_at > now() - interval '10 minutes'
+                where p.online and p.updated_at > now() - interval '24 hours'
                 limit 30
                 """, transaction: tx)).ToList();
 
