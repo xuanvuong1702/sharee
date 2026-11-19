@@ -1,5 +1,10 @@
 # flows.md — Luồng người dùng và edge cases
 
+## 0. Phạm vi triển khai v1.4
+
+> **Luồng đang code:** `ride-dispatch.md` (F2 mới). Các flow F2–F5 bên dưới là **future offer mode**, chưa bật; khi đọc flow hiện tại, dùng `ride-dispatch.md`.
+
+
 > Mỗi flow ghi: mục tiêu, precondition, các bước, trạng thái, lỗi, microcopy. Screen ID trỏ `screens.md`.
 
 ## F1. Đăng ký / đăng nhập

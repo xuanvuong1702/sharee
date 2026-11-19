@@ -1,5 +1,10 @@
 # product.md — Mô hình sản phẩm và luật nghiệp vụ
 
+## 0. Phạm vi triển khai v1.4
+
+> **Luồng đang code:** `ride-dispatch.md`. Không có trường giá cước; passenger chọn phương thức thanh toán; tài xế đầu tiên nhận chuyến; thanh toán trực tiếp. Các mục offer/counter bên dưới là **future mode**, chưa bật.
+
+
 > Tài liệu này định nghĩa **cái gì** và **vì sao**, không định nghĩa pixel. Pixel nằm ở `screens.md`, `components.md`, `tokens.json`.
 
 ## 1. Định nghĩa
@@ -265,9 +270,12 @@ cash_due → cash_collected
 | Auth | OTP, refresh, logout, device | P0 |
 | Passenger | Map, search, pin | P0 |
 | Passenger | Saved places | P1 |
-| Passenger | Đặt giá, mở quote | P0 |
+| Passenger | Chọn điểm đón/đến, xem tài xế gần | P0 |
+| Passenger | Gửi yêu cầu, tài xế nhận chuyến | P0 |
+| Passenger | Thanh toán trực tiếp (chọn phương thức) | P0 |
+| Passenger | Đặt giá, mở quote (future offer mode) | P2 |
 | Passenger | Đặt lịch | P1 |
-| Passenger | Offer list, counter, accept | P0 |
+| Passenger | Offer list, counter, accept (future offer mode) | P2 |
 | Passenger | Tracking, chat, call, share, SOS | P0 |
 | Passenger | Payment online/cash, receipt, invoice | P0 |
 | Passenger | Rating, report, dispute | P0 |
@@ -275,7 +283,8 @@ cash_due → cash_collected
 | Passenger | Promo, referral, wallet top-up | P1 |
 | Passenger | Split fare | P2 |
 | Passenger | Multi-stop, shared ride, corporate | P2 |
-| Driver | Online/offline, radar, accept/counter | P0 |
+| Driver | Online/offline, nhận chuyến | P0 |
+| Driver | Counter/quote (future offer mode) | P2 |
 | Driver | Navigate, arrive, start, complete | P0 |
 | Driver | Earnings, withdrawal | P0 |
 | Driver | KYC/vehicle docs | P0 |

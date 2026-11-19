@@ -335,6 +335,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                           ? null
                           : () => Navigator.of(context).pop(_picked),
                     ),
+                    const SizedBox(height: 4),
+                    Text(MapConfig.attribution,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 8, color: AppTheme.mutedLight)),
                   ],
                 ),
               ),

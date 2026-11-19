@@ -3,6 +3,7 @@
 Bộ tài liệu thiết kế chính thức cho mô hình **chợ chuyến đi thương lượng giá** nằm tại:
 
 - [`docs/desgin/README.md`](docs/desgin/README.md) — điểm vào
+- [`docs/desgin/ride-dispatch.md`](docs/desgin/ride-dispatch.md) — luồng đặt xe trực tiếp đang triển khai
 - [`docs/desgin/DESIGN.md`](docs/desgin/DESIGN.md) — nguyên tắc và luật thiết kế
 - [`docs/desgin/product.md`](docs/desgin/product.md) — mô hình giá và luật nghiệp vụ
 - [`docs/desgin/flows.md`](docs/desgin/flows.md) — luồng end-to-end

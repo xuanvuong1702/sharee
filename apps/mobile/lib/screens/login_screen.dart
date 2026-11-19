@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
                   Center(
-                    child: Text('Sharee 1.3.0',
+                    child: Text('Sharee 1.4.0',
                         style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.45), fontSize: 9.5)),
                   ),

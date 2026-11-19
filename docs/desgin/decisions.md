@@ -26,6 +26,9 @@
 | D18 | Chat trước match chỉ template | Chống off-platform | 2026-11-19 |
 | D19 | Không hiển thị SĐT đầy đủ | Privacy | 2026-11-19 |
 | D20 | Admin live ops + command palette | Vận hành | 2026-11-19 |
+| D21 | v1.4 dispatch trực tiếp: không nhập/đặt giá, tài xế accept, thanh toán trực tiếp | Chủ dự án chốt | 2026-11-19 |
+| D22 | Bản đồ dùng Esri Light Gray (không key), Nominatim proxy + fallback | Ổn định demo | 2026-11-19 |
+| D23 | Offer/counter chuyển thành future mode, không bật mặc định | Tránh lệch phạm vi | 2026-11-19 |
 
 ## Giả định cần xác nhận
 

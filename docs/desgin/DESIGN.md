@@ -1,6 +1,11 @@
 # DESIGN.md — Sharee: chợ chuyến đi thương lượng
 
-> **v1.1** — source of truth, Green SM-inspired cho thiết kế lại toàn bộ app.
+## 0. Phạm vi triển khai v1.4
+
+> **Luồng đang code:** `ride-dispatch.md`. App không nhập/đặt giá; passenger chọn điểm đón/đến + phương thức thanh toán, tài xế online nhận chuyến, giá thỏa thuận trực tiếp. Các mục offer/counter/escrow giá bên dưới là **future mode**, chưa bật.
+
+
+> **v1.4** — source of truth, Green SM-inspired + direct dispatch cho thiết kế lại toàn bộ app.
 > Đọc `README.md` trước. Bản Green SM cũ nằm ở `_reference-green-sm/`, chỉ để tham khảo.
 
 ## 1. Tầm nhìn

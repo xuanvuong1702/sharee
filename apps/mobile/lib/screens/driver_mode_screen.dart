@@ -319,6 +319,12 @@ class _CurrentRideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusText = switch (ride.status) {
+      'accepted' => 'Đang đến điểm đón',
+      'arrived' => 'Đã đến điểm đón',
+      'in_progress' => 'Đang chở khách',
+      _ => ride.statusLabel,
+    };
     final (label, action) = switch (ride.status) {
       'accepted' => ('Đã đến điểm đón', 'arrive'),
       'arrived' => ('Bắt đầu chuyến', 'start'),
@@ -338,7 +344,7 @@ class _CurrentRideCard extends StatelessWidget {
                   color: AppTheme.primarySoft,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(ride.statusLabel,
+                child: Text(statusText,
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,

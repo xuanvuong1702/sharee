@@ -1,5 +1,10 @@
 # screens.md — Danh mục và đặc tả màn hình
 
+## 0. Phạm vi triển khai v1.4
+
+> Màn đang code: Home → RideBooking (map + chọn điểm) → RideWaiting → DriverMode. Các màn offer/counter bên dưới là **future mode**. Đặc tả hiện tại: `ride-dispatch.md`.
+
+
 > Kích thước tham chiếu: iPhone 390×844pt, safe area. Android tương đương. Nội dung cuộn có padding đáy cho tab bar.
 > Component name → `components.md`; token → `tokens.json`.
 

@@ -1,26 +1,29 @@
 # Sharee Design Docs
 
-> **Trạng thái:** v1.1 — thiết kế lại toàn bộ, Green SM visual cho mô hình **chợ chuyến đi thương lượng giá**.
+> **Trạng thái:** v1.4 — Green SM visual + dispatch trực tiếp cho mô hình **chợ chuyến đi thương lượng giá**.
 > **Phạm vi:** tài liệu thiết kế, chưa phải code. Mọi quyết định triển khai phải bám tài liệu này.
 > **Ngôn ngữ:** tiếng Việt có dấu. Code/API dùng tiếng Anh.
 
 ## 1. Sản phẩm là gì
 
-**Sharee** là ứng dụng gọi xe và đặt chuyến theo mô hình **hai chiều thương lượng**:
+**Sharee** là ứng dụng gọi xe kết nối passenger với tài xế đang online:
 
-- Người đi đặt chuyến, chọn điểm đón/trả, loại xe, thời gian và **mức giá mình muốn trả**.
-- Tài xế gần đó xem yêu cầu, **nhận giá**, **trả giá khác**, hoặc gửi báo giá kèm ETA.
-- Người đi so sánh các lời chào, xem hồ sơ/uy tín/giá, rồi **chọn tài xế**.
-- Khi hai bên chốt, giá được khóa, chuyến đi bắt đầu, thanh toán/escrow theo phương thức đã chọn.
-- Ứng dụng **không tự đặt giá cuối cùng** và không dùng surge do hệ thống áp đặt.
+- Người đi chọn điểm đón/trả, loại xe và **phương thức thanh toán**; app không nhập/đặt giá.
+- Tài xế online gần đó nhận thông báo; tài xế đầu tiên nhận chuyến sẽ đi đến/đón/hoàn tất.
+- Giá cước do passenger và tài xế **tự thỏa thuận trực tiếp**; app không can thiệp.
+- App chỉ hỗ trợ ghi nhận phương thức thanh toán (tiền mặt/chuyển khoản/ví).
+- **v1.4** dùng luồng dispatch trực tiếp; offer/counter trong tài liệu là **future mode**, chưa bật.
 
 Đây không phải super-app đồ ăn/giao hàng. Không có Green SM membership, nhiệm vụ, voucher dày đặc.
+
+> **Nguồn hiện tại:** `ride-dispatch.md` cho luồng đang code. Các mục offer/counter trong `product.md`, `flows.md`, `screens.md` chỉ dùng khi bật future mode.
 
 ## 2. Đọc theo thứ tự
 
 | File | Nội dung | Khi nào đọc |
 |---|---|---|
 | `README.md` | Mục lục, trạng thái, cách dùng | Đầu tiên |
+| `ride-dispatch.md` | **Luồng đặt xe trực tiếp đang triển khai (v1.4)** | Khi code flow hiện tại |
 | `DESIGN.md` | Triết lý, nguyên tắc, luật cứng, checklist | Trước khi thiết kế/kỷ luật |
 | `product.md` | Mô hình thương lượng, actor, business rules, feature matrix | Trước khi vẽ luồng |
 | `research.md` | Phân tích 18 ảnh Green SM, benchmark, điều nên/chưa nên học | Trước khi chọn phong cách |
