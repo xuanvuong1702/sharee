@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/app_state.dart';
+import 'core/route_observer.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
 
@@ -31,6 +32,7 @@ class ShareeApp extends StatelessWidget {
             title: 'Sharee',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
+            navigatorObservers: [appRouteObserver],
             builder: (context, child) {
               if (!kIsWeb) return child!;
               if (_webMode == 'full') {

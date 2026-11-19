@@ -141,6 +141,56 @@
 - Countdown có text.
 - Focus ring 2px.
 
+## 4.12 Bottom tab bar — ẩn khi cuộn xuống, hiện khi cuộn lên
+
+### Hành vi
+
+- Người dùng vuốt nội dung **xuống** (scroll down) → tab bar trượt xuống khỏi màn hình và mờ dần.
+- Người dùng vuốt **lên** (scroll up) → tab bar trượt lên trở lại.
+- Ở đầu danh sách → luôn hiện.
+- Đổi tab / mở màn mới → hiện.
+- Kéo refresh ở đầu danh sách → không ẩn.
+
+### Ngưỡng
+
+| Thông số | Giá trị |
+|---|---|
+| Delta tích luỹ để ẩn | > 10px |
+| Delta tích luỹ để hiện | < −6px |
+| Bỏ qua jitter | < 6px |
+| Trục | Chỉ vertical |
+| Depth | Chỉ scroll ngoài cùng (depth 0) |
+| Thời gian trượt | 220ms |
+| Thời gian mờ | 160ms |
+| Easing | `easeOutCubic` / `easeOut` |
+| Khoảng trượt | 125% chiều cao tab bar |
+
+### Cảm giác
+
+- Tab bar **trượt xuống** thay vì biến mất đột ngột.
+- Không thay đổi layout của nội dung (dùng `extendBody`, overlay).
+- Không rung/không haptic khi ẩn/hiện.
+- Khi hiện lại, không bounce quá đà; chỉ trượt lên dứt khoát.
+- Nội dung vẫn cuộn mượt; không rebuild toàn màn.
+
+### Edge cases
+
+- Horizontal carousel: bỏ qua.
+- Nested scroll trong sheet: bỏ qua (depth > 0).
+- Pull-to-refresh: giữ tab bar.
+- Danh sách ngắn không scroll: tab bar luôn hiện.
+- Keyboard mở: tab bar có thể bị che; không xử lý đặc biệt.
+- Reduce Motion: đổi trạng thái ngay, không trượt/fade.
+- Screen reader: ẩn khỏi semantics khi tab bar đã ẩn.
+
+### Implementation contract
+
+- `HomeShell` bọc `NotificationListener<ScrollNotification>`.
+- `_navVisible` điều khiển `AnimatedSlide` + `AnimatedOpacity`.
+- `IgnorePointer` + `ExcludeSemantics` khi ẩn.
+- `_select()` reset `_navVisible = true`.
+- Không dùng `BottomNavigationBar` mặc định vì cần animation tùy biến.
+
 ## 7. Checklist motion
 
 - [ ] Tab indicator 250ms, spring.
