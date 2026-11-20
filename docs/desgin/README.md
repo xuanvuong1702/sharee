@@ -28,6 +28,7 @@
 | `product.md` | Mô hình thương lượng, actor, business rules, feature matrix | Trước khi vẽ luồng |
 | `research.md` | Phân tích 18 ảnh Green SM, benchmark, điều nên/chưa nên học | Trước khi chọn phong cách |
 | `motion.md` | Animation Green SM + đặc tả chuyển động | Khi làm animation |
+| `video-analysis.md` | Phân tích frame 4 video Green SM | Khi cần bám video |
 | `ia.md` | Sitemap hành khách, tài xế, admin | Trước khi dựng màn |
 | `flows.md` | Luồng đầu-cuối và edge cases | Trước khi dựng flow |
 | `screens.md` | Danh mục màn hình + đặc tả golden screens | Khi dựng màn |

@@ -116,8 +116,11 @@
 ### 4.11 Tab content
 
 - Giữ scroll position.
-- Nếu tab mới: fade 150ms.
+- Tab mới fade-in 200ms, `easeOut`; tab cũ fade-out cùng lúc (crossfade).
+- Không slide ngang.
 - Không reload toàn bộ nếu có cache.
+- Reduce Motion: đổi tức thì.
+- Chi tiết video: `video-analysis.md`.
 
 ## 5. 3D asset strategy
 

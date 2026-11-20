@@ -100,7 +100,7 @@ class _HomeShellState extends State<HomeShell> with RouteAware {
       extendBody: true,
       body: NotificationListener<ScrollNotification>(
         onNotification: _onScroll,
-        child: IndexedStack(index: _index, children: _screens),
+        child: _AnimatedTabStack(index: _index, children: _screens),
       ),
       bottomNavigationBar: IgnorePointer(
         ignoring: !_navVisible,
@@ -315,6 +315,38 @@ class _HomeShellState extends State<HomeShell> with RouteAware {
       _scrollAccum = 0;
       _lastPixels = null;
     });
+  }
+}
+
+class _AnimatedTabStack extends StatelessWidget {
+  final int index;
+  final List<Widget> children;
+  const _AnimatedTabStack({required this.index, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return Stack(
+      children: [
+        for (var i = 0; i < children.length; i++)
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: i != index,
+              child: ExcludeSemantics(
+                excluding: i != index,
+                child: AnimatedOpacity(
+                  opacity: i == index ? 1 : 0,
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: children[i],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
