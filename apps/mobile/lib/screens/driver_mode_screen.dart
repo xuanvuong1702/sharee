@@ -26,6 +26,7 @@ class _DriverModeScreenState extends State<DriverModeScreen> {
   List<RideInfo> _incoming = const [];
   RideInfo? _current;
   Timer? _poll;
+  Timer? _presenceTimer;
   double _lat = 21.0278;
   double _lng = 105.8342;
 
@@ -38,6 +39,7 @@ class _DriverModeScreenState extends State<DriverModeScreen> {
   @override
   void dispose() {
     _poll?.cancel();
+    _presenceTimer?.cancel();
     super.dispose();
   }
 
@@ -51,6 +53,8 @@ class _DriverModeScreenState extends State<DriverModeScreen> {
         await _refreshRides();
         _poll?.cancel();
         _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refreshRides());
+        _presenceTimer?.cancel();
+        _presenceTimer = Timer.periodic(const Duration(minutes: 2), (_) => _heartbeat());
       }
     } catch (e) {
       _error = e.toString();
@@ -120,13 +124,29 @@ class _DriverModeScreenState extends State<DriverModeScreen> {
         await _refreshRides();
         _poll?.cancel();
         _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refreshRides());
+        _presenceTimer?.cancel();
+        _presenceTimer = Timer.periodic(const Duration(minutes: 2), (_) => _heartbeat());
       } else {
         _poll?.cancel();
+        _presenceTimer?.cancel();
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _heartbeat() async {
+    if (!_online) return;
+    try {
+      await AppScope.of(context).api.setDriverPresence(
+            online: true,
+            lat: _lat,
+            lng: _lng,
+          );
+    } catch (_) {
+      // The next user action will surface a connection error.
     }
   }
 

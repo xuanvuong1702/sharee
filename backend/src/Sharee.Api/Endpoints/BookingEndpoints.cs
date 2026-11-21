@@ -33,6 +33,8 @@ public static class BookingEndpoints
             if (trip is null) return Results.NotFound(new { error = "Không tìm thấy chuyến" });
             if (trip.DriverId == userId) return Results.BadRequest(new { error = "Bạn là tài xế của chuyến này" });
             if (trip.Status != "open") return Results.Conflict(new { error = "Chuyến không còn mở" });
+            if (trip.DepartureTime <= DateTimeOffset.UtcNow.AddMinutes(5))
+                return Results.Conflict(new { error = "Chuyến đã quá giờ hoặc sắp khởi hành" });
             if (!await DriverVerification.IsApprovedAsync(conn, trip.DriverId, ct))
                 return Results.Json(new
                 {
@@ -50,10 +52,20 @@ public static class BookingEndpoints
             if (from.Seq >= to.Seq) return Results.BadRequest(new { error = "Điểm đón phải trước điểm trả" });
             if (!from.AllowPickup || !to.AllowDropoff)
                 return Results.BadRequest(new { error = "Điểm đón/trả không được phép" });
-            if (request.Seats <= 0) return Results.BadRequest(new { error = "Số ghế không hợp lệ" });
+            if (request.Seats <= 0 || request.Seats > 8)
+                return Results.BadRequest(new { error = "Số ghế không hợp lệ" });
+            var pending = await conn.ExecuteScalarAsync<int>("""
+                select count(*) from bookings
+                where passenger_id = @userId and trip_id = @tripId
+                  and status in ('pending_driver','pending_payment')
+                """, new { userId, tripId });
+            if (pending >= 2)
+                return Results.Conflict(new { error = "Bạn đang giữ quá nhiều chỗ cho chuyến này." });
 
-            var price = (to.PriceFromOrigin - from.PriceFromOrigin) * request.Seats;
-            if (price <= 0) return Results.BadRequest(new { error = "Chặng không hợp lệ" });
+            var priceLong = (long)(to.PriceFromOrigin - from.PriceFromOrigin) * request.Seats;
+            if (priceLong <= 0 || priceLong > 2_000_000)
+                return Results.BadRequest(new { error = "Giá chuyến không hợp lệ" });
+            var price = (int)priceLong;
 
             var status = trip.BookingMode == "instant" ? "pending_payment" : "pending_driver";
             var expires = trip.BookingMode == "instant"

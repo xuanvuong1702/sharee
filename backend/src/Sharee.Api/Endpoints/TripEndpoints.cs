@@ -18,13 +18,21 @@ public static class TripEndpoints
             string? date, short seats, DateTimeOffset? arriveBy, double? radiusKm,
             Db db, CancellationToken ct) =>
         {
-            seats = seats <= 0 ? (short)1 : seats;
-            var radiusM = (radiusKm ?? 15) * 1000;
+            seats = (short)Math.Clamp((int)seats, 1, 8);
+            var radiusM = Math.Clamp(radiusKm ?? 15, 1, 100) * 1000;
 
             var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, VietnamTz);
-            var day = string.IsNullOrWhiteSpace(date)
-                ? localNow.Date
-                : DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            DateTime day;
+            if (!string.IsNullOrWhiteSpace(date))
+            {
+                if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out day))
+                    return Results.BadRequest(new { error = "Ngày không hợp lệ (yyyy-MM-dd)" });
+            }
+            else
+            {
+                day = localNow.Date;
+            }
             var offset = VietnamTz.GetUtcOffset(day);
             var dayStart = new DateTimeOffset(day, offset).ToUniversalTime();
             var dayEnd = dayStart.AddDays(1);
@@ -119,12 +127,16 @@ public static class TripEndpoints
             CancellationToken ct) =>
         {
             var driverId = http.User.GetUserId();
-            if (request.Stops.Count < 2)
-                return Results.BadRequest(new { error = "Chuyến cần ít nhất 2 điểm đón/trả" });
+            if (request.Stops.Count is < 2 or > 20)
+                return Results.BadRequest(new { error = "Chuyến cần từ 2 đến 20 điểm đón/trả" });
             if (request.DepartureTime <= DateTimeOffset.UtcNow.AddMinutes(15))
                 return Results.BadRequest(new { error = "Giờ khởi hành phải sau hiện tại ít nhất 15 phút" });
-            if (request.SeatsTotal is < 1 or > 8 || request.PricePerSeat < 10000)
+            if (request.SeatsTotal is < 1 or > 8 || request.PricePerSeat is < 10000 or > 10_000_000)
                 return Results.BadRequest(new { error = "Số ghế hoặc giá không hợp lệ" });
+            if (request.Stops.Any(s =>
+                    s.Lat is < -90 or > 90 || s.Lng is < -180 or > 180 ||
+                    string.IsNullOrWhiteSpace(s.Name) || s.Name.Trim().Length > 120))
+                return Results.BadRequest(new { error = "Điểm dừng không hợp lệ" });
             if (!request.Stops[0].AllowPickup || !request.Stops[^1].AllowDropoff)
                 return Results.BadRequest(new { error = "Điểm đầu phải cho đón, điểm cuối phải cho trả" });
 
@@ -145,9 +157,12 @@ public static class TripEndpoints
             var distance = 0.0;
             for (var i = 1; i < request.Stops.Count; i++)
             {
-                distance += Pricing.HaversineMeters(
+                var segment = Pricing.HaversineMeters(
                     request.Stops[i - 1].Lat, request.Stops[i - 1].Lng,
                     request.Stops[i].Lat, request.Stops[i].Lng);
+                if (segment < 1)
+                    return Results.BadRequest(new { error = "Hai điểm dừng không được trùng nhau" });
+                distance += segment;
             }
             var durationSeconds = (int)Math.Max(600, distance / 17.0);
             var departureUtc = request.DepartureTime.ToUniversalTime();

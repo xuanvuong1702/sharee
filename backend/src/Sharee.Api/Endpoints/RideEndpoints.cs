@@ -53,7 +53,7 @@ public static class RideEndpoints
                 join users u on u.id = p.driver_id
                 left join vehicles v on v.id = p.vehicle_id
                 where p.online
-                  and p.updated_at > now() - interval '24 hours'
+                  and p.updated_at > now() - interval '10 minutes'
                   and ST_DWithin(p.location, ST_SetSRID(ST_MakePoint(@lng, @lat), 4326)::geography, @radiusM)
                 order by distance_m
                 limit 20
@@ -216,7 +216,7 @@ public static class RideEndpoints
                 join users u on u.id = p.driver_id
                 where p.online
                   and p.driver_id <> @passengerId
-                  and p.updated_at > now() - interval '24 hours'
+                  and p.updated_at > now() - interval '10 minutes'
                   and ST_DWithin(
                         p.location,
                         ST_SetSRID(ST_MakePoint(@pickupLng, @pickupLat), 4326)::geography,

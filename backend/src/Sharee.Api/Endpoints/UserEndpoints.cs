@@ -18,6 +18,19 @@ public static class UserEndpoints
         app.MapPatch("/api/me", async (
             UpdateProfileRequest request, HttpContext http, Db db, CancellationToken ct) =>
         {
+            var fullName = request.FullName?.Trim();
+            if (fullName is { Length: > 80 })
+                return Results.BadRequest(new { error = "Tên tối đa 80 ký tự" });
+            if (request.Bio is { Length: > 500 })
+                return Results.BadRequest(new { error = "Giới thiệu tối đa 500 ký tự" });
+            if (request.Email is { Length: > 200 } || (request.Email is not null && !request.Email.Contains('@')))
+                return Results.BadRequest(new { error = "Email không hợp lệ" });
+            if (request.AvatarUrl is not null &&
+                (!Uri.TryCreate(request.AvatarUrl, UriKind.Absolute, out var avatar) ||
+                 avatar.Scheme is not ("http" or "https") ||
+                 request.AvatarUrl.Length > 500))
+                return Results.BadRequest(new { error = "Ảnh đại diện phải là URL http(s) hợp lệ" });
+
             await using var conn = await db.OpenAsync(ct);
             var row = await conn.QuerySingleOrDefaultAsync<UserRow>("""
                 update users set
@@ -30,9 +43,9 @@ public static class UserEndpoints
                 """, new
             {
                 id = http.User.GetUserId(),
-                fullName = request.FullName,
-                email = request.Email,
-                bio = request.Bio,
+                fullName,
+                email = request.Email?.Trim(),
+                bio = request.Bio?.Trim(),
                 avatarUrl = request.AvatarUrl
             });
             return row is null ? Results.NotFound() : Results.Ok(row.ToUser());

@@ -17,6 +17,9 @@ public static class ReviewEndpoints
         {
             if (request.Rating is < 1 or > 5)
                 return Results.BadRequest(new { error = "Số sao phải từ 1 đến 5" });
+            var comment = string.IsNullOrWhiteSpace(request.Comment) ? null : request.Comment.Trim();
+            if (comment is { Length: > 1000 })
+                return Results.BadRequest(new { error = "Nhận xét tối đa 1000 ký tự" });
 
             var userId = http.User.GetUserId();
             var booking = await read.GetBookingAsync(id, ct);
@@ -41,7 +44,7 @@ public static class ReviewEndpoints
                 """, new
             {
                 bookingId = id, reviewerId = userId, revieweeId, role,
-                rating = request.Rating, comment = request.Comment
+                rating = request.Rating, comment = comment
             }, tx);
 
             if (reviewId is null)
