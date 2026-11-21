@@ -178,6 +178,15 @@ public static class RideEndpoints
                 ? request.VehicleClass : "car";
 
             await using var conn = await db.OpenAsync(ct);
+            var activeRequests = await conn.ExecuteScalarAsync<int>("""
+                select count(*) from ride_requests
+                where passenger_id = @passengerId
+                  and status in ('searching','accepted','driver_arriving','arrived','in_progress')
+                  and created_at > now() - interval '2 hours'
+                """, new { passengerId });
+            if (activeRequests >= 2)
+                return Results.Conflict(new { message = "Bạn đang có chuyến đang xử lý. Hãy hoàn tất hoặc huỷ trước." });
+
             await using var tx = await conn.BeginTransactionAsync(ct);
             var id = await conn.ExecuteScalarAsync<Guid>("""
                 insert into ride_requests
@@ -205,9 +214,18 @@ public static class RideEndpoints
             var drivers = (await conn.QueryAsync<Guid>("""
                 select p.driver_id from driver_presence p
                 join users u on u.id = p.driver_id
-                where p.online and p.updated_at > now() - interval '24 hours'
-                limit 30
-                """, transaction: tx)).ToList();
+                where p.online
+                  and p.driver_id <> @passengerId
+                  and p.updated_at > now() - interval '24 hours'
+                  and ST_DWithin(
+                        p.location,
+                        ST_SetSRID(ST_MakePoint(@pickupLng, @pickupLat), 4326)::geography,
+                        12000)
+                order by ST_Distance(
+                    p.location,
+                    ST_SetSRID(ST_MakePoint(@pickupLng, @pickupLat), 4326)::geography)
+                limit 20
+                """, new { passengerId, pickupLng = request.PickupLng, pickupLat = request.PickupLat }, tx)).ToList();
 
             foreach (var driverId in drivers)
             {
@@ -240,7 +258,7 @@ public static class RideEndpoints
             if (row is null) return Results.NotFound();
             var passengerId = (Guid)row.passenger_id;
             Guid? driverId = (Guid?)row.driver_id;
-            if (passengerId != userId && driverId != userId && (string)row.status != "searching")
+            if (passengerId != userId && driverId != userId)
                 return Results.Forbid();
             return Results.Ok(MapRide(row));
         }).RequireAuthorization().WithTags("Rides");
@@ -265,7 +283,11 @@ public static class RideEndpoints
                 update ride_requests
                 set status = 'accepted', driver_id = @driverId, vehicle_id = @vehicleId,
                     accepted_at = now(), updated_at = now()
-                where id = @id and status = 'searching'
+                where id = @id and status = 'searching' and passenger_id <> @driverId
+                  and not exists (
+                    select 1 from ride_requests active
+                    where active.driver_id = @driverId
+                      and active.status in ('accepted','driver_arriving','arrived','in_progress'))
                 returning passenger_id, pickup_label, dropoff_label
                 """, new { id, driverId, vehicleId }, tx);
             if (row is null)
@@ -355,11 +377,15 @@ public static class RideEndpoints
             if (status is "completed" or "cancelled")
                 return Results.Conflict(new { message = "Chuyến đã kết thúc." });
 
-            await conn.ExecuteAsync("""
+            var affected = await conn.ExecuteAsync("""
                 update ride_requests set status = 'cancelled', cancelled_at = now(),
                   cancel_reason = @reason, updated_at = now()
                 where id = @id
-                """, new { id, reason = string.IsNullOrWhiteSpace(request?.Reason) ? "Người dùng huỷ" : request!.Reason!.Trim() });
+                  and status in ('searching','accepted','arrived')
+                  and (passenger_id = @userId or driver_id = @userId)
+                """, new { id, userId, reason = string.IsNullOrWhiteSpace(request?.Reason) ? "Người dùng huỷ" : request!.Reason!.Trim() });
+            if (affected == 0)
+                return Results.Conflict(new { message = "Chuyến đã thay đổi trạng thái, không thể huỷ." });
 
             var otherId = userId == passengerId ? driverId : passengerId;
             if (otherId is not null)

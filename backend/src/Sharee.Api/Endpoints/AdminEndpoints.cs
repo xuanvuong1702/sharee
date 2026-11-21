@@ -114,10 +114,19 @@ public static class AdminEndpoints
         });
 
         group.MapPost("/refunds/{bookingId:guid}", async (
-            Guid bookingId, Db db, LedgerService ledger, CancellationToken ct) =>
+            Guid bookingId, HttpContext http, Db db, LedgerService ledger, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
             await using var tx = await conn.BeginTransactionAsync(ct);
+            var payout = await conn.ExecuteScalarAsync<bool>("""
+                select exists(select 1 from ledger_transactions
+                              where type = 'payout' and ref_type = 'booking' and ref_id = @bookingId)
+                """, new { bookingId }, tx);
+            if (payout)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Conflict(new { error = "Tiền đã được giải ngân; cần xử lý thủ công." });
+            }
             var amount = await conn.ExecuteScalarAsync<int?>(
                 "select amount from payments where booking_id = @bookingId and status = 'succeeded'",
                 new { bookingId }, tx);
@@ -129,12 +138,16 @@ public static class AdminEndpoints
 
             await conn.ExecuteAsync("update payments set status = 'refunded' where booking_id = @bookingId",
                 new { bookingId }, tx);
+            await conn.ExecuteAsync("""
+                update escrow_holds set status = 'refunded', released_at = now(), updated_at = now()
+                where booking_id = @bookingId and status <> 'released'
+                """, new { bookingId }, tx);
             await conn.ExecuteAsync("update bookings set status = 'refunded' where id = @bookingId",
                 new { bookingId }, tx);
             await ledger.RecordAsync(conn, tx, "refund", "booking", bookingId,
                 ("escrow", 'D', amount.Value),
                 ("customer_receivable", 'C', amount.Value));
-            await Audit.LogAsync(conn, tx, null, "refund.manual", "booking", bookingId.ToString(),
+            await Audit.LogAsync(conn, tx, http.User.GetUserId(), "refund.manual", "booking", bookingId.ToString(),
                 new { amount = amount.Value });
             await tx.CommitAsync(ct);
             return Results.Ok(new { status = "refunded", amount });

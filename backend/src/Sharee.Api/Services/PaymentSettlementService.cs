@@ -41,8 +41,23 @@ public sealed class PaymentSettlementService(Db db, LedgerService ledger)
         }
         if ((string)row.booking_status != "pending_payment")
         {
-            await tx.RollbackAsync(ct);
-            return (string)row.booking_status is "confirmed" or "completed";
+            // The customer paid after the seat hold expired/was cancelled.
+            // Acknowledge the webhook (so PayOS stops retrying) but never
+            // confirm a dead booking. Put the money in a manual refund queue.
+            await conn.ExecuteAsync("""
+                insert into payment_reconciliation
+                  (booking_id, order_code, amount, reason, status, note)
+                values (@bookingId, @orderCode, @amount, 'late_payment', 'open',
+                        'Webhook arrived after booking left pending_payment')
+                on conflict (order_code) do nothing
+                """, new
+            {
+                bookingId = (Guid)row.booking_id,
+                orderCode = webhook.OrderCode.ToString(CultureInfo.InvariantCulture),
+                amount = webhook.Amount
+            }, tx);
+            await tx.CommitAsync(ct);
+            return true;
         }
 
         var meta = JsonSerializer.Serialize(new

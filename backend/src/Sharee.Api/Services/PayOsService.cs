@@ -32,7 +32,7 @@ public sealed class PayOsService(
 
         await using var conn = await db.OpenAsync(ct);
         var booking = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-            select b.id, b.passenger_id, b.status, b.price_total, b.seats,
+            select b.id, b.passenger_id, b.status, b.price_total, b.seats, b.expires_at,
                    u.full_name, u.phone,
                    t.origin_label, t.destination_label
             from bookings b
@@ -67,7 +67,16 @@ public sealed class PayOsService(
             $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}{Random.Shared.Next(10, 99)}",
             CultureInfo.InvariantCulture);
         var description = "Sharee " + bookingId.ToString("N")[..8];
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
+        // The payment link must never outlive the seat hold. Otherwise a
+        // customer can pay after expiry and the seat may already be resold.
+        var bookingExpiry = booking.expires_at is null
+            ? DateTimeOffset.UtcNow.AddMinutes(10)
+            : Time.ToDto((DateTime)booking.expires_at);
+        var expiresAt = bookingExpiry < DateTimeOffset.UtcNow.AddMinutes(15)
+            ? bookingExpiry
+            : DateTimeOffset.UtcNow.AddMinutes(15);
+        if (expiresAt <= DateTimeOffset.UtcNow)
+            throw new InvalidOperationException("Booking đã hết hạn thanh toán");
 
         var signature = SignCreate(amount, options.CancelUrl, description, orderCode, options.ReturnUrl);
         var payload = new Dictionary<string, object?>

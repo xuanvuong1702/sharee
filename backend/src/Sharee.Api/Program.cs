@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Threading.RateLimiting;
 using Dapper;
@@ -60,6 +61,7 @@ builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<JwtOptions>();
 builder.Services.AddScoped<LedgerService>();
+builder.Services.AddScoped<BookingSettlementService>();
 builder.Services.AddScoped<ReadService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<RecurringTripService>();
@@ -67,6 +69,8 @@ builder.Services.AddScoped<TrackingService>();
 builder.Services.AddHostedService<RecurringWorker>();
 builder.Services.AddHostedService<OutboxWorker>();
 builder.Services.AddHostedService<BookingExpiryWorker>();
+builder.Services.AddHostedService<RideExpiryWorker>();
+builder.Services.AddHostedService<BookingReleaseWorker>();
 builder.Services.AddHostedService<MaintenanceWorker>();
 builder.Services.AddMemoryCache();
 var signalR = builder.Services.AddSignalR();
@@ -195,11 +199,26 @@ builder.Services.AddAuthorization(o =>
 
 if (config.GetValue("ReverseProxy:TrustForwarded", false))
 {
+    var trustedProxies = config.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
+    var trustedNetworks = config.GetSection("ReverseProxy:KnownNetworks").Get<string[]>() ?? [];
     builder.Services.Configure<ForwardedHeadersOptions>(o =>
     {
         o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        o.KnownIPNetworks.Clear();
+        // Never clear the trust list blindly: that lets any client spoof
+        // X-Forwarded-For and defeat IP rate limits / OTP audit trails.
+        if (trustedProxies.Length == 0 && trustedNetworks.Length == 0)
+        {
+            Console.Error.WriteLine(
+                "ReverseProxy:TrustForwarded is enabled without KnownProxies/KnownNetworks; " +
+                "only loopback proxies are trusted.");
+            return;
+        }
         o.KnownProxies.Clear();
+        o.KnownIPNetworks.Clear();
+        foreach (var value in trustedProxies)
+            if (IPAddress.TryParse(value, out var ip)) o.KnownProxies.Add(ip);
+        foreach (var value in trustedNetworks)
+            if (System.Net.IPNetwork.TryParse(value, out var network)) o.KnownIPNetworks.Add(network);
     });
 }
 

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Dapper;
 using Npgsql;
 using Sharee.Api.Contracts;
@@ -69,7 +70,7 @@ public static class DailyEndpoints
                 """, new { stopId = request.StopId, lineId = request.LineId });
             if (stop is null) return Results.BadRequest(new { error = "Trạm không hợp lệ" });
 
-            var code = Random.Shared.Next(1000, 9999).ToString();
+            var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString();
             var id = await conn.ExecuteScalarAsync<Guid>("""
                 insert into e_tickets (passenger_id, line_id, stop_id, code, qr_token, expires_at)
                 values (@userId, @lineId, @stopId, @code, @qr, now() + interval '30 minutes')
@@ -126,8 +127,12 @@ public static class DailyEndpoints
                     statusCode: StatusCodes.Status403Forbidden);
             await using var tx = await conn.BeginTransactionAsync(ct);
             var ticket = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-                select id, passenger_id, driver_id, code, status, stop_id, line_id
-                from e_tickets where id = @id
+                select t.id, t.passenger_id, t.driver_id, t.code, t.status, t.stop_id, t.line_id,
+                       t.expires_at, t.failed_attempts,
+                       ST_Y(s.location::geometry) as stop_lat, ST_X(s.location::geometry) as stop_lng
+                from e_tickets t
+                join line_stops s on s.id = t.stop_id
+                where t.id = @id
                 """, new { id }, tx);
             if (ticket is null)
             {
@@ -145,9 +150,39 @@ public static class DailyEndpoints
                 await tx.RollbackAsync(ct);
                 return Results.Conflict(new { error = "Vé đã được xác nhận" });
             }
-            if ((string)ticket.code != request.Code.Trim())
+            if ((string)ticket.status is not ("waiting" or "assigned"))
             {
                 await tx.RollbackAsync(ct);
+                return Results.Conflict(new { error = "Vé không còn hiệu lực" });
+            }
+            if (ticket.expires_at is not null && (DateTime)ticket.expires_at < DateTime.UtcNow)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Conflict(new { error = "Vé đã hết hạn" });
+            }
+            if ((int)ticket.failed_attempts >= 5)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.Json(new { error = "Vé đã bị khoá do nhập sai quá nhiều lần." },
+                    statusCode: StatusCodes.Status429TooManyRequests);
+            }
+            if (request.Lat is not null && request.Lng is not null)
+            {
+                var meters = Pricing.HaversineMeters(
+                    request.Lat.Value, request.Lng.Value, (double)ticket.stop_lat, (double)ticket.stop_lng);
+                if (meters > 1000)
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.BadRequest(new { error = "Bạn đang ở quá xa điểm xác nhận vé." });
+                }
+            }
+            if ((string)ticket.code != (request.Code ?? "").Trim())
+            {
+                await conn.ExecuteAsync("""
+                    update e_tickets set failed_attempts = failed_attempts + 1
+                    where id = @id
+                    """, new { id }, tx);
+                await tx.CommitAsync(ct);
                 return Results.BadRequest(new { error = "Mã vé không đúng" });
             }
 
@@ -191,16 +226,29 @@ public static class DailyEndpoints
         group.MapGet("/driver/queue", async (HttpContext http, Db db, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
+            var driverId = http.User.GetUserId();
+            if (!await DriverVerification.IsApprovedAsync(conn, driverId, ct))
+                return Results.Json(new { error = "Tài xế chưa được xác thực." },
+                    statusCode: StatusCodes.Status403Forbidden);
             var ids = (await conn.QueryAsync<Guid>("""
                 select id from e_tickets
-                where status = 'waiting'
+                where (status = 'waiting' and driver_id is null)
                    or (driver_id = @driverId and status in ('assigned','validated'))
                 order by created_at desc
                 limit 50
-                """, new { driverId = http.User.GetUserId() })).ToList();
+                """, new { driverId })).ToList();
             var list = new List<ETicketDto?>();
-            foreach (var id in ids) list.Add(await GetTicketAsync(conn, id));
-            return Results.Ok(list.Where(x => x is not null));
+            foreach (var id in ids)
+            {
+                var ticket = await GetTicketAsync(conn, id);
+                if (ticket is null) continue;
+                // Waiting tickets are visible for claiming, but their code and
+                // QR token must not be exposed until the driver is assigned.
+                if (ticket.Status == "waiting")
+                    ticket = ticket with { Code = "", QrToken = "" };
+                list.Add(ticket);
+            }
+            return Results.Ok(list);
         }).RequireAuthorization();
 
         group.MapGet("/partner/summary", async (Db db, CancellationToken ct) =>

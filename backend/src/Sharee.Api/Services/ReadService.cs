@@ -103,10 +103,17 @@ public sealed class ReadService(Db db)
         stops.TryGetValue(row.FromStopId, out var from);
         stops.TryGetValue(row.ToStopId, out var to);
 
-        var passenger = new UserDto(row.PassengerId, row.PassengerPhone, row.PassengerName, null,
+        // Contact details are only revealed after the booking is confirmed.
+        // Before that, both sides can chat through the app without phone leaks.
+        var revealContact = row.Status is "confirmed" or "completed";
+        var passenger = new UserDto(row.PassengerId,
+            revealContact ? row.PassengerPhone : Privacy.MaskPhone(row.PassengerPhone),
+            row.PassengerName, null,
             row.PassengerAvatarUrl, null, row.PassengerRole, row.PassengerVerifiedLevel,
             row.PassengerRatingAvg, row.PassengerRatingCount);
-        var driver = new UserDto(row.DriverId, row.DriverPhone, row.DriverName, null,
+        var driver = new UserDto(row.DriverId,
+            revealContact ? row.DriverPhone : Privacy.MaskPhone(row.DriverPhone),
+            row.DriverName, null,
             row.DriverAvatarUrl, null, row.DriverRole, row.DriverVerifiedLevel,
             row.DriverRatingAvg, row.DriverRatingCount);
 

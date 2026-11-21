@@ -39,10 +39,19 @@ public static class UserEndpoints
         }).RequireAuthorization().WithTags("Me");
 
         app.MapGet("/api/users/{id:guid}", async (
-            Guid id, ReadService read, Db db, CancellationToken ct) =>
+            Guid id, HttpContext http, ReadService read, Db db, CancellationToken ct) =>
         {
             var user = await read.GetUserAsync(id, ct);
             if (user is null) return Results.NotFound();
+
+            // Public profiles never expose phone/email; the owner sees their own data.
+            if (http.User.GetUserId() != id)
+                user = user with
+                {
+                    Phone = Privacy.MaskPhone(user.Phone),
+                    Email = Privacy.MaskEmail(user.Email),
+                    Bio = null
+                };
 
             await using var conn = await db.OpenAsync(ct);
             var completed = await conn.ExecuteScalarAsync<int>("""
@@ -52,11 +61,11 @@ public static class UserEndpoints
                 """, new { id });
             var reviews = await read.GetReviewsAsync(id, ct);
             return Results.Ok(new UserProfileDto(user, reviews, completed));
-        }).WithTags("Users");
+        }).RequireAuthorization().WithTags("Users");
 
         app.MapGet("/api/users/{id:guid}/reviews", async (
             Guid id, ReadService read, CancellationToken ct) =>
-            Results.Ok(await read.GetReviewsAsync(id, ct))).WithTags("Users");
+            Results.Ok(await read.GetReviewsAsync(id, ct))).RequireAuthorization().WithTags("Users");
 
         app.MapPost("/api/me/devices", async (
             RegisterDeviceRequest request, HttpContext http, Db db, CancellationToken ct) =>

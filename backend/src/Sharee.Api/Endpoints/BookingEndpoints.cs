@@ -23,7 +23,8 @@ public static class BookingEndpoints
             if (!string.IsNullOrWhiteSpace(idempotency))
             {
                 var existingId = await conn.ExecuteScalarAsync<Guid?>(
-                    "select id from bookings where idempotency_key = @idempotency", new { idempotency });
+                    "select id from bookings where passenger_id = @userId and trip_id = @tripId and idempotency_key = @idempotency",
+                    new { userId, tripId, idempotency });
                 if (existingId is not null)
                     return Results.Ok(await read.GetBookingAsync(existingId.Value, ct));
             }
@@ -91,7 +92,8 @@ public static class BookingEndpoints
             {
                 await tx.RollbackAsync(ct);
                 var existingId = await conn.ExecuteScalarAsync<Guid>(
-                    "select id from bookings where idempotency_key = @idempotency", new { idempotency });
+                    "select id from bookings where passenger_id = @userId and trip_id = @tripId and idempotency_key = @idempotency",
+                    new { userId, tripId, idempotency });
                 return Results.Ok(await read.GetBookingAsync(existingId, ct));
             }
 
@@ -216,20 +218,23 @@ public static class BookingEndpoints
                 : 0;
 
             await using var conn = await db.OpenAsync(ct);
+            await using var tx = await conn.BeginTransactionAsync(ct);
             var mustHold = await conn.ExecuteScalarAsync<bool>("""
                 select exists(select 1 from appeals
                               where booking_id = @id and status in ('open','investigating'))
                     or exists(select 1 from escrow_holds
                               where booking_id = @id and status = 'released')
-                """, new { id });
+                """, new { id }, tx);
             if (mustHold)
+            {
+                await tx.RollbackAsync(ct);
                 return Results.Conflict(new
                 {
                     error = "Booking đang có khiếu nại mở hoặc tiền đã được giải ngân, không thể huỷ."
                 });
+            }
             var paymentMethod = await conn.ExecuteScalarAsync<string>(
-                "select payment_method from bookings where id = @id", new { id });
-            await using var tx = await conn.BeginTransactionAsync(ct);
+                "select payment_method from bookings where id = @id", new { id }, tx);
 
             var cancelled = await conn.ExecuteAsync("""
                 update bookings set status = @newStatus, updated_at = now()
@@ -257,10 +262,32 @@ public static class BookingEndpoints
                         ("escrow", 'D', refundAmount),
                         ("customer_receivable", 'C', refundAmount));
             }
-            await conn.ExecuteAsync("""
-                update escrow_holds set status = 'refunded', released_at = now(), updated_at = now()
-                where booking_id = @id and status <> 'released'
-                """, new { id }, tx);
+
+            if (paymentMethod != "cash")
+            {
+                var remainder = booking.PriceTotal - refundAmount;
+                if (remainder > 0)
+                    await ledger.RecordAsync(conn, tx, "fee", "booking", id,
+                        ("escrow", 'D', remainder),
+                        ("platform_revenue", 'C', remainder));
+
+                await conn.ExecuteAsync("""
+                    update escrow_holds
+                    set status = @status, released_at = now(), updated_at = now()
+                    where booking_id = @id and status <> 'released'
+                    """, new
+                {
+                    id,
+                    status = refundAmount >= booking.PriceTotal ? "refunded" : "partial_refunded"
+                }, tx);
+            }
+            else
+            {
+                await conn.ExecuteAsync("""
+                    update escrow_holds set status = 'released', released_at = now(), updated_at = now()
+                    where booking_id = @id and status <> 'released'
+                    """, new { id }, tx);
+            }
 
             await Notifier.NotifyAsync(conn, tx,
                 driverCancelled ? booking.Passenger.Id : booking.Driver.Id,
@@ -272,7 +299,7 @@ public static class BookingEndpoints
         });
 
         group.MapPost("/{id:guid}/complete", async (
-            Guid id, HttpContext http, Db db, LedgerService ledger, ReadService read,
+            Guid id, HttpContext http, Db db, BookingSettlementService settlement, ReadService read,
             CancellationToken ct) =>
         {
             var booking = await read.GetBookingAsync(id, ct);
@@ -285,52 +312,36 @@ public static class BookingEndpoints
                     error = "Tài xế chưa được xác thực nên không thể hoàn tất chuyến.",
                     verificationRequired = true
                 }, statusCode: StatusCodes.Status403Forbidden);
-            await using var tx = await conn.BeginTransactionAsync(ct);
-            var affected = await conn.ExecuteAsync("""
-                update bookings set status = 'completed', updated_at = now()
-                where id = @id and status = 'confirmed'
-                """, new { id }, tx);
-            if (affected == 0)
-            {
-                await tx.RollbackAsync(ct);
-                return Results.Conflict(new { error = "Booking chưa ở trạng thái xác nhận" });
-            }
 
-            var payout = booking.PriceTotal;
-            var openAppeal = await conn.ExecuteScalarAsync<bool>("""
-                select exists(select 1 from appeals
-                              where booking_id = @id and status in ('open','investigating'))
-                """, new { id }, tx);
-            if (openAppeal)
+            var result = await settlement.CompleteAsync(id, booking.Driver.Id, ct);
+            if (!result.Ok)
             {
-                await tx.RollbackAsync(ct);
-                return Results.Conflict(new
+                var code = result.Status switch
                 {
-                    error = "Booking đang có khiếu nại mở, chưa thể giải ngân."
-                });
+                    "not_found" => StatusCodes.Status404NotFound,
+                    "forbidden" => StatusCodes.Status403Forbidden,
+                    _ => StatusCodes.Status409Conflict
+                };
+                return Results.Json(new { error = result.Error }, statusCode: code);
             }
-            var escrow = await conn.QuerySingleOrDefaultAsync<dynamic>(
-                "select method, status from escrow_holds where booking_id = @id", new { id }, tx);
-            var alreadyReleased = escrow is not null && (string)escrow.status == "released";
-            var method = escrow is null ? null : (string)escrow.method;
-            method ??= await conn.ExecuteScalarAsync<string>(
-                "select payment_method from bookings where id = @id", new { id });
-            await conn.ExecuteAsync("""
-                insert into escrow_holds (booking_id, amount, method, status, released_at)
-                values (@id, @payout, coalesce(@method, 'payos'), 'released', now())
-                on conflict (booking_id) do update set
-                    status = 'released', released_at = now(), updated_at = now()
-                """, new { id, payout, method }, tx);
-            if (method != "cash" && !alreadyReleased)
-            {
-                await ledger.RecordAsync(conn, tx, "payout", "booking", id,
-                    ("escrow", 'D', payout),
-                    ("driver_payable", 'C', payout));
-            }
+            return Results.Ok(await read.GetBookingAsync(id, ct));
+        });
 
-            await Notifier.NotifyAsync(conn, tx, booking.Passenger.Id, "booking.completed",
-                "Chuyến đã hoàn thành", "Hãy đánh giá tài xế để giúp cộng đồng.");
-            await tx.CommitAsync(ct);
+        group.MapPost("/{id:guid}/confirm", async (
+            Guid id, HttpContext http, BookingSettlementService settlement, ReadService read,
+            CancellationToken ct) =>
+        {
+            var result = await settlement.ConfirmAsync(id, http.User.GetUserId(), ct);
+            if (!result.Ok)
+            {
+                var code = result.Status switch
+                {
+                    "not_found" => StatusCodes.Status404NotFound,
+                    "forbidden" => StatusCodes.Status403Forbidden,
+                    _ => StatusCodes.Status409Conflict
+                };
+                return Results.Json(new { error = result.Error }, statusCode: code);
+            }
             return Results.Ok(await read.GetBookingAsync(id, ct));
         });
 

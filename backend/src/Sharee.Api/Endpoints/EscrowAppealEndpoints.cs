@@ -328,6 +328,18 @@ public static class EscrowAppealEndpoints
             }
             else
             {
+                var alreadyPaidOut = await conn.ExecuteScalarAsync<bool>("""
+                    select exists(select 1 from ledger_transactions
+                                  where type = 'payout' and ref_type = 'booking' and ref_id = @bookingId)
+                    """, new { bookingId = appeal.BookingId }, tx);
+                if (alreadyPaidOut)
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.Conflict(new
+                    {
+                        error = "Tiền đã được giải ngân; không thể hoàn tự động. Cần xử lý thủ công."
+                    });
+                }
                 await conn.ExecuteAsync(
                     "update payments set status = 'refunded' where booking_id = @bookingId",
                     new { bookingId = appeal.BookingId }, tx);

@@ -4,7 +4,7 @@ using Sharee.Api.Infrastructure;
 
 namespace Sharee.Api.Services;
 
-public sealed class TrackingService(Db db, LedgerService ledger)
+public sealed class TrackingService(Db db)
 {
     public async Task<TripTrackingDto?> GetAsync(Guid tripId, Guid userId, CancellationToken ct = default)
     {
@@ -88,29 +88,9 @@ public sealed class TrackingService(Db db, LedgerService ledger)
             where id = @tripId
             """, new { tripId, normalized }, tx);
 
-        if (normalized == "completed")
-        {
-            var confirmed = (await conn.QueryAsync<dynamic>("""
-                select id, price_total, passenger_id from bookings
-                where trip_id = @tripId and status = 'confirmed'
-                """, new { tripId }, tx)).ToList();
-
-            foreach (var booking in confirmed)
-            {
-                var bookingId = (Guid)booking.id;
-                var payout = (int)booking.price_total;
-                await conn.ExecuteAsync("""
-                    update bookings set status = 'completed', updated_at = now()
-                    where id = @bookingId and status = 'confirmed'
-                    """, new { bookingId }, tx);
-                await ledger.RecordAsync(conn, tx, "payout", "booking", bookingId,
-                    ("escrow", 'D', payout),
-                    ("driver_payable", 'C', payout));
-                await Notifier.NotifyAsync(conn, tx, (Guid)booking.passenger_id,
-                    "booking.completed", "Chuyến đã hoàn thành",
-                    "Hãy đánh giá tài xế để giúp cộng đồng.");
-            }
-        }
+        // Tracking is a location/status signal only. Money is moved by
+        // BookingSettlementService from the driver's /complete endpoint or the
+        // admin appeal resolution; never from a tracking update.
 
         await tx.CommitAsync(ct);
         return await BuildAsync(conn, tripId, userId);

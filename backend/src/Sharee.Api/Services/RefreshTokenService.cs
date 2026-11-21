@@ -46,7 +46,15 @@ public sealed class RefreshTokenService(Db db, JwtOptions options)
 
         var user = await conn.QuerySingleOrDefaultAsync<UserRow>(
             "select * from users where id = @id", new { id = (Guid)tokenRow.user_id });
-        if (user is null) return null;
+        if (user is null || user.Status == "blocked")
+        {
+            // A blocked account must not be able to rotate a still-valid refresh token.
+            await conn.ExecuteAsync("""
+                update refresh_tokens set revoked_at = now()
+                where user_id = @userId and revoked_at is null
+                """, new { userId = (Guid)tokenRow.user_id });
+            return null;
+        }
 
         var newToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
         await using var tx = await conn.BeginTransactionAsync(ct);

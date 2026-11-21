@@ -93,7 +93,7 @@ public static class TripEndpoints
 
             var items = rows.Select(r => new SearchResultDto(
                 r.TripId,
-                new UserDto(r.DriverId, r.DriverPhone, r.DriverName, null, r.DriverAvatarUrl, null,
+                new UserDto(r.DriverId, Privacy.MaskPhone(r.DriverPhone), r.DriverName, null, r.DriverAvatarUrl, null,
                     r.DriverRole, r.DriverVerifiedLevel, r.DriverRatingAvg, r.DriverRatingCount),
                 new VehicleDto(r.VehicleId, r.VehicleMake, r.VehicleModel, r.VehicleYear,
                     r.VehicleColor, r.VehiclePlate, r.VehicleSeats, r.VehicleStatus),
@@ -112,7 +112,7 @@ public static class TripEndpoints
         {
             var trip = await read.GetTripAsync(id, ct);
             return trip is null ? Results.NotFound() : Results.Ok(trip);
-        }).WithTags("Trips");
+        }).RequireAuthorization().WithTags("Trips");
 
         app.MapPost("/api/trips", async (
             CreateTripRequest request, HttpContext http, Db db, ReadService read,

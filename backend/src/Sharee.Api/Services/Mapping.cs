@@ -10,7 +10,7 @@ public static class Mapping
         r.VerifiedLevel, r.RatingAvg, r.RatingCount);
 
     public static UserDto ToDriver(this TripRow r) => new(
-        r.DriverId, r.DriverPhone, r.DriverName, null, r.DriverAvatarUrl, null, r.DriverRole,
+        r.DriverId, Privacy.MaskPhone(r.DriverPhone), r.DriverName, null, r.DriverAvatarUrl, null, r.DriverRole,
         r.DriverVerifiedLevel, r.DriverRatingAvg, r.DriverRatingCount);
 
     public static VehicleDto ToVehicle(this TripRow r) => new(

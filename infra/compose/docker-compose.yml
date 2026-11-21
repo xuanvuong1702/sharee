@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: sharee
       POSTGRES_PASSWORD: sharee
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - sharee-pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     container_name: sharee-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -42,7 +42,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_URLS: http://+:8080
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Db: Host=db;Port=5432;Database=sharee;Username=sharee;Password=sharee
       ConnectionStrings__Redis: redis:6379,abortConnect=false
       Jwt__Key: sharee-local-demo-jwt-2f7c9a1e5b8d4c6a0e3f7b9d1c5a8e2f
