@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -233,6 +234,34 @@ public sealed class PayOsService(
 
     private string SignCreate(int amount, string cancelUrl, string description, long orderCode, string returnUrl)
         => Hmac($"amount={amount}&cancelUrl={cancelUrl}&description={description}&orderCode={orderCode}&returnUrl={returnUrl}");
+
+    public async Task<(bool Ok, string? ProviderRef, string? Error)> RefundAsync(
+        string orderCode, int amount, string reason, CancellationToken ct = default)
+    {
+        if (!Enabled) return (false, null, "PayOS chưa được cấu hình");
+        using var request = new HttpRequestMessage(HttpMethod.Post,
+            $"{options.BaseUrl.TrimEnd('/')}{options.RefundPath.Replace("{orderCode}", Uri.EscapeDataString(orderCode))}");
+        request.Headers.Add("x-client-id", options.ClientId);
+        request.Headers.Add("x-api-key", options.ApiKey);
+        request.Headers.Add("x-signature", Hmac($"amount={amount}&orderCode={orderCode}&reason={reason}"));
+        request.Content = JsonContent.Create(new { amount, orderCode, reason });
+        using var response = await httpFactory.CreateClient("payos").SendAsync(request, ct);
+        var body = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            return (false, null, $"PayOS refund HTTP {(int)response.StatusCode}: {body[..Math.Min(300, body.Length)]}");
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var reference = doc.RootElement.TryGetProperty("reference", out var r)
+                ? r.GetString()
+                : doc.RootElement.TryGetProperty("id", out var id) ? id.GetString() : null;
+            return (true, reference, null);
+        }
+        catch (JsonException)
+        {
+            return (false, null, "Phản hồi refund PayOS không hợp lệ");
+        }
+    }
 
     private string Hmac(string value)
     {

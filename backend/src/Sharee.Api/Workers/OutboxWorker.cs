@@ -23,7 +23,8 @@ public sealed class OutboxWorker(
                 await using var tx = await conn.BeginTransactionAsync(stoppingToken);
                 var events = (await conn.QueryAsync<dynamic>("""
                     select id, type, payload from outbox
-                    where processed_at is null and next_attempt_at <= now()
+                    where processed_at is null and dead_lettered_at is null
+                      and next_attempt_at <= now()
                     order by id
                     limit 50
                     for update skip locked
@@ -68,7 +69,10 @@ public sealed class OutboxWorker(
                             update outbox
                             set attempts = attempts + 1,
                                 last_error = @error,
-                                next_attempt_at = now() + interval '10 seconds'
+                                next_attempt_at = now() + make_interval(
+                                    secs => least(300, 10 * power(2, least(attempts, 5)))::int),
+                                dead_lettered_at = case
+                                    when attempts + 1 >= 5 then now() else dead_lettered_at end
                             where id = @id
                             """, new { id = (long)evt.id, error = ex.Message }, tx);
                     }

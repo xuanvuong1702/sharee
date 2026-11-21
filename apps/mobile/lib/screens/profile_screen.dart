@@ -6,6 +6,7 @@ import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
 import 'chat_screen.dart';
 import 'driver_mode_screen.dart';
+import 'driver_wallet_screen.dart';
 import 'earnings_screen.dart';
 import 'notifications_screen.dart';
 import 'recurring_trips_screen.dart';
@@ -209,6 +210,15 @@ class ProfileScreen extends StatelessWidget {
                       subtitle: 'Lịch chạy tự động hằng tuần',
                       onTap: () =>
                           Navigator.of(context).push(appRoute(const RecurringTripsScreen())),
+                    ),
+                    _MenuTile(
+                      icon: Icons.account_balance_wallet_rounded,
+                      color: AppTheme.success,
+                      background: AppTheme.successSoft,
+                      title: 'Ví tài xế',
+                      subtitle: 'Số dư và rút tiền',
+                      onTap: () =>
+                          Navigator.of(context).push(appRoute(const DriverWalletScreen())),
                     ),
                     _MenuTile(
                       icon: Icons.local_taxi_rounded,

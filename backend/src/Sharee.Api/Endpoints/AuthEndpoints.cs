@@ -16,10 +16,13 @@ public static class AuthEndpoints
 
         group.MapPost("/otp/request", async (
             RequestOtpRequest request, OtpService otp, ISmsSender sms, IConfiguration config,
-            ILoggerFactory loggerFactory, HttpContext http, CancellationToken ct) =>
+            ILoggerFactory loggerFactory, OtpRateGuard guard, HttpContext http, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.Phone) || request.Phone.Length < 8)
                 return Results.BadRequest(new { error = "Số điện thoại không hợp lệ" });
+            if (!guard.Allow(http.Connection.RemoteIpAddress?.ToString()))
+                return Results.Json(new { error = "Quá nhiều yêu cầu OTP. Thử lại sau." },
+                    statusCode: StatusCodes.Status429TooManyRequests);
 
             try
             {

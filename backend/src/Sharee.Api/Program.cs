@@ -62,6 +62,7 @@ builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<JwtOptions>();
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<BookingSettlementService>();
+builder.Services.AddSingleton<OtpRateGuard>();
 builder.Services.AddScoped<ReadService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<RecurringTripService>();
@@ -295,6 +296,27 @@ if (swaggerEnabled)
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/admin"))
+    {
+        var allowedIps = config.GetSection("Admin:AllowedIps").Get<string[]>();
+        if (!AdminSecurity.IsIpAllowed(context.Connection.RemoteIpAddress, allowedIps))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new { error = "Admin IP không được phép." });
+            return;
+        }
+        var mfaSecret = config["Admin:MfaSecret"];
+        if (!AdminSecurity.ValidateTotp(mfaSecret, context.Request.Headers["X-Admin-Mfa"].FirstOrDefault()))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new { error = "Thiếu hoặc sai mã MFA admin." });
+            return;
+        }
+    }
+    await next();
+});
 
 app.MapGet("/", () => Results.Ok(new
 {
@@ -345,6 +367,7 @@ app.MapAdminEndpoints();
 app.MapDailyEndpoints();
 app.MapNotificationEndpoints();
 app.MapRideEndpoints();
+app.MapDriverFinanceEndpoints();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificationHub>("/hubs/notifications");
 

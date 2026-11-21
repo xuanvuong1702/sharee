@@ -103,6 +103,10 @@ public record ETicketDto(
 public record CreateETicketRequest(Guid LineId, Guid StopId);
 public record ValidateTicketRequest(string Code, double? Lat = null, double? Lng = null);
 public record ResolveReconciliationRequest(string? Note);
+public record CreateWithdrawalRequest(
+    int Amount, string BankName, string AccountNumber, string AccountName);
+public record MarkWithdrawalPaidRequest(string ProviderRef, string? Note);
+public record RejectWithdrawalRequest(string Note);
 
 public record AdminDashboardDto(
     int Users, int Trips, int Bookings, int OpenReports, int PendingVerifications,

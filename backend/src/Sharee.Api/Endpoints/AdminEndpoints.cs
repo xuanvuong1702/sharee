@@ -114,43 +114,24 @@ public static class AdminEndpoints
         });
 
         group.MapPost("/refunds/{bookingId:guid}", async (
-            Guid bookingId, HttpContext http, Db db, LedgerService ledger, CancellationToken ct) =>
+            Guid bookingId, HttpContext http, Db db, BookingSettlementService settlement,
+            CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
-            await using var tx = await conn.BeginTransactionAsync(ct);
-            var payout = await conn.ExecuteScalarAsync<bool>("""
-                select exists(select 1 from ledger_transactions
-                              where type = 'payout' and ref_type = 'booking' and ref_id = @bookingId)
-                """, new { bookingId }, tx);
-            if (payout)
-            {
-                await tx.RollbackAsync(ct);
-                return Results.Conflict(new { error = "Tiền đã được giải ngân; cần xử lý thủ công." });
-            }
             var amount = await conn.ExecuteScalarAsync<int?>(
                 "select amount from payments where booking_id = @bookingId and status = 'succeeded'",
-                new { bookingId }, tx);
+                new { bookingId });
             if (amount is null)
-            {
-                await tx.RollbackAsync(ct);
                 return Results.Conflict(new { error = "Không có thanh toán để hoàn" });
-            }
 
-            await conn.ExecuteAsync("update payments set status = 'refunded' where booking_id = @bookingId",
-                new { bookingId }, tx);
-            await conn.ExecuteAsync("""
-                update escrow_holds set status = 'refunded', released_at = now(), updated_at = now()
-                where booking_id = @bookingId and status <> 'released'
-                """, new { bookingId }, tx);
-            await conn.ExecuteAsync("update bookings set status = 'refunded' where id = @bookingId",
-                new { bookingId }, tx);
-            await ledger.RecordAsync(conn, tx, "refund", "booking", bookingId,
-                ("escrow", 'D', amount.Value),
-                ("customer_receivable", 'C', amount.Value));
-            await Audit.LogAsync(conn, tx, http.User.GetUserId(), "refund.manual", "booking", bookingId.ToString(),
-                new { amount = amount.Value });
-            await tx.CommitAsync(ct);
-            return Results.Ok(new { status = "refunded", amount });
+            var result = await settlement.RefundAsync(
+                bookingId, null, http.User.GetUserId(), "admin_manual", ct);
+            if (!result.Ok)
+                return Results.Conflict(new { error = result.Error ?? "Không thể hoàn tiền" });
+
+            await Audit.LogAsync(conn, null, http.User.GetUserId(), "refund.manual",
+                "booking", bookingId.ToString(), new { amount = result.Amount });
+            return Results.Ok(new { status = result.Status, amount = result.Amount });
         });
 
         group.MapGet("/reconciliation", async (Db db, CancellationToken ct) =>

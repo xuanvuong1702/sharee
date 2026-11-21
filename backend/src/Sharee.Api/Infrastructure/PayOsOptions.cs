@@ -9,4 +9,6 @@ public sealed class PayOsOptions
     public string ReturnUrl { get; set; } = "https://app.sharee.vn/payment/return";
     public string CancelUrl { get; set; } = "https://app.sharee.vn/payment/cancel";
     public bool Enabled { get; set; }
+    /// <summary>PayOS refund path; override if the merchant API contract changes.</summary>
+    public string RefundPath { get; set; } = "/v2/payment-requests/{orderCode}/refund";
 }

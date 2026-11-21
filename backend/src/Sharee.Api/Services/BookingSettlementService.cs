@@ -11,7 +11,8 @@ public sealed record SettlementResult(bool Ok, string Status, string? Error = nu
 /// completion and admin appeal resolution must call this service; otherwise a
 /// booking can be paid out and refunded twice.
 /// </summary>
-public sealed class BookingSettlementService(Db db, LedgerService ledger)
+public sealed class BookingSettlementService(
+    Db db, LedgerService ledger, PayOsService payos, IConfiguration config)
 {
     public async Task<SettlementResult> CompleteAsync(
         Guid bookingId, Guid driverId, CancellationToken ct = default)
@@ -102,9 +103,25 @@ public sealed class BookingSettlementService(Db db, LedgerService ledger)
             """, new { bookingId }, tx);
         var amount = (int)escrow.amount;
         var method = (string)escrow.method;
+        var feePercent = Math.Clamp(config.GetValue("Platform:FeePercent", 10m), 0m, 50m);
+        var fee = method == "cash" ? 0 : (int)Math.Round(amount * feePercent / 100m,
+            MidpointRounding.AwayFromZero);
+        var driverAmount = amount - fee;
         if (method != "cash" && !alreadyPaidOut && amount > 0)
-            await ledger.RecordAsync(conn, tx, "payout", "booking", bookingId,
-                ("escrow", 'D', amount), ("driver_payable", 'C', amount));
+        {
+            if (fee > 0)
+                await ledger.RecordAsync(conn, tx, "payout", "booking", bookingId,
+                    ("escrow", 'D', amount),
+                    ("driver_payable", 'C', driverAmount),
+                    ("platform_revenue", 'C', fee));
+            else
+                await ledger.RecordAsync(conn, tx, "payout", "booking", bookingId,
+                    ("escrow", 'D', amount), ("driver_payable", 'C', driverAmount));
+        }
+        if (method != "cash")
+            await conn.ExecuteAsync(
+                "update bookings set fee_amount = @fee, updated_at = now() where id = @bookingId",
+                new { fee, bookingId }, tx);
 
         await conn.ExecuteAsync("""
             update escrow_holds set status = 'released', released_at = now(),
@@ -142,6 +159,37 @@ public sealed class BookingSettlementService(Db db, LedgerService ledger)
 
         if (method != "cash" && amount > 0)
         {
+            var payment = await conn.QuerySingleOrDefaultAsync<dynamic>("""
+                select id, provider, provider_ref, status from payments
+                where booking_id = @bookingId for update
+                """, new { bookingId }, tx);
+            if (payment is not null && (string)payment.provider == "payos" &&
+                (string)payment.status == "succeeded" && payos.Enabled)
+            {
+                var refund = await payos.RefundAsync((string)payment.provider_ref, amount, reason, ct);
+                await conn.ExecuteAsync("""
+                    insert into payment_refunds
+                      (booking_id, payment_id, amount, reason, provider, provider_ref, status,
+                       error, completed_at)
+                    values (@bookingId, @paymentId, @amount, @reason, 'payos', @providerRef,
+                            @status, @error, @completedAt)
+                    """, new
+                {
+                    bookingId,
+                    paymentId = (Guid)payment.id,
+                    amount,
+                    reason,
+                    providerRef = refund.ProviderRef,
+                    status = refund.Ok ? "succeeded" : "failed",
+                    error = refund.Error,
+                    completedAt = refund.Ok ? DateTimeOffset.UtcNow : (DateTimeOffset?)null
+                }, tx);
+                if (!refund.Ok)
+                {
+                    await tx.RollbackAsync(ct);
+                    return new(false, "refund_failed", refund.Error);
+                }
+            }
             var alreadyRefunded = await conn.ExecuteScalarAsync<bool>("""
                 select exists(select 1 from ledger_transactions
                               where type = 'refund' and ref_type = 'booking' and ref_id = @bookingId)

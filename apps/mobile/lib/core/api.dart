@@ -159,6 +159,23 @@ class Api {
     return Earnings.fromJson(data);
   }
 
+  Future<Map<String, dynamic>> driverWallet() async =>
+      await _send('GET', '/api/driver/wallet') as Map<String, dynamic>;
+
+  Future<void> requestWithdrawal({
+    required int amount,
+    required String bankName,
+    required String accountNumber,
+    required String accountName,
+  }) async {
+    await _send('POST', '/api/driver/withdrawals', body: {
+      'amount': amount,
+      'bankName': bankName,
+      'accountNumber': accountNumber,
+      'accountName': accountName,
+    });
+  }
+
   Future<void> registerDevice(String token, String platform) async {
     await _send('POST', '/api/me/devices', body: {'token': token, 'platform': platform});
   }
