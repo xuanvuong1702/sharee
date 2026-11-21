@@ -102,15 +102,22 @@ public sealed class ReadService(Db db)
             BookingSql.Replace("where b.id = @id", "where b.id = any(@ids)"),
             new { ids = ids.ToArray() }))
             .ToDictionary(r => r.Id);
+        var tripIds = rows.Values.Select(r => r.TripId).Distinct().ToArray();
+        var stopsByTrip = (await conn.QueryAsync<StopRow>(
+                StopsSql.Replace("where trip_id = @tripId", "where trip_id = any(@tripIds)"),
+                new { tripIds }))
+            .GroupBy(s => s.TripId)
+            .ToDictionary(g => g.Key, g => g.ToDictionary(s => s.Id));
+        var payments = (await conn.QueryAsync<PaymentRow>(
+                "select id, booking_id, amount, currency, status, provider, captured_at from payments where booking_id = any(@ids)",
+                new { ids = ids.ToArray() }))
+            .ToDictionary(p => p.BookingId);
         var result = new List<BookingDto>(ids.Count);
         foreach (var id in ids)
         {
             if (!rows.TryGetValue(id, out var row)) continue;
-            var stops = (await conn.QueryAsync<StopRow>(StopsSql, new { tripId = row.TripId }))
-                .ToDictionary(s => s.Id);
-            var payment = await conn.QuerySingleOrDefaultAsync<PaymentRow>(
-                "select id, booking_id, amount, currency, status, provider, captured_at from payments where booking_id = @id",
-                new { id });
+            var stops = stopsByTrip.GetValueOrDefault(row.TripId) ?? [];
+            payments.TryGetValue(id, out var payment);
             stops.TryGetValue(row.FromStopId, out var from);
             stops.TryGetValue(row.ToStopId, out var to);
             var revealContact = row.Status is "confirmed" or "completed";
