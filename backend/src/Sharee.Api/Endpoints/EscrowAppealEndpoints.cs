@@ -265,10 +265,10 @@ public static class EscrowAppealEndpoints
                 where id = @evidenceId and appeal_id = @appealId
                 """, new { evidenceId, appealId });
             if (row is null) return Results.NotFound();
-            var path = storage.Resolve((string)row.stored_path);
-            return path is null || !File.Exists(path)
+            var stream = await storage.OpenReadAsync((string)row.stored_path, ct);
+            return stream is null
                 ? Results.NotFound()
-                : Results.File(path, (string)row.mime_type, (string)row.original_name,
+                : Results.File(stream, (string)row.mime_type, (string)row.original_name,
                     enableRangeProcessing: true);
         });
 

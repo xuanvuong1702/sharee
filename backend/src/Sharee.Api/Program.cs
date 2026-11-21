@@ -56,6 +56,9 @@ builder.Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new Ap
     RootPath = config["Storage:AppealRoot"] ?? "./data/appeals"
 }));
 builder.Services.AddSingleton<AppealStorage>();
+builder.Services.Configure<ObjectStorageOptions>(config.GetSection("ObjectStorage"));
+builder.Services.AddSingleton<ObjectStorageService>();
+builder.Services.AddSingleton<SensitiveDataBackfill>();
 builder.Services.AddScoped<OtpService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddSingleton<RefreshTokenService>();
@@ -392,6 +395,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var migrator = scope.ServiceProvider.GetRequiredService<Migrator>();
     await migrator.RunAsync();
+    await scope.ServiceProvider.GetRequiredService<SensitiveDataBackfill>().RunAsync();
 }
 
 app.Run();

@@ -15,6 +15,7 @@ public sealed record StoredAppealEvidence(
 
 public sealed partial class AppealStorage(
     IOptions<AppealStorageOptions> options,
+    ObjectStorageService objects,
     ILogger<AppealStorage> logger)
 {
     private const long MaxBytes = 10 * 1024 * 1024;
@@ -37,8 +38,8 @@ public sealed partial class AppealStorage(
         var dir = Path.Combine(_root, appealId.ToString("N"));
         Directory.CreateDirectory(dir);
         var name = $"{Guid.NewGuid():N}{ext}";
-        var full = Path.Combine(dir, name);
-        await File.WriteAllBytesAsync(full, bytes, ct);
+        var relative = Path.Combine(appealId.ToString("N"), name).Replace('\\', '/');
+        await objects.SaveAsync($"appeals/{relative}", bytes, mime, ct);
         var hash = SHA256.HashData(bytes);
         var original = Regex.Replace(Path.GetFileName(file.FileName), @"[^\w\.\- ]", "_");
         if (string.IsNullOrWhiteSpace(original)) original = "evidence" + ext;
@@ -53,6 +54,14 @@ public sealed partial class AppealStorage(
         var full = Path.GetFullPath(Path.Combine(_root, storedPath));
         var prefix = _root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         return full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? full : null;
+    }
+
+    public async Task<Stream?> OpenReadAsync(string storedPath, CancellationToken ct = default)
+    {
+        var stream = await objects.OpenReadAsync($"appeals/{storedPath}", ct);
+        if (stream is not null) return stream;
+        var local = Resolve(storedPath);
+        return local is not null && File.Exists(local) ? File.OpenRead(local) : null;
     }
 
     private static string? DetectMime(ReadOnlySpan<byte> header)

@@ -24,6 +24,7 @@ public static class VerificationTypes
 
 public sealed partial class VerificationStorage(
     IOptions<VerificationStorageOptions> options,
+    ObjectStorageService objects,
     ILogger<VerificationStorage> logger)
 {
     private const long MaxBytes = 10 * 1024 * 1024;
@@ -56,10 +57,8 @@ public sealed partial class VerificationStorage(
         var dir = Path.Combine(_root, userId.ToString("N"));
         Directory.CreateDirectory(dir);
         var storedName = $"{Guid.NewGuid():N}{ext}";
-        var fullPath = Path.Combine(dir, storedName);
-        var relative = Path.Combine(userId.ToString("N"), storedName).Replace('\\', '/');
-
-        await File.WriteAllBytesAsync(fullPath, bytes, ct);
+        var relative = $"{userId:N}/{storedName}";
+        await objects.SaveAsync($"verifications/{relative}", bytes, mime, ct);
         var hash = SHA256.HashData(bytes);
         var original = Regex.Replace(Path.GetFileName(file.FileName), @"[^\w\.\- ]", "_");
         if (string.IsNullOrWhiteSpace(original)) original = "document" + ext;
@@ -76,19 +75,22 @@ public sealed partial class VerificationStorage(
         return full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? full : null;
     }
 
-    public void Delete(string? storedPath)
+    public async Task<Stream?> OpenReadAsync(string storedPath, CancellationToken ct = default)
+    {
+        var stream = await objects.OpenReadAsync($"verifications/{storedPath}", ct);
+        if (stream is not null) return stream;
+        var local = Resolve(storedPath);
+        return local is not null && File.Exists(local) ? File.OpenRead(local) : null;
+    }
+
+    public async Task DeleteAsync(string? storedPath, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(storedPath)) return;
+        await objects.DeleteAsync($"verifications/{storedPath}", ct);
         var full = Resolve(storedPath);
         if (full is null || !File.Exists(full)) return;
-        try
-        {
-            File.Delete(full);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Could not delete verification document {Path}", storedPath);
-        }
+        try { File.Delete(full); }
+        catch (Exception ex) { logger.LogWarning(ex, "Could not delete verification document {Path}", storedPath); }
     }
 
     private static string? DetectMime(ReadOnlySpan<byte> header)

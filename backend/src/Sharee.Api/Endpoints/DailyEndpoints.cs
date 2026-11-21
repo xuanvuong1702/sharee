@@ -212,12 +212,16 @@ public static class DailyEndpoints
             return Results.Ok(await GetTicketAsync(conn, id));
         }).RequireAuthorization();
 
-        group.MapGet("/my-tickets", async (HttpContext http, Db db, CancellationToken ct) =>
+        group.MapGet("/my-tickets", async (HttpContext http, Db db,
+            int? limit, int? offset, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
-            var ids = (await conn.QueryAsync<Guid>(
-                "select id from e_tickets where passenger_id = @userId order by created_at desc limit 50",
-                new { userId = http.User.GetUserId() })).ToList();
+            var take = Math.Clamp(limit ?? 30, 1, 100);
+            var skip = Math.Max(0, offset ?? 0);
+            var ids = (await conn.QueryAsync<Guid>("""
+                select id from e_tickets where passenger_id = @userId
+                order by created_at desc limit @take offset @skip
+                """, new { userId = http.User.GetUserId(), take, skip })).ToList();
             var list = new List<ETicketDto?>();
             foreach (var id in ids) list.Add(await GetTicketAsync(conn, id));
             return Results.Ok(list.Where(x => x is not null));

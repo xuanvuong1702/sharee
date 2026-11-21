@@ -378,3 +378,6 @@ h1, h2, h3, p { margin-top: 0; }
 .inspiration-copy p { font-size: 11px; color: rgba(255,255,255,.74); margin: 0; }
 @media (max-width: 900px) { .inspiration-grid { grid-template-columns: 1fr 1fr; } .inspiration-card:first-child { grid-column: span 2; } }
 @media (max-width: 620px) { .inspiration-grid { grid-template-columns: 1fr; } .inspiration-card:first-child { grid-column: auto; } .inspiration-card { min-height: 220px; } }
+
+.search-suggestions{position:relative;z-index:20;display:grid;gap:4px;background:#fff;border:1px solid var(--line,#e5eaf1);border-radius:14px;padding:6px;box-shadow:0 12px 30px rgba(15,35,60,.10)}
+.search-suggestions button{text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:10px;cursor:pointer}.search-suggestions button:hover{background:#f2f7f8}.search-suggestions strong{display:block;font-size:13px}.search-suggestions small{display:block;color:#71808f;font-size:11px;margin-top:2px}

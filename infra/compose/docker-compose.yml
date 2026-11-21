@@ -29,6 +29,28 @@ services:
       timeout: 3s
       retries: 20
 
+  minio:
+    image: minio/minio:latest
+    container_name: sharee-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: sharee
+      MINIO_ROOT_PASSWORD: sharee-minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - sharee-minio:/data
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "until mc alias set local http://minio:9000 sharee sharee-minio; do sleep 1; done;
+      mc mb --ignore-existing local/sharee;"
+
   api:
     build:
       context: ../../backend
@@ -58,9 +80,17 @@ services:
       Swagger__Enabled: "true"
       Storage__VerificationRoot: /data/verifications
       Storage__AppealRoot: /data/appeals
+      ObjectStorage__Enabled: "true"
+      ObjectStorage__Endpoint: http://minio:9000
+      ObjectStorage__Bucket: sharee
+      ObjectStorage__AccessKey: sharee
+      ObjectStorage__SecretKey: sharee-minio
+      ObjectStorage__UseSsl: "false"
+      ObjectStorage__LocalRoot: /data/objects
     volumes:
       - sharee-verification:/data/verifications
       - sharee-appeals:/data/appeals
+      - sharee-objects:/data/objects
     ports:
       - "8080:8080"
 
@@ -74,15 +104,6 @@ services:
       - api
     ports:
       - "3000:80"
-
-  mobile-web:
-    build:
-      context: ../../apps/mobile
-      dockerfile: Dockerfile
-    container_name: sharee-mobile-web
-    restart: unless-stopped
-    ports:
-      - "8081:80"
 
   web:
     build:
@@ -101,4 +122,6 @@ volumes:
   sharee-pgdata:
   sharee-verification:
   sharee-appeals:
+  sharee-minio:
+  sharee-objects:
 

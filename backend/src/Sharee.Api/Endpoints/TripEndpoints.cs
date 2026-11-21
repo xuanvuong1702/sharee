@@ -269,18 +269,21 @@ public static class TripEndpoints
         }).RequireAuthorization().WithTags("Trips");
 
         app.MapGet("/api/trips/mine", async (
-            HttpContext http, Db db, ReadService read, CancellationToken ct) =>
+            HttpContext http, Db db, ReadService read, int? limit, int? offset,
+            CancellationToken ct) =>
         {
             var userId = http.User.GetUserId();
+            var take = Math.Clamp(limit ?? 30, 1, 100);
+            var skip = Math.Max(0, offset ?? 0);
             await using var conn = await db.OpenAsync(ct);
             var drivingIds = (await conn.QueryAsync<Guid>(
-                "select id from trips where driver_id = @userId order by departure_time desc limit 30",
-                new { userId })).ToList();
+                "select id from trips where driver_id = @userId order by departure_time desc limit @take offset @skip",
+                new { userId, take, skip })).ToList();
             var ridingIds = (await conn.QueryAsync<Guid>("""
                 select distinct b.trip_id from bookings b
                 where b.passenger_id = @userId
-                order by b.trip_id limit 30
-                """, new { userId })).ToList();
+                order by b.trip_id limit @take offset @skip
+                """, new { userId, take, skip })).ToList();
 
             var driving = new List<TripDto>();
             foreach (var id in drivingIds)

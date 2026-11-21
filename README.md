@@ -1,7 +1,7 @@
 # Sharee — ứng dụng đi chung xe (BlaBlaCar-style) + chế độ Daily
 
 Đồ án học tập được triển khai đầy đủ: **backend ASP.NET Core 10 + PostgreSQL/PostGIS**, **Flutter mobile app**,
-**React admin**, **Docker Compose**, migration/seed tự động, unit test và smoke test end-to-end.
+**Next.js web**, **React admin**, **Docker Compose**, migration/seed tự động, unit test và smoke test end-to-end.
 
 > Cấu hình trong repo là **demo**, bật OTP dev, seed dữ liệu mẫu và thanh toán mock.
 > Trước khi chạy cho khách thật, đọc [PRODUCTION.md](PRODUCTION.md) và dùng `infra/compose/docker-compose.prod.yml`.
@@ -14,7 +14,7 @@
 - Design system riêng: palette navy/electric blue, thang chữ, radius 20–28, shadow mềm, trạng thái màu thống nhất.
 - Mobile-first: app bar gọn, bottom nav nổi 5 tab, sticky CTA, bottom sheet, safe-area và vùng chạm ≥ 44px.
 - Trải nghiệm: skeleton loading, pull-to-refresh, empty state có hành động, transition mượt, haptic feedback.
-- Bản web được đóng khung 480px như một chiếc điện thoại để kiểm chứng UI trên desktop.
+- Bản web đầy đủ dùng **Next.js** tại `apps/web`; app Flutter chỉ còn bản mobile native, không còn chế độ full web.
 
 ## Chạy trong 1 lệnh
 
@@ -26,13 +26,15 @@ docker compose up -d --build
 |---|---|---|
 | API + Swagger | http://localhost:8080/swagger | REST + SignalR `/hubs/chat`, `/hubs/notifications` |
 | Admin web | http://localhost:3000 | đăng nhập bằng OTP admin |
-| Mobile web (Flutter) | http://localhost:8081 | bản build web của app Flutter |
+| Next.js web | http://localhost:8083 | bản web đầy đủ |
+| MinIO (object storage) | http://localhost:9001 | console; API dùng `http://localhost:9000` |
 | PostgreSQL/PostGIS | localhost:5432 | user/pass/db: `sharee` |
 | Redis | localhost:6379 | SignalR backplane + cache |
 
-Health checks: `GET /health/live`, `GET /health/ready` (DB readiness), `GET /health` (tương thích cũ).
+Health checks: `GET /health/live`, `GET /health/ready` (DB + Redis readiness), `GET /health` (tương thích cũ).
 
-> Nếu build mobile web lần đầu: `cd apps/mobile && flutter build web --dart-define=API_BASE_URL=http://localhost:8080`
+> Next.js web build: `cd apps/web && npm ci && npm run build`
+
 > trước khi `docker compose up --build` (Dockerfile copy `build/web`).
 
 ## Tài khoản demo
@@ -298,15 +300,13 @@ flutter build apk --release \
 - Backend: `Push__Fcm__ProjectId`, service account JSON (hoặc file trong container), APNs key nếu dùng trực tiếp.
 - Chi tiết: [PRODUCTION.md](PRODUCTION.md).
 
-## Bốn bản triển khai
+## Ba bản triển khai
 
 | Bản | Build | Docker / port |
 |---|---|---|
 | **Web người dùng (Next.js)** | `cd apps/web && npm run build` | `apps/web/Static.Dockerfile` · `8083` |
-| **Web mobile (Flutter)** | `--dart-define=WEB_MODE=mobile` | `apps/mobile/Dockerfile` · `8081` |
-| **Web full Flutter (legacy)** | `--dart-define=WEB_MODE=full` | `apps/mobile/FullWeb.Dockerfile` · `8082` |
 | **Admin** | React/Vite | `apps/admin/Dockerfile` · `3000` |
-| **App** | APK/AAB/IPA từ GitHub Release | — |
+| **Mobile app** | `flutter build apk` | APK/AAB/IPA từ GitHub Release |
 
 Next.js web build tĩnh:
 
@@ -357,7 +357,7 @@ docker compose -f infra/compose/docker-compose.prod.yml --env-file .env up -d --
 
 - Cấu hình mặc định trong repo là **demo**: OTP trả về client, thanh toán mock.
 - Production tự chặn mock payment, OTP dev, Swagger và seed demo; xem `PRODUCTION.md`.
-- Flutter web gọi API qua `localhost:8080`; đổi bằng `--dart-define=API_BASE_URL=...`.
+- Mobile app gọi API qua `--dart-define=API_BASE_URL=...`; Next.js dùng `NEXT_PUBLIC_API_URL`.
 - Android SDK chuẩn đã cấu hình tại `C:\Android\sdk`; APK build tại
   `apps/mobile/build/app/outputs/flutter-apk/`, bản ký sẵn trong `artifacts/sharee-release-signed.apk`.
 - Build APK store: tạo keystore bằng `infra/scripts/create-keystore.ps1`, rồi

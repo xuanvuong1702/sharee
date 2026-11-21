@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.0.3" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="MessagePack" Version="2.5.303" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

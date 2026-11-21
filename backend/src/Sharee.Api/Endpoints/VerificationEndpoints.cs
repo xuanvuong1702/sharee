@@ -33,6 +33,9 @@ public static partial class VerificationEndpoints
             var error = ValidateProfile(request, out var legalName, out var idNumber,
                 out var licenseNumber, out var vehicleRegistration);
             if (error is not null) return Results.BadRequest(new { error });
+            idNumber = SensitiveDataProtector.Protect(idNumber)!;
+            licenseNumber = SensitiveDataProtector.Protect(licenseNumber)!;
+            vehicleRegistration = SensitiveDataProtector.Protect(vehicleRegistration);
 
             await using var conn = await db.OpenAsync(ct);
             var current = await conn.QuerySingleOrDefaultAsync<dynamic>(
@@ -125,11 +128,11 @@ public static partial class VerificationEndpoints
                         updated_at = now()
                     """, new { userId, type, stored.OriginalName, stored.StoredPath,
                     stored.MimeType, stored.SizeBytes, stored.Sha256 });
-                storage.Delete(old);
+                await storage.DeleteAsync(old, ct);
             }
             catch
             {
-                storage.Delete(stored.StoredPath);
+                await storage.DeleteAsync(stored.StoredPath, ct);
                 throw;
             }
 
@@ -153,7 +156,7 @@ public static partial class VerificationEndpoints
             var path = await conn.ExecuteScalarAsync<string>(
                 "delete from verification_documents where user_id = @userId and type = @type returning stored_path",
                 new { userId, type });
-            storage.Delete(path);
+            await storage.DeleteAsync(path, ct);
             return Results.Ok(new { status = "deleted" });
         });
 
@@ -222,7 +225,8 @@ public static partial class VerificationEndpoints
             return Results.Ok(rows.Select(r => new VerificationQueueItemDto(
                 (Guid)r.user_id, (string)r.full_name, (string)r.phone,
                 (string)r.verification_status, (int)r.verified_level,
-                (string?)r.legal_name, (string?)r.id_number, (string?)r.license_number,
+                (string?)r.legal_name, SensitiveDataProtector.Unprotect((string?)r.id_number),
+                SensitiveDataProtector.Unprotect((string?)r.license_number),
                 ToDateOnly(r.license_expiry),
                 ToDateOnly(r.insurance_expiry),                (int)(long)r.document_count,
                 DtoOrNull(r.verification_submitted_at),
@@ -246,9 +250,9 @@ public static partial class VerificationEndpoints
                 where id = @documentId and user_id = @userId
                 """, new { documentId, userId });
             if (doc is null) return Results.NotFound();
-            var path = storage.Resolve((string)doc.stored_path);
-            if (path is null || !File.Exists(path)) return Results.NotFound();
-            return Results.File(path, (string)doc.mime_type, (string)doc.original_name,
+            var stream = await storage.OpenReadAsync((string)doc.stored_path, ct);
+            if (stream is null) return Results.NotFound();
+            return Results.File(stream, (string)doc.mime_type, (string)doc.original_name,
                 enableRangeProcessing: true);
         });
 
@@ -376,10 +380,11 @@ public static partial class VerificationEndpoints
             DtoOrNull(user.verification_submitted_at),
             DtoOrNull(user.verification_reviewed_at),
             (string?)user.verification_rejection_reason, (string?)user.legal_name,
-            ToDateOnly((object?)user.date_of_birth), (string?)user.id_number,
+            ToDateOnly((object?)user.date_of_birth), SensitiveDataProtector.Unprotect((string?)user.id_number),
             ToDateOnly((object?)user.id_issued_at), ToDateOnly((object?)user.id_expiry),
-            (string?)user.license_number, (string?)user.license_class,
-            ToDateOnly((object?)user.license_expiry), (string?)user.vehicle_registration,
+            SensitiveDataProtector.Unprotect((string?)user.license_number), (string?)user.license_class,
+            ToDateOnly((object?)user.license_expiry),
+            SensitiveDataProtector.Unprotect((string?)user.vehicle_registration),
             ToDateOnly((object?)user.insurance_expiry),
             docs.Select(MapDocument).ToList(), VerificationTypes.RequiredForDriver);
     }

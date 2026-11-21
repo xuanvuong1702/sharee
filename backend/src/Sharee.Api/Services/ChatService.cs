@@ -24,10 +24,29 @@ public sealed class ChatService(Db db)
         await using var conn = await db.OpenAsync(ct);
         var rows = await conn.QueryAsync<dynamic>("""
             select c.id, c.booking_id,
-                   case when b.passenger_id = @userId then t.driver_id else b.passenger_id end as other_id
+                   case when b.passenger_id = @userId then t.driver_id else b.passenger_id end as other_id,
+                   u.full_name as other_name, u.phone as other_phone,
+                   u.avatar_url as other_avatar, u.role as other_role,
+                   u.verified_level as other_verified, u.rating_avg as other_rating_avg,
+                   u.rating_count as other_rating_count,
+                   lm.body as last_body, lm.created_at as last_at,
+                   coalesce(unread.cnt, 0) as unread,
+                   t.id as trip_id, t.origin_label, t.destination_label, t.departure_time,
+                   d.full_name as driver_name, v.make || ' ' || v.model as vehicle, v.plate
             from conversations c
             join bookings b on b.id = c.booking_id
             join trips t on t.id = b.trip_id
+            join users u on u.id = case when b.passenger_id = @userId then t.driver_id else b.passenger_id end
+            join users d on d.id = t.driver_id
+            join vehicles v on v.id = t.vehicle_id
+            left join lateral (
+                select body, created_at from messages
+                where conversation_id = c.id order by created_at desc limit 1
+            ) lm on true
+            left join lateral (
+                select count(*) as cnt from messages
+                where conversation_id = c.id and sender_id <> @userId and read_at is null
+            ) unread on true
             where b.passenger_id = @userId or t.driver_id = @userId
             order by c.created_at desc
             """, new { userId });
@@ -35,34 +54,18 @@ public sealed class ChatService(Db db)
         var result = new List<ConversationDto>();
         foreach (var row in rows)
         {
-            Guid id = row.id;
-            Guid bookingId = row.booking_id;
-            Guid otherId = row.other_id;
-
-            var other = await conn.QuerySingleAsync<UserRow>("select * from users where id = @otherId", new { otherId });
-            var last = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-                select body, created_at from messages where conversation_id = @id order by created_at desc limit 1
-                """, new { id });
-            var unread = await conn.ExecuteScalarAsync<int>("""
-                select count(*) from messages
-                where conversation_id = @id and sender_id <> @userId and read_at is null
-                """, new { id, userId });
-            var trip = await conn.QuerySingleAsync<dynamic>("""
-                select t.id, t.origin_label, t.destination_label, t.departure_time,
-                       d.full_name as driver_name, v.make || ' ' || v.model as vehicle, v.plate
-                from bookings b join trips t on t.id = b.trip_id
-                join users d on d.id = t.driver_id
-                join vehicles v on v.id = t.vehicle_id
-                where b.id = @bookingId
-                """, new { bookingId });
-
+            var other = new UserDto((Guid)row.other_id, (string)row.other_phone,
+                (string)row.other_name, null, (string?)row.other_avatar, null,
+                (string)row.other_role, (short)(int)row.other_verified,
+                (decimal)row.other_rating_avg, (int)row.other_rating_count);
             result.Add(new ConversationDto(
-                id, bookingId, other.ToUser(),
-                last is null ? null : (string)last.body,
-                last is null ? null : Time.ToDto((DateTime)last.created_at),
-                unread,
-                new TripSummaryDto(trip.id, trip.origin_label, trip.destination_label,
-                    Time.ToDto((DateTime)trip.departure_time), trip.driver_name, trip.vehicle, trip.plate)));
+                (Guid)row.id, (Guid)row.booking_id, other,
+                row.last_body is null ? null : (string)row.last_body,
+                row.last_at is null ? null : Time.ToDto((DateTime)row.last_at),
+                (int)(long)row.unread,
+                new TripSummaryDto((Guid)row.trip_id, (string)row.origin_label,
+                    (string)row.destination_label, Time.ToDto((DateTime)row.departure_time),
+                    (string)row.driver_name, (string)row.vehicle, (string)row.plate)));
         }
 
         return result;

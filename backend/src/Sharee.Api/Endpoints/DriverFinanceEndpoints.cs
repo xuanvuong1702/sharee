@@ -50,7 +50,8 @@ public static class DriverFinanceEndpoints
                     id = (Guid)r.id,
                     amount = (int)r.amount,
                     bankName = (string)r.bank_name,
-                    accountNumber = Sharee.Api.Services.Privacy.MaskPhone((string)r.account_number),
+                    accountNumber = Sharee.Api.Services.Privacy.MaskPhone(
+                        SensitiveDataProtector.Unprotect((string)r.account_number) ?? ""),
                     status = (string)r.status,
                     providerRef = (string?)r.provider_ref,
                     note = (string?)r.note,
@@ -109,7 +110,7 @@ public static class DriverFinanceEndpoints
                 driverId,
                 amount = request.Amount,
                 bankName = request.BankName.Trim(),
-                accountNumber = request.AccountNumber.Trim(),
+                accountNumber = SensitiveDataProtector.Protect(request.AccountNumber.Trim())!,
                 accountName = request.AccountName.Trim()
             }, tx);
             await tx.CommitAsync(ct);
@@ -136,7 +137,7 @@ public static class DriverFinanceEndpoints
                 driverName = (string)r.driver_name,
                 amount = (int)r.amount,
                 bankName = (string)r.bank_name,
-                accountNumber = (string)r.account_number,
+                accountNumber = SensitiveDataProtector.Unprotect((string)r.account_number),
                 accountName = (string)r.account_name,
                 status = (string)r.status,
                 providerRef = (string?)r.provider_ref,
@@ -179,7 +180,7 @@ public static class DriverFinanceEndpoints
             var amount = (int)row.amount;
             var providerRef = request.ProviderRef.Trim();
             var payout = await bank.TransferAsync(id, amount, (string)row.bank_name,
-                (string)row.account_number, (string)row.account_name, ct);
+                SensitiveDataProtector.Unprotect((string)row.account_number)!, (string)row.account_name, ct);
             if (bank.Enabled && !payout.Ok)
             {
                 await tx.RollbackAsync(ct);

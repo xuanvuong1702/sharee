@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../core/app_state.dart';
 import '../core/format.dart';
+import '../core/map_config.dart';
 import '../core/models.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/ui.dart';
-import 'home_screen.dart';
+import 'location_picker_screen.dart';
 import 'verification_screen.dart';
 
 class PublishScreen extends StatefulWidget {
@@ -21,7 +24,8 @@ class _PublishScreenState extends State<PublishScreen> {
   bool _checkingVerification = true;
   VerificationInfo? _verification;
   Vehicle? _vehicle;
-  int _preset = 0;
+  GeoPlace? _from;
+  GeoPlace? _to;
   DateTime _departure = DateTime.now().add(const Duration(days: 1, hours: 1));
   final _price = TextEditingController(text: '180000');
   int _seats = 3;
@@ -137,6 +141,20 @@ class _PublishScreenState extends State<PublishScreen> {
     }
   }
 
+  Future<void> _pickPoint(bool from) async {
+    final place = await Navigator.of(context).push<GeoPlace>(
+      appRoute(LocationPickerScreen(pickup: from)),
+    );
+    if (place == null || !mounted) return;
+    setState(() {
+      if (from) {
+        _from = place;
+      } else {
+        _to = place;
+      }
+    });
+  }
+
   Future<void> _submit() async {
     if (_vehicle == null) {
       showError(context, 'Bạn cần thêm xe trước khi đăng chuyến');
@@ -147,13 +165,18 @@ class _PublishScreenState extends State<PublishScreen> {
       showError(context, 'Giá mỗi ghế tối thiểu 10.000đ');
       return;
     }
+    if (_from == null || _to == null) {
+      showError(context, 'Chọn điểm đón và điểm đến trên bản đồ');
+      return;
+    }
     setState(() => _busy = true);
     try {
-      final p = presets[_preset];
+      final from = _from!;
+      final to = _to!;
       final body = {
         'vehicleId': _vehicle!.id,
-        'origin': {'lat': p.fromLat, 'lng': p.fromLng, 'label': p.fromLabel},
-        'destination': {'lat': p.toLat, 'lng': p.toLng, 'label': p.toLabel},
+        'origin': {'lat': from.lat, 'lng': from.lng, 'label': from.label},
+        'destination': {'lat': to.lat, 'lng': to.lng, 'label': to.label},
         'departureTime': _departure.toUtc().toIso8601String(),
         'pricePerSeat': price,
         'seatsTotal': _seats,
@@ -162,8 +185,8 @@ class _PublishScreenState extends State<PublishScreen> {
         'petsAllowed': false,
         'smokingAllowed': false,
         'stops': [
-          {'name': p.fromLabel, 'lat': p.fromLat, 'lng': p.fromLng, 'allowPickup': true, 'allowDropoff': false},
-          {'name': p.toLabel, 'lat': p.toLat, 'lng': p.toLng, 'allowPickup': false, 'allowDropoff': true},
+          {'name': from.label, 'lat': from.lat, 'lng': from.lng, 'allowPickup': true, 'allowDropoff': false},
+          {'name': to.label, 'lat': to.lat, 'lng': to.lng, 'allowPickup': false, 'allowDropoff': true},
         ],
       };
       await AppScope.of(context).api.createTrip(body);
@@ -298,72 +321,95 @@ class _PublishScreenState extends State<PublishScreen> {
                       child: const Icon(Icons.alt_route_rounded, color: AppTheme.primary, size: 21),
                     ),
                     const SizedBox(width: 11),
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(presets[_preset].name,
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900)),
-                          const SizedBox(height: 2),
-                          Text('${presets[_preset].fromLabel.split(',').first} → ${presets[_preset].toLabel.split(',').first}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                          Text('Chọn tuyến của bạn',
+                              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900)),
+                          SizedBox(height: 2),
+                          Text('Chạm bản đồ hoặc tìm địa chỉ để chọn điểm đón và điểm đến.',
+                              style: TextStyle(fontSize: 10.5, color: AppTheme.muted)),
                         ],
                       ),
                     ),
-                    const Pill('Tuyến cố định', color: AppTheme.primary, background: AppTheme.primarySoft),
+                    Pill('Bản đồ', color: AppTheme.primary, background: AppTheme.primarySoft),
                   ],
                 ),
               ),
-              const SectionHeader('Chọn tuyến đường'),
+              const SectionHeader('Tuyến đường trên bản đồ'),
               AppCard(
                 padding: const EdgeInsets.all(10),
                 child: Column(
                   children: [
-                    for (var i = 0; i < presets.length; i++)
-                      GestureDetector(
-                        onTap: () => setState(() => _preset = i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 160),
-                          margin: EdgeInsets.only(bottom: i == presets.length - 1 ? 0 : 6),
-                          padding: const EdgeInsets.all(11),
-                          decoration: BoxDecoration(
-                            color: _preset == i ? AppTheme.primarySoft : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: _preset == i ? AppTheme.primary : AppTheme.line,
-                                width: _preset == i ? 1.4 : 1),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        height: 190,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: _from == null
+                                ? const LatLng(21.0278, 105.8342)
+                                : LatLng(_from!.lat, _from!.lng),
+                            initialZoom: 12,
+                            onTap: (_, point) => _pickPoint(_from == null),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _preset == i
-                                    ? Icons.radio_button_checked_rounded
-                                    : Icons.radio_button_off_rounded,
-                                size: 18,
-                                color: _preset == i ? AppTheme.primary : AppTheme.mutedLight,
-                              ),
-                              const SizedBox(width: 9),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(presets[i].name,
-                                        style: const TextStyle(
-                                            fontSize: 12.5, fontWeight: FontWeight.w800)),
-                                    const SizedBox(height: 1),
-                                    Text('${presets[i].fromLabel.split(',').first} → ${presets[i].toLabel.split(',').first}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+                          children: [
+                            TileLayer(
+                              urlTemplate: MapConfig.tileUrl,
+                              userAgentPackageName: MapConfig.userAgent,
+                            ),
+                            if (_from != null && _to != null)
+                              PolylineLayer(polylines: [
+                                Polyline(
+                                  points: [
+                                    LatLng(_from!.lat, _from!.lng),
+                                    LatLng(_to!.lat, _to!.lng),
                                   ],
+                                  strokeWidth: 4,
+                                  color: AppTheme.primary,
                                 ),
-                              ),
-                            ],
-                          ),
+                              ]),
+                            MarkerLayer(markers: [
+                              if (_from != null)
+                                Marker(
+                                  point: LatLng(_from!.lat, _from!.lng),
+                                  width: 40,
+                                  height: 40,
+                                  child: const Icon(Icons.trip_origin_rounded,
+                                      color: AppTheme.success, size: 30),
+                                ),
+                              if (_to != null)
+                                Marker(
+                                  point: LatLng(_to!.lat, _to!.lng),
+                                  width: 40,
+                                  height: 40,
+                                  child: const Icon(Icons.location_on_rounded,
+                                      color: AppTheme.accent, size: 34),
+                                ),
+                            ]),
+                          ],
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.trip_origin_rounded, color: AppTheme.success),
+                      title: Text(_from?.label ?? 'Chọn điểm đón trên bản đồ',
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      trailing: const Icon(Icons.map_rounded, size: 18),
+                      onTap: () => _pickPoint(true),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.location_on_rounded, color: AppTheme.accent),
+                      title: Text(_to?.label ?? 'Chọn điểm đến trên bản đồ',
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      trailing: const Icon(Icons.map_rounded, size: 18),
+                      onTap: () => _pickPoint(false),
+                    ),
                   ],
                 ),
               ),

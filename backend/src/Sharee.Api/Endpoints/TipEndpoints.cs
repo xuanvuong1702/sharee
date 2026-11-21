@@ -62,7 +62,7 @@ public static partial class TipEndpoints
                 driverId = http.User.GetUserId(),
                 bankBin,
                 bankName,
-                accountNumber,
+                accountNumber = SensitiveDataProtector.Protect(accountNumber)!,
                 accountName
             });
 
@@ -319,10 +319,11 @@ public static partial class TipEndpoints
             from driver_tip_accounts where driver_id = @driverId
             """, new { driverId });
         if (row is null) return null;
+        var accountNumber = SensitiveDataProtector.Unprotect((string)row.account_number) ?? "";
         return new TipAccountDto(
             (Guid)row.driver_id, (string)row.bank_bin, (string)row.bank_name,
-            (string)row.account_number, (string)row.account_name,
-            VietQr.Build((string)row.bank_bin, (string)row.account_number, null, "Sharee tip"));
+            accountNumber, (string)row.account_name,
+            VietQr.Build((string)row.bank_bin, accountNumber, null, "Sharee tip"));
     }
 
     private static async Task<TipDto?> GetTipAsync(Npgsql.NpgsqlConnection conn, Guid id)
