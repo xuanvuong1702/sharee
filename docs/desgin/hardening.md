@@ -14,6 +14,10 @@
 - **Late PayOS webhook:** booking đã rời `pending_payment` → ghi `payment_reconciliation` thay vì trả `false` im lặng; admin có queue `GET /api/admin/reconciliation`.
 - **PayOS link expiry:** link không sống quá `bookings.expires_at`.
 - **Admin refund thủ công:** chặn nếu đã payout, cập nhật escrow/payment, audit actor thật.
+- **Ví tài xế / rút tiền:** ledger `driver_payable`; `GET /api/driver/wallet`, tạo yêu cầu rút, admin duyệt/đánh dấu đã chuyển khoản; UI **Ví tài xế** trong app.
+- **Phí nền tảng:** `Platform:FeePercent` (mặc định 10%), ghi `fee_amount`, tách `driver_payable` và `platform_revenue` khi release.
+- **PayOS refund adapter:** `PayOsService.RefundAsync`, bảng `payment_refunds`; nếu PayOS bật và gọi lỗi thì không đánh dấu refund thành công.
+- **Lịch sử trạng thái:** trigger `booking_status_history` ghi mọi thay đổi status booking.
 
 ### P0 — PII / auth
 
@@ -40,39 +44,41 @@
 - Booking: chặn chuyến sắp/đã quá giờ, giới hạn pending/user/trip, giá tràn.
 - Trip create: 2–20 stops, label, toạ độ, stop trùng, giá/ghế.
 - Review/report/profile: giới hạn độ dài, target tồn tại, avatar http(s).
+- Admin: IP allowlist + TOTP MFA tùy chọn (`Admin:AllowedIps`, `Admin:MfaSecret`).
+- OTP: giới hạn theo IP + toàn cục (`OtpRateGuard`).
+- Outbox: exponential backoff, dead-letter sau 5 lần (`dead_lettered_at`).
 
 ### Test
 
-- Backend: **15 test pass** (thêm 7 Privacy tests).
-- Migrations 016–019 đã chạy trên server.
+- Backend: **16 test pass**, gồm Testcontainers Postgres cho ledger invariant.
+- Migrations 016–021 đã chạy trên server.
 - API health 200 sau deploy.
+- Ví/rút tiền đã test end-to-end: tạo yêu cầu → admin paid → số dư giảm.
 
 ## Chưa sửa / còn lại
 
 ### P0 còn lại
 
-- **Chưa gọi refund PayOS thật** và chưa có payout/chuyển khoản cho tài xế; hiện vẫn là ledger nội bộ.
-- Chưa có ví/rút tiền tài xế.
-- Chưa có phí nền tảng thực (fee_amount vẫn 0).
-- Chưa có state machine đầy đủ cho mọi chuyển trạng thái booking; cancel/complete/appeal đã có guard chính nhưng chưa event-sourced.
+- **PayOS refund adapter chưa được xác minh với merchant thật** do chưa có credential; cần test sandbox trước production.
+- **Chuyển khoản tài xế vẫn là admin đánh dấu đã chuyển**, chưa tích hợp bank payout API.
+- **Chưa có state machine đầy đủ/event-sourced** cho mọi chuyển trạng thái; đã có guard chính và status history trigger.
+- **Object storage + mã hoá CCCD/tài khoản ngân hàng** chưa có; file vẫn local volume.
 
 ### P1 còn lại
 
-- Admin MFA/IP allowlist; admin web refresh token.
-- OTP rate limit theo IP/toàn hệ thống, SMS pumping.
-- Outbox worker retry/dead-letter, transaction khi gửi push.
+- Admin web refresh token; UI nhập MFA khi bật.
 - Daily: tiền EUR/amount_minor, subsidy mặc định 200, khoảng cách 5 km, chưa có location bắt buộc.
 - Rating tích luỹ `numeric(3,2)`.
 - Tip cash tự confirm.
 - Carpool schedule conflict, route engine thật, ETA.
+- Outbox vẫn giữ transaction khi gửi push (chưa tách claim/process).
 
 ### P2/P3 còn lại
 
 - N+1, phân trang, cache size, Redis health, timestamp behavior.
-- Testcontainers/integration tests, ledger invariant test.
 - Secure storage token, CSP, repo LFS, `desgin` typo.
 - File KYC/appeal lên object storage; mã hoá CCCD/tài khoản ngân hàng.
 - Bảng settings thay hard-code.
-- Status history, backup script, reconciliation UI đầy đủ.
+- Backup script, reconciliation UI đầy đủ.
 
-> Ưu tiên tiếp theo: **refund PayOS thật + payout tài xế + ledger invariant integration test**.
+> Ưu tiên tiếp theo: **xác minh PayOS refund sandbox + bank payout API + mã hoá/object storage**.
