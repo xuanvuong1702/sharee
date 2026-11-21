@@ -89,42 +89,49 @@ public sealed class ReadService(Db db)
     }
 
     public async Task<BookingDto?> GetBookingAsync(Guid id, CancellationToken ct = default)
+        => (await GetBookingsAsync([id], ct)).FirstOrDefault();
+
+    /// <summary>Loads a page of bookings with one connection; avoids re-opening
+    /// a connection per booking in list endpoints.</summary>
+    public async Task<IReadOnlyList<BookingDto>> GetBookingsAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
     {
-        var row = await GetBookingRowAsync(id, ct);
-        if (row is null) return null;
-
+        if (ids.Count == 0) return [];
         await using var conn = await db.OpenAsync(ct);
-        var stops = (await conn.QueryAsync<StopRow>(StopsSql, new { tripId = row.TripId }))
-            .ToDictionary(s => s.Id);
-        var payment = await conn.QuerySingleOrDefaultAsync<PaymentRow>(
-            "select id, booking_id, amount, currency, status, provider, captured_at from payments where booking_id = @id",
-            new { id });
-
-        stops.TryGetValue(row.FromStopId, out var from);
-        stops.TryGetValue(row.ToStopId, out var to);
-
-        // Contact details are only revealed after the booking is confirmed.
-        // Before that, both sides can chat through the app without phone leaks.
-        var revealContact = row.Status is "confirmed" or "completed";
-        var passenger = new UserDto(row.PassengerId,
-            revealContact ? row.PassengerPhone : Privacy.MaskPhone(row.PassengerPhone),
-            row.PassengerName, null,
-            row.PassengerAvatarUrl, null, row.PassengerRole, row.PassengerVerifiedLevel,
-            row.PassengerRatingAvg, row.PassengerRatingCount);
-        var driver = new UserDto(row.DriverId,
-            revealContact ? row.DriverPhone : Privacy.MaskPhone(row.DriverPhone),
-            row.DriverName, null,
-            row.DriverAvatarUrl, null, row.DriverRole, row.DriverVerifiedLevel,
-            row.DriverRatingAvg, row.DriverRatingCount);
-
-        return new BookingDto(
-            row.Id, row.TripId, passenger, driver,
-            from?.ToStop() ?? new StopDto(row.FromStopId, 0, "", 0, 0, 0, false, false, 0),
-            to?.ToStop() ?? new StopDto(row.ToStopId, 0, "", 0, 0, 0, false, false, 0),
-            row.Seats, row.PriceTotal, row.Status, row.ExpiresAt, row.CreatedAt,
-            new TripSummaryDto(row.TripId, row.OriginLabel, row.DestinationLabel, row.DepartureTime,
-                row.DriverName, $"{row.VehicleMake} {row.VehicleModel}", row.VehiclePlate),
-            payment?.ToPayment());
+        var rows = (await conn.QueryAsync<BookingRow>(
+            BookingSql.Replace("where b.id = @id", "where b.id = any(@ids)"),
+            new { ids = ids.ToArray() }))
+            .ToDictionary(r => r.Id);
+        var result = new List<BookingDto>(ids.Count);
+        foreach (var id in ids)
+        {
+            if (!rows.TryGetValue(id, out var row)) continue;
+            var stops = (await conn.QueryAsync<StopRow>(StopsSql, new { tripId = row.TripId }))
+                .ToDictionary(s => s.Id);
+            var payment = await conn.QuerySingleOrDefaultAsync<PaymentRow>(
+                "select id, booking_id, amount, currency, status, provider, captured_at from payments where booking_id = @id",
+                new { id });
+            stops.TryGetValue(row.FromStopId, out var from);
+            stops.TryGetValue(row.ToStopId, out var to);
+            var revealContact = row.Status is "confirmed" or "completed";
+            var passenger = new UserDto(row.PassengerId,
+                revealContact ? row.PassengerPhone : Privacy.MaskPhone(row.PassengerPhone),
+                row.PassengerName, null, row.PassengerAvatarUrl, null, row.PassengerRole,
+                row.PassengerVerifiedLevel, row.PassengerRatingAvg, row.PassengerRatingCount);
+            var driver = new UserDto(row.DriverId,
+                revealContact ? row.DriverPhone : Privacy.MaskPhone(row.DriverPhone),
+                row.DriverName, null, row.DriverAvatarUrl, null, row.DriverRole,
+                row.DriverVerifiedLevel, row.DriverRatingAvg, row.DriverRatingCount);
+            result.Add(new BookingDto(
+                row.Id, row.TripId, passenger, driver,
+                from?.ToStop() ?? new StopDto(row.FromStopId, 0, "", 0, 0, 0, false, false, 0),
+                to?.ToStop() ?? new StopDto(row.ToStopId, 0, "", 0, 0, 0, false, false, 0),
+                row.Seats, row.PriceTotal, row.Status, row.ExpiresAt, row.CreatedAt,
+                new TripSummaryDto(row.TripId, row.OriginLabel, row.DestinationLabel, row.DepartureTime,
+                    row.DriverName, $"{row.VehicleMake} {row.VehicleModel}", row.VehiclePlate),
+                payment?.ToPayment()));
+        }
+        return result;
     }
 
     public async Task<UserDto?> GetUserAsync(Guid id, CancellationToken ct = default)

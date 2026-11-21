@@ -132,21 +132,19 @@ public static class BookingEndpoints
             return Results.Ok(booking);
         });
 
-        group.MapGet("/mine", async (HttpContext http, Db db, ReadService read, CancellationToken ct) =>
+        group.MapGet("/mine", async (HttpContext http, Db db, ReadService read,
+            int? limit, int? offset, CancellationToken ct) =>
         {
             var userId = http.User.GetUserId();
+            var take = Math.Clamp(limit ?? 30, 1, 100);
+            var skip = Math.Max(0, offset ?? 0);
             await using var conn = await db.OpenAsync(ct);
-            var ids = (await conn.QueryAsync<Guid>(
-                "select id from bookings where passenger_id = @userId or trip_id in (select id from trips where driver_id = @userId) order by created_at desc limit 50",
-                new { userId })).ToList();
-
-            var list = new List<BookingDto>();
-            foreach (var id in ids)
-            {
-                var booking = await read.GetBookingAsync(id, ct);
-                if (booking is not null) list.Add(booking);
-            }
-            return Results.Ok(list);
+            var ids = (await conn.QueryAsync<Guid>("""
+                select id from bookings
+                where passenger_id = @userId or trip_id in (select id from trips where driver_id = @userId)
+                order by created_at desc limit @take offset @skip
+                """, new { userId, take, skip })).ToList();
+            return Results.Ok(await read.GetBookingsAsync(ids, ct));
         });
 
         group.MapPost("/{id:guid}/accept", async (
