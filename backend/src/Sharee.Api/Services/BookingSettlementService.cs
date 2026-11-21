@@ -190,8 +190,11 @@ public sealed class BookingSettlementService(Db db, LedgerService ledger)
     private static Task<dynamic?> LockAsync(
         NpgsqlConnection conn, NpgsqlTransaction tx, Guid bookingId)
         => conn.QuerySingleOrDefaultAsync<dynamic>("""
-            select id, driver_id, passenger_id, trip_id, seats, price_total, status,
-                   payment_method
-            from bookings where id = @bookingId for update
+            select b.id, t.driver_id, b.passenger_id, b.trip_id, b.seats, b.price_total,
+                   b.status, b.payment_method
+            from bookings b
+            join trips t on t.id = b.trip_id
+            where b.id = @bookingId
+            for update of b
             """, new { bookingId }, tx);
 }
