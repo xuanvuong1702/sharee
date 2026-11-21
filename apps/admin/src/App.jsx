@@ -8,6 +8,9 @@ async function api(path, { token, method = 'GET', body } = {}) {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(localStorage.getItem('sharee_admin_mfa')
+        ? { 'X-Admin-Mfa': localStorage.getItem('sharee_admin_mfa') }
+        : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -24,6 +27,7 @@ function Login({ onLogin }) {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [devCode, setDevCode] = useState('');
+  const [mfa, setMfa] = useState(localStorage.getItem('sharee_admin_mfa') || '');
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -64,8 +68,15 @@ function Login({ onLogin }) {
           <>
             <label>Mã OTP</label>
             <input value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} />
+            <label>Mã MFA (nếu đã bật)</label>
+            <input value={mfa} onChange={(e) => setMfa(e.target.value)} maxLength={6}
+              placeholder="6 chữ số" />
             {devCode && <div className="hint">Mã demo: {devCode}</div>}
-            <button className="primary" onClick={verify} disabled={busy}>{busy ? 'Đang xác thực…' : 'Vào dashboard'}</button>
+            <button className="primary" onClick={() => {
+              if (mfa.trim()) localStorage.setItem('sharee_admin_mfa', mfa.trim());
+              else localStorage.removeItem('sharee_admin_mfa');
+              verify();
+            }} disabled={busy}>{busy ? 'Đang xác thực…' : 'Vào dashboard'}</button>
             <button className="link" onClick={() => setStep(0)}>Đổi số</button>
           </>
         )}
@@ -364,7 +375,11 @@ function Verifications({ token }) {
   async function viewDocument(docId) {
     try {
       const res = await fetch(`${API}/api/admin/verifications/${selected}/documents/${docId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(localStorage.getItem('sharee_admin_mfa')
+            ? { 'X-Admin-Mfa': localStorage.getItem('sharee_admin_mfa') } : {}),
+        },
       });
       if (!res.ok) throw new Error('Không mở được tài liệu');
       const blob = await res.blob();
@@ -513,7 +528,11 @@ function Appeals({ token }) {
   async function viewEvidence(evidenceId) {
     try {
       const res = await fetch(`${API}/api/admin/appeals/${selected}/evidence/${evidenceId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(localStorage.getItem('sharee_admin_mfa')
+            ? { 'X-Admin-Mfa': localStorage.getItem('sharee_admin_mfa') } : {}),
+        },
       });
       if (!res.ok) throw new Error('Không mở được bằng chứng');
       window.open(URL.createObjectURL(await res.blob()), '_blank', 'noopener');

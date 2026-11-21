@@ -62,7 +62,6 @@ builder.Services.AddSingleton<RefreshTokenService>();
 builder.Services.AddSingleton<JwtOptions>();
 builder.Services.AddScoped<LedgerService>();
 builder.Services.AddScoped<BookingSettlementService>();
-builder.Services.AddSingleton<OtpRateGuard>();
 builder.Services.AddScoped<ReadService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<RecurringTripService>();
@@ -73,14 +72,25 @@ builder.Services.AddHostedService<BookingExpiryWorker>();
 builder.Services.AddHostedService<RideExpiryWorker>();
 builder.Services.AddHostedService<BookingReleaseWorker>();
 builder.Services.AddHostedService<MaintenanceWorker>();
-builder.Services.AddMemoryCache();
+builder.Services.AddMemoryCache(o => o.SizeLimit = 10_000);
 var signalR = builder.Services.AddSignalR();
 var redisConnection = config.GetConnectionString("Redis");
 if (!string.IsNullOrWhiteSpace(redisConnection))
 {
     signalR.AddStackExchangeRedis(redisConnection, o =>
         o.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("sharee"));
+    try
+    {
+        var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnection);
+        builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Redis unavailable for OTP guard: {ex.Message}");
+    }
 }
+builder.Services.AddSingleton(sp =>
+    new OtpRateGuard(sp.GetService<StackExchange.Redis.IConnectionMultiplexer>()));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddProblemDetails();
 builder.Services.AddResponseCompression(o => o.EnableForHttps = true);
@@ -93,6 +103,10 @@ var paymentProvider = config["Payments:Provider"] ?? "mock";
 var payos = config.GetSection("PayOS").Get<PayOsOptions>() ?? new PayOsOptions();
 builder.Services.AddSingleton(payos);
 builder.Services.AddScoped<PayOsService>();
+var bankPayout = config.GetSection("BankPayout").Get<BankPayoutOptions>() ?? new BankPayoutOptions();
+builder.Services.AddSingleton(bankPayout);
+builder.Services.AddHttpClient("bankpayout", c => c.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddScoped<BankPayoutService>();
 builder.Services.AddScoped<PaymentSettlementService>();
 if (isProduction && paymentProvider.Equals("payos", StringComparison.OrdinalIgnoreCase))
 {
@@ -326,15 +340,18 @@ app.MapGet("/", () => Results.Ok(new
     health = "/health/ready"
 }));
 app.MapGet("/health/live", () => Results.Ok(new { status = "live" }));
-app.MapGet("/health/ready", async (Db db, CancellationToken ct) =>
+app.MapGet("/health/ready", async (Db db, IServiceProvider services, CancellationToken ct) =>
 {
     try
     {
         await using var conn = await db.OpenAsync(ct);
         var ok = await conn.ExecuteScalarAsync<int>("select 1");
-        return ok == 1
-            ? Results.Ok(new { status = "ready", db = true })
-            : Results.Json(new { status = "degraded", db = false }, statusCode: 503);
+        var redis = services.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+        var redisOk = redis is null || redis.IsConnected;
+        return ok == 1 && redisOk
+            ? Results.Ok(new { status = "ready", db = true, redis = redisOk })
+            : Results.Json(new { status = "degraded", db = ok == 1, redis = redisOk },
+                statusCode: 503);
     }
     catch (Exception ex)
     {

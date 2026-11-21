@@ -20,7 +20,7 @@ public static class AuthEndpoints
         {
             if (string.IsNullOrWhiteSpace(request.Phone) || request.Phone.Length < 8)
                 return Results.BadRequest(new { error = "Số điện thoại không hợp lệ" });
-            if (!guard.Allow(http.Connection.RemoteIpAddress?.ToString()))
+            if (!await guard.AllowAsync(http.Connection.RemoteIpAddress?.ToString()))
                 return Results.Json(new { error = "Quá nhiều yêu cầu OTP. Thử lại sau." },
                     statusCode: StatusCodes.Status429TooManyRequests);
 

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../core/app_state.dart';
 import '../core/format.dart';
+import '../core/models.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/ui.dart';
 import 'chat_screen.dart';
+import 'location_picker_screen.dart';
 import 'notifications_screen.dart';
 import 'ride_booking_screen.dart';
 import 'results_screen.dart';
@@ -16,12 +19,36 @@ class RoutePreset {
   final String toLabel;
   final double toLat;
   final double toLng;
-  const RoutePreset(this.name, this.fromLabel, this.fromLat, this.fromLng, this.toLabel, this.toLat, this.toLng);
+  const RoutePreset(
+    this.name,
+    this.fromLabel,
+    this.fromLat,
+    this.fromLng,
+    this.toLabel,
+    this.toLat,
+    this.toLng,
+  );
 }
 
 const presets = [
-  RoutePreset('Hà Nội → Hải Phòng', 'Bến xe Mỹ Đình, Hà Nội', 21.0285, 105.7749, 'Lạch Tray, Hải Phòng', 20.8449, 106.6881),
-  RoutePreset('Hà Nội → Nội Bài', 'Bến xe Mỹ Đình, Hà Nội', 21.0285, 105.7749, 'Sân bay Nội Bài', 21.2187, 105.7999),
+  RoutePreset(
+    'Hà Nội → Hải Phòng',
+    'Bến xe Mỹ Đình, Hà Nội',
+    21.0285,
+    105.7749,
+    'Lạch Tray, Hải Phòng',
+    20.8449,
+    106.6881,
+  ),
+  RoutePreset(
+    'Hà Nội → Nội Bài',
+    'Bến xe Mỹ Đình, Hà Nội',
+    21.0285,
+    105.7749,
+    'Sân bay Nội Bài',
+    21.2187,
+    105.7999,
+  ),
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -33,8 +60,50 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _preset = 0;
+  GeoPlace? _pickup;
+  GeoPlace? _dropoff;
   DateTime _date = DateTime.now().add(const Duration(days: 1));
   int _seats = 1;
+
+  Future<void> _pickPlace(bool pickup) async {
+    final place = await Navigator.of(context)
+        .push<GeoPlace>(appRoute(LocationPickerScreen(pickup: pickup)));
+    if (place == null || !mounted) return;
+    setState(() {
+      if (pickup) {
+        _pickup = place;
+      } else {
+        _dropoff = place;
+      }
+    });
+  }
+
+  void _swap() {
+    setState(() {
+      final tmp = _pickup;
+      _pickup = _dropoff;
+      _dropoff = tmp;
+    });
+  }
+
+  void _applyPreset(int index) {
+    final p = presets[index];
+    setState(() {
+      _preset = index;
+      _pickup = GeoPlace(
+        label: p.fromLabel,
+        fullName: p.fromLabel,
+        lat: p.fromLat,
+        lng: p.fromLng,
+      );
+      _dropoff = GeoPlace(
+        label: p.toLabel,
+        fullName: p.toLabel,
+        lat: p.toLat,
+        lng: p.toLng,
+      );
+    });
+  }
 
   Future<void> _pickDate() async {
     final value = await showDatePicker(
@@ -44,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
       lastDate: DateTime.now().add(const Duration(days: 60)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(primary: AppTheme.primary),
+          colorScheme: Theme.of(context).colorScheme
+              .copyWith(primary: AppTheme.primary),
         ),
         child: child!,
       ),
@@ -57,17 +127,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _search() {
-    final p = presets[_preset];
-    Navigator.of(context).push(appRoute(ResultsScreen(
-      fromLabel: p.fromLabel,
-      fromLat: p.fromLat,
-      fromLng: p.fromLng,
-      toLabel: p.toLabel,
-      toLat: p.toLat,
-      toLng: p.toLng,
-      date: _date,
-      seats: _seats,
-    )));
+    final from = _pickup;
+    final to = _dropoff;
+    if (from == null || to == null) {
+      showInfo(context, 'Chọn điểm đón và điểm đến trước nhé.');
+      return;
+    }
+    Navigator.of(context).push(
+      appRoute(
+        ResultsScreen(
+          fromLabel: from.label,
+          fromLat: from.lat,
+          fromLng: from.lng,
+          toLabel: to.label,
+          toLat: to.lat,
+          toLng: to.lng,
+          date: _date,
+          seats: _seats,
+        ),
+      ),
+    );
   }
 
   Future<void> _pickRoute() async {
@@ -79,52 +158,132 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Chọn tuyến đường',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const Text(
+              'Chọn địa điểm',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 10),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.my_location_rounded,
+                      color: AppTheme.primary,
+                    ),
+                    title: Text(
+                      _pickup?.label ?? 'Chọn điểm đón',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickPlace(true);
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.place_rounded,
+                      color: AppTheme.accent,
+                    ),
+                    title: Text(
+                      _dropoff?.label ?? 'Chọn điểm đến',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickPlace(false);
+                    },
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 4),
-            const Text('Các tuyến đang có nhiều tài xế hoạt động',
-                style: TextStyle(fontSize: 11.5, color: AppTheme.muted)),
-            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _swap();
+                },
+                icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                label: const Text('Đổi chiều'),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tuyến phổ biến',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.muted,
+              ),
+            ),
+            const SizedBox(height: 8),
             for (var i = 0; i < presets.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AppCard(
                   onTap: () {
-                    setState(() => _preset = i);
+                    _applyPreset(i);
                     Navigator.pop(context);
                   },
                   padding: const EdgeInsets.all(14),
                   border: Border.all(
-                      color: i == _preset ? AppTheme.primary : AppTheme.line,
-                      width: i == _preset ? 1.5 : 1),
+                    color: i == _preset ? AppTheme.primary : AppTheme.line,
+                    width: i == _preset ? 1.5 : 1,
+                  ),
                   child: Row(
                     children: [
                       Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: i == _preset ? AppTheme.primarySoft : const Color(0xFFF3F6FA),
+                          color: i == _preset
+                              ? AppTheme.primarySoft
+                              : const Color(0xFFF3F6FA),
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: const Icon(Icons.route_rounded, size: 19, color: AppTheme.primary),
+                        child: const Icon(
+                          Icons.route_rounded,
+                          size: 19,
+                          color: AppTheme.primary,
+                        ),
                       ),
                       const SizedBox(width: 11),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(presets[i].name,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                            Text(
+                              presets[i].name,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                             const SizedBox(height: 2),
-                            Text('${presets[i].fromLabel} → ${presets[i].toLabel}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 10.5, color: AppTheme.muted)),
+                            Text(
+                              '${presets[i].fromLabel} → ${presets[i].toLabel}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                color: AppTheme.muted,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       if (i == _preset)
-                        const Icon(Icons.check_circle_rounded, color: AppTheme.primary, size: 20),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppTheme.primary,
+                          size: 20,
+                        ),
                     ],
                   ),
                 ),
@@ -155,7 +314,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(34)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(34),
+                ),
               ),
             ),
           ),
@@ -174,9 +335,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      (user?.fullName.isNotEmpty == true ? user!.fullName[0] : 'B').toUpperCase(),
+                      (user?.fullName.isNotEmpty == true
+                              ? user!.fullName[0]
+                              : 'B')
+                          .toUpperCase(),
                       style: const TextStyle(
-                          color: AppTheme.primary, fontSize: 17, fontWeight: FontWeight.w800),
+                        color: AppTheme.primary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -184,27 +351,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Xin chào, ${user?.fullName.split(' ').first ?? 'bạn'}',
-                            style: const TextStyle(
-                                fontSize: 11.5,
-                                color: AppTheme.muted,
-                                fontWeight: FontWeight.w500)),
+                        Text(
+                          'Xin chào, ${user?.fullName.split(' ').first ?? 'bạn'}',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppTheme.muted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        const Text('Bạn muốn đi đâu?',
-                            style: TextStyle(
-                                fontSize: 18, color: AppTheme.ink, fontWeight: FontWeight.w800)),
+                        const Text(
+                          'Bạn muốn đi đâu?',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppTheme.ink,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   _HeaderIcon(
                     icon: Icons.chat_bubble_outline_rounded,
-                    onTap: () => Navigator.of(context).push(appRoute(const ChatThreadsScreen())),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(appRoute(const ChatThreadsScreen())),
                   ),
                   const SizedBox(width: 8),
                   _HeaderIcon(
                     icon: Icons.notifications_none_rounded,
                     badge: unread,
-                    onTap: () => Navigator.of(context).push(appRoute(const NotificationsScreen())),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(appRoute(const NotificationsScreen())),
                   ),
                 ],
               ),
@@ -228,13 +407,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                   height: 9,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppTheme.success, width: 2),
+                                    border: Border.all(
+                                      color: AppTheme.success,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                                 Container(
                                   width: 2,
                                   height: 24,
-                                  margin: const EdgeInsets.symmetric(vertical: 3),
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 3,
+                                  ),
                                   color: const Color(0xFFD8E2F3),
                                 ),
                                 Container(
@@ -242,7 +426,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   height: 9,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppTheme.accent, width: 2),
+                                    border: Border.all(
+                                      color: AppTheme.accent,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -252,29 +439,43 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Điểm đón',
-                                      style: TextStyle(
-                                          fontSize: 9.5,
-                                          color: AppTheme.muted,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.2)),
-                                  Text(presets[_preset].fromLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontSize: 12.5, fontWeight: FontWeight.w700)),
+                                  Text(
+                                    'Điểm đón',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: AppTheme.muted,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  Text(
+                                    _pickup?.label ?? 'Chọn điểm đón',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   const SizedBox(height: 9),
-                                  Text('Điểm đến',
-                                      style: TextStyle(
-                                          fontSize: 9.5,
-                                          color: AppTheme.muted,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.2)),
-                                  Text(presets[_preset].toLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          fontSize: 12.5, fontWeight: FontWeight.w700)),
+                                  Text(
+                                    'Điểm đến',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: AppTheme.muted,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  Text(
+                                    _dropoff?.label ?? 'Chọn điểm đến',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -285,8 +486,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: const Color(0xFFF1F4F9),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.unfold_more_rounded,
-                                  size: 18, color: AppTheme.muted),
+                              child: const Icon(
+                                Icons.unfold_more_rounded,
+                                size: 18,
+                                color: AppTheme.muted,
+                              ),
                             ),
                           ],
                         ),
@@ -301,24 +505,37 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: _pickDate,
                             borderRadius: BorderRadius.circular(12),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4,
+                                horizontal: 4,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Ngày đi',
-                                      style: TextStyle(
-                                          fontSize: 9.5,
-                                          color: AppTheme.muted,
-                                          fontWeight: FontWeight.w700)),
+                                  const Text(
+                                    'Ngày đi',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      color: AppTheme.muted,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   const SizedBox(height: 3),
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today_rounded,
-                                          size: 12, color: AppTheme.primary),
+                                      const Icon(
+                                        Icons.calendar_today_rounded,
+                                        size: 12,
+                                        color: AppTheme.primary,
+                                      ),
                                       const SizedBox(width: 5),
-                                      Text(dayLabel(_date),
-                                          style: const TextStyle(
-                                              fontSize: 12.5, fontWeight: FontWeight.w800)),
+                                      Text(
+                                        dayLabel(_date),
+                                        style: const TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -331,11 +548,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Số ghế',
-                                style: TextStyle(
-                                    fontSize: 9.5,
-                                    color: AppTheme.muted,
-                                    fontWeight: FontWeight.w700)),
+                            const Text(
+                              'Số ghế',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                color: AppTheme.muted,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             Row(
                               children: [
                                 _SeatButton(
@@ -344,10 +564,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onTap: () => setState(() => _seats--),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text('$_seats',
-                                      style: const TextStyle(
-                                          fontSize: 14, fontWeight: FontWeight.w900)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Text(
+                                    '$_seats',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
                                 _SeatButton(
                                   icon: Icons.add_rounded,
@@ -364,7 +590,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     PrimaryButton(
                       label: 'Tìm chuyến',
                       icon: Icons.search_rounded,
-                      onPressed: _search,
+                      onPressed: _pickup == null || _dropoff == null
+                          ? null
+                          : _search,
                     ),
                   ],
                 ),
@@ -440,11 +668,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   _DateQuick(
                     label: 'Ngày mai',
-                    active: _isSameDay(_date, DateTime.now().add(const Duration(days: 1))),
-                    onTap: () => setState(() => _date = DateTime.now().add(const Duration(days: 1))),
+                    active: _isSameDay(
+                      _date,
+                      DateTime.now().add(const Duration(days: 1)),
+                    ),
+                    onTap: () => setState(
+                      () => _date = DateTime.now().add(const Duration(days: 1)),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  _DateQuick(label: 'Chọn ngày', active: false, onTap: _pickDate),
+                  _DateQuick(
+                    label: 'Chọn ngày',
+                    active: false,
+                    onTap: _pickDate,
+                  ),
                 ],
               ),
               const SectionHeader('Tuyến phổ biến'),
@@ -460,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.directions_car_filled_rounded,
                       image: 'assets/images/coast.jpg',
                       onTap: () {
-                        setState(() => _preset = 0);
+                        _applyPreset(0);
                         _search();
                       },
                     ),
@@ -471,7 +708,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.flight_takeoff_rounded,
                       image: 'assets/images/hanoi.jpg',
                       onTap: () {
-                        setState(() => _preset = 1);
+                        _applyPreset(1);
                         _search();
                       },
                     ),
@@ -482,27 +719,35 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: const [
                   Expanded(
-                      child: _Benefit(
-                          icon: Icons.verified_user_rounded,
-                          title: 'Tài xế KYC',
-                          sub: 'CCCD & GPLX')),
+                    child: _Benefit(
+                      icon: Icons.verified_user_rounded,
+                      title: 'Tài xế KYC',
+                      sub: 'CCCD & GPLX',
+                    ),
+                  ),
                   SizedBox(width: 8),
                   Expanded(
-                      child: _Benefit(
-                          icon: Icons.lock_rounded,
-                          title: 'Escrow',
-                          sub: 'Giữ tiền an toàn')),
+                    child: _Benefit(
+                      icon: Icons.lock_rounded,
+                      title: 'Escrow',
+                      sub: 'Giữ tiền an toàn',
+                    ),
+                  ),
                   SizedBox(width: 8),
                   Expanded(
-                      child: _Benefit(
-                          icon: Icons.star_rounded,
-                          title: 'Đánh giá thật',
-                          sub: 'Sao & hoàn thành')),
+                    child: _Benefit(
+                      icon: Icons.star_rounded,
+                      title: 'Đánh giá thật',
+                      sub: 'Sao & hoàn thành',
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               AppCard(
-                gradient: const LinearGradient(colors: [Color(0xFF071A33), Color(0xFF12306B)]),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF071A33), Color(0xFF12306B)],
+                ),
                 border: null,
                 child: Row(
                   children: [
@@ -513,19 +758,33 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(13),
                       ),
-                      child: const Icon(Icons.eco_rounded, color: Colors.white, size: 22),
+                      child: const Icon(
+                        Icons.eco_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Mỗi chuyến đi là một lựa chọn xanh',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                          Text(
+                            'Mỗi chuyến đi là một lựa chọn xanh',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                           SizedBox(height: 3),
-                          Text('Giảm xe cá nhân, giảm phát thải và chia sẻ chi phí.',
-                              style: TextStyle(color: Colors.white70, fontSize: 10.5)),
+                          Text(
+                            'Giảm xe cá nhân, giảm phát thải và chia sẻ chi phí.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10.5,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -555,8 +814,9 @@ class _HeaderIcon extends StatelessWidget {
     return Material(
       color: Colors.white.withValues(alpha: 0.72),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(13),
-          side: const BorderSide(color: Colors.white)),
+        borderRadius: BorderRadius.circular(13),
+        side: const BorderSide(color: Colors.white),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(13),
@@ -580,7 +840,11 @@ class _SeatButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
 
-  const _SeatButton({required this.icon, required this.enabled, required this.onTap});
+  const _SeatButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -593,8 +857,11 @@ class _SeatButton extends StatelessWidget {
           color: const Color(0xFFF1F4F9),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon,
-            size: 15, color: enabled ? AppTheme.ink : AppTheme.mutedLight),
+        child: Icon(
+          icon,
+          size: 15,
+          color: enabled ? AppTheme.ink : AppTheme.mutedLight,
+        ),
       ),
     );
   }
@@ -605,7 +872,11 @@ class _DateQuick extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _DateQuick({required this.label, required this.active, required this.onTap});
+  const _DateQuick({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -618,11 +889,14 @@ class _DateQuick extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: active ? AppTheme.ink : AppTheme.line),
         ),
-        child: Text(label,
-            style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: active ? Colors.white : AppTheme.muted)),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: active ? Colors.white : AppTheme.muted,
+          ),
+        ),
       ),
     );
   }
@@ -670,23 +944,39 @@ class _HeroServiceCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.ink,
+                        ),
+                      ),
                       const SizedBox(height: 3),
-                      Text(subtitle,
-                          style: const TextStyle(fontSize: 10, color: AppTheme.muted)),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppTheme.muted,
+                        ),
+                      ),
                       const Spacer(),
                       const Row(
                         children: [
-                          Text('Mở',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.primary)),
+                          Text(
+                            'Mở',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primary,
+                            ),
+                          ),
                           SizedBox(width: 3),
-                          Icon(Icons.arrow_forward_rounded,
-                              size: 12, color: AppTheme.primary),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 12,
+                            color: AppTheme.primary,
+                          ),
                         ],
                       ),
                     ],
@@ -727,8 +1017,10 @@ class _FloatingIconState extends State<_FloatingIcon>
       vsync: this,
       duration: const Duration(milliseconds: 3200),
     )..repeat(reverse: true);
-    _float = Tween<double>(begin: -2, end: 2)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _float = Tween<double>(
+      begin: -2,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -744,10 +1036,8 @@ class _FloatingIconState extends State<_FloatingIcon>
     }
     return AnimatedBuilder(
       animation: _float,
-      builder: (context, child) => Transform.translate(
-        offset: Offset(0, _float.value),
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.translate(offset: Offset(0, _float.value), child: child),
       child: Image.asset(widget.image, width: widget.size, height: widget.size),
     );
   }
@@ -758,7 +1048,11 @@ class _ServiceTile3D extends StatelessWidget {
   final String image;
   final VoidCallback onTap;
 
-  const _ServiceTile3D({required this.label, required this.image, required this.onTap});
+  const _ServiceTile3D({
+    required this.label,
+    required this.image,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -779,10 +1073,15 @@ class _ServiceTile3D extends StatelessWidget {
             children: [
               Image.asset(image, width: 40, height: 40, fit: BoxFit.contain),
               const SizedBox(height: 5),
-              Text(label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700)),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
         ),
@@ -850,19 +1149,32 @@ class _PopularCard extends StatelessWidget {
                           child: Icon(icon, color: Colors.white, size: 16),
                         ),
                         const Spacer(),
-                        const Icon(Icons.arrow_outward_rounded,
-                            color: Colors.white70, size: 16),
+                        const Icon(
+                          Icons.arrow_outward_rounded,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
                       ],
                     ),
                     const Spacer(),
-                    Text(title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     const SizedBox(height: 3),
-                    Text(subtitle,
-                        style: const TextStyle(color: Colors.white70, fontSize: 10.5)),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -899,8 +1211,14 @@ class _Benefit extends StatelessWidget {
             child: Icon(icon, size: 16, color: AppTheme.primary),
           ),
           const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800)),
-          Text(sub, style: const TextStyle(fontSize: 9.5, color: AppTheme.muted)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800),
+          ),
+          Text(
+            sub,
+            style: const TextStyle(fontSize: 9.5, color: AppTheme.muted),
+          ),
         ],
       ),
     );

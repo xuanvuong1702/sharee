@@ -85,7 +85,11 @@ public sealed class GeoService
                 }
 
                 var result = list.Count > 0 ? list : FallbackFor(query);
-                _cache.Set(key, result, TimeSpan.FromMinutes(10));
+                _cache.Set(key, result, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                    Size = 1
+                });
                 return result;
             }
             finally
@@ -129,7 +133,11 @@ public sealed class GeoService
                 var result = new GeoPlaceDto(
                     string.IsNullOrWhiteSpace(name) ? full.Split(',')[0].Trim() : name!,
                     full, lat, lng, "pin");
-                _cache.Set(key, result, TimeSpan.FromHours(6));
+                _cache.Set(key, result, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6),
+                    Size = 1
+                });
                 return result;
             }
             finally

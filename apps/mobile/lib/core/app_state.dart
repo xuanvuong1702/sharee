@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
@@ -10,6 +11,7 @@ import 'realtime.dart';
 
 class AppState extends ChangeNotifier {
   final Api api = Api();
+  static const _secure = FlutterSecureStorage();
   AppUser? user;
   String? refreshToken;
   bool ready = false;
@@ -21,9 +23,20 @@ class AppState extends ChangeNotifier {
 
   Future<void> load() async {
     api.onTokensChanged = _persistTokens;
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final refresh = prefs.getString('refreshToken');
+    var token = await _secure.read(key: 'token');
+    var refresh = await _secure.read(key: 'refreshToken');
+    if (token == null) {
+      // One-time migration from the old plaintext SharedPreferences store.
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('token');
+      refresh = prefs.getString('refreshToken');
+      if (token != null) {
+        await _secure.write(key: 'token', value: token);
+        if (refresh != null) await _secure.write(key: 'refreshToken', value: refresh);
+        await prefs.remove('token');
+        await prefs.remove('refreshToken');
+      }
+    }
     if (token != null && token.isNotEmpty) {
       api.token = token;
       api.refreshToken = refresh;
@@ -39,7 +52,8 @@ class AppState extends ChangeNotifier {
         }
         if (user == null) {
           api.token = null;
-          await prefs.remove('token');
+          await _secure.delete(key: 'token');
+          await _secure.delete(key: 'refreshToken');
         }
       }
     }
@@ -75,18 +89,16 @@ class AppState extends ChangeNotifier {
     api.refreshToken = refresh;
     refreshToken = refresh;
     user = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
-    await prefs.setString('refreshToken', refresh);
+    await _secure.write(key: 'token', value: token);
+    await _secure.write(key: 'refreshToken', value: refresh);
     notifyListeners();
     unawaited(_startRealtime());
   }
 
   Future<void> _persistTokens(String access, String refresh) async {
     refreshToken = refresh;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', access);
-    await prefs.setString('refreshToken', refresh);
+    await _secure.write(key: 'token', value: access);
+    await _secure.write(key: 'refreshToken', value: refresh);
   }
 
   Future<void> refreshUser() async {
@@ -108,9 +120,8 @@ class AppState extends ChangeNotifier {
     refreshToken = null;
     user = null;
     unread = 0;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('refreshToken');
+    await _secure.delete(key: 'token');
+    await _secure.delete(key: 'refreshToken');
     notifyListeners();
   }
 }
