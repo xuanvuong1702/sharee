@@ -37,6 +37,7 @@ public sealed class ObjectStorageService(
         if (_s3 is null) return;
         try
         {
+            await EnsureBucketAsync(ct);
             await _s3.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = _options.Bucket,
@@ -103,6 +104,13 @@ public sealed class ObjectStorageService(
         if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Object key không hợp lệ");
         return full;
+    }
+
+    private async Task EnsureBucketAsync(CancellationToken ct)
+    {
+        if (_s3 is null) return;
+        if (await Amazon.S3.Util.AmazonS3Util.DoesS3BucketExistV2Async(_s3, _options.Bucket)) return;
+        await _s3.PutBucketAsync(new PutBucketRequest { BucketName = _options.Bucket }, ct);
     }
 
     private static IAmazonS3? BuildClient(ObjectStorageOptions options)

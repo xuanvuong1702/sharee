@@ -30,7 +30,7 @@ services:
       retries: 20
 
   minio:
-    image: minio/minio:latest
+    image: bitnamilegacy/minio:latest
     container_name: sharee-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -42,14 +42,6 @@ services:
       - "127.0.0.1:9001:9001"
     volumes:
       - sharee-minio:/data
-
-  minio-init:
-    image: minio/mc:latest
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "until mc alias set local http://minio:9000 sharee sharee-minio; do sleep 1; done;
-      mc mb --ignore-existing local/sharee;"
 
   api:
     build:
