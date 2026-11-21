@@ -1,6 +1,6 @@
 # hardening.md — trạng thái triển khai
 
-> Cập nhật 2026-11-21. Build/test: backend **18/18**, Next.js build pass.
+> Cập nhật 2026-11-21. Build/test: backend **19/19**, Next.js build pass.
 
 ## Đã hoàn thành
 
@@ -62,3 +62,8 @@ cd backend/tests/Sharee.Tests && dotnet test
 cd apps/mobile && flutter analyze && flutter test
 cd apps/web && npm run build
 ```
+
+### X�c minh MinIO
+- Container local itnamilegacy/minio ch?y t?i 127.0.0.1:9000, health 200.
+- Integration test ObjectStorageIntegrationTests upload/d?c file qua S3 API: pass.
+
