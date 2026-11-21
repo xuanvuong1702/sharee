@@ -120,7 +120,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
       body: Column(
         children: [
           SizedBox(
-            height: 62,
+            height: 74,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               scrollDirection: Axis.horizontal,
@@ -280,6 +280,7 @@ class _DateChip extends StatelessWidget {
           boxShadow: active ? AppTheme.liftedShadow : null,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(weekday,
                 style: TextStyle(
