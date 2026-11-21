@@ -102,6 +102,7 @@ public record ETicketDto(
 
 public record CreateETicketRequest(Guid LineId, Guid StopId);
 public record ValidateTicketRequest(string Code, double? Lat = null, double? Lng = null);
+public record ResolveReconciliationRequest(string? Note);
 
 public record AdminDashboardDto(
     int Users, int Trips, int Bookings, int OpenReports, int PendingVerifications,

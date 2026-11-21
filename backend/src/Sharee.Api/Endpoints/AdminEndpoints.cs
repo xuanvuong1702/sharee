@@ -153,6 +153,56 @@ public static class AdminEndpoints
             return Results.Ok(new { status = "refunded", amount });
         });
 
+        group.MapGet("/reconciliation", async (Db db, CancellationToken ct) =>
+        {
+            await using var conn = await db.OpenAsync(ct);
+            var rows = await conn.QueryAsync<dynamic>("""
+                select r.id, r.booking_id, r.order_code, r.amount, r.reason, r.status,
+                       r.note, r.created_at, u.full_name as passenger_name,
+                       t.origin_label, t.destination_label
+                from payment_reconciliation r
+                join bookings b on b.id = r.booking_id
+                join users u on u.id = b.passenger_id
+                join trips t on t.id = b.trip_id
+                where r.status = 'open'
+                order by r.created_at desc limit 100
+                """);
+            return Results.Ok(rows.Select(r => new
+            {
+                id = (Guid)r.id,
+                bookingId = (Guid)r.booking_id,
+                orderCode = (string)r.order_code,
+                amount = (int)r.amount,
+                reason = (string)r.reason,
+                note = (string?)r.note,
+                createdAt = Time.ToDto((DateTime)r.created_at),
+                passengerName = (string)r.passenger_name,
+                route = $"{r.origin_label} → {r.destination_label}"
+            }));
+        });
+
+        group.MapPost("/reconciliation/{id:guid}/resolve", async (
+            Guid id, ResolveReconciliationRequest request, HttpContext http, Db db,
+            CancellationToken ct) =>
+        {
+            await using var conn = await db.OpenAsync(ct);
+            await using var tx = await conn.BeginTransactionAsync(ct);
+            var affected = await conn.ExecuteAsync("""
+                update payment_reconciliation
+                set status = 'resolved', resolved_at = now(), note = @note
+                where id = @id and status = 'open'
+                """, new { id, note = (request.Note ?? "").Trim() }, tx);
+            if (affected == 0)
+            {
+                await tx.RollbackAsync(ct);
+                return Results.NotFound();
+            }
+            await Audit.LogAsync(conn, tx, http.User.GetUserId(), "reconciliation.resolve",
+                "payment_reconciliation", id.ToString(), new { request.Note });
+            await tx.CommitAsync(ct);
+            return Results.Ok(new { status = "resolved" });
+        });
+
         group.MapGet("/audit", async (Db db, CancellationToken ct) =>
         {
             await using var conn = await db.OpenAsync(ct);
