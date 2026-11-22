@@ -12,6 +12,20 @@ export default function AccountPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  async function cancel(id: string) {
+    if (!confirm("Huỷ chuyến này?")) return;
+    setCancelling(id);
+    try {
+      await api.cancelBooking(id);
+      setBookings(await api.myBookings());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không huỷ được chuyến");
+    } finally {
+      setCancelling(null);
+    }
+  }
 
   useEffect(() => {
     if (!user) {
@@ -94,6 +108,12 @@ export default function AccountPage() {
               <div className="booking-row-side">
                 <strong>{money(booking.priceTotal)}</strong>
                 <span>{booking.payment?.status === "succeeded" ? "Đã thanh toán" : "Chưa thanh toán"}</span>
+                {["pending_payment", "pending_driver", "confirmed"].includes(booking.status) ? (
+                  <Button variant="ghost" size="sm" disabled={cancelling === booking.id}
+                    onClick={() => cancel(booking.id)}>
+                    {cancelling === booking.id ? "Đang huỷ..." : "Huỷ chuyến"}
+                  </Button>
+                ) : null}
               </div>
             </Card>
           ))}

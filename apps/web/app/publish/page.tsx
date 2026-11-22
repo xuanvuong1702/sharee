@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field } from "@sharee/ui";
 import { useAuth } from "@/components/AuthProvider";
+import { MapPicker } from "@/components/MapPicker";
 import { API_URL } from "@/lib/sharee";
 
 type Place = { label: string; fullName: string; lat: number; lng: number };
@@ -130,6 +131,11 @@ export default function PublishPage() {
               ))}
             </div>
           )}
+          <MapPicker pickup={from} dropoff={to}
+            onChange={(kind, place) => {
+              if (kind === "pickup") { setFrom(place); setFromQuery(place.label); }
+              else { setTo(place); setToQuery(place.label); }
+            }} />
           <label className="sh-field"><span>Xe</span>
             <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
               {vehicles.map((v) => <option key={v.id} value={v.id}>{v.make} {v.model} · {v.plate}</option>)}

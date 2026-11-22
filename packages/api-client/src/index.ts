@@ -213,6 +213,34 @@ export class ShareeApi {
     });
   }
 
+  paymentConfig() {
+    return this.request<{
+      provider: string;
+      payosEnabled: boolean;
+      methods: string[];
+    }>("/api/payments/config");
+  }
+
+  createPayOs(bookingId: string) {
+    return this.request<{
+      checkoutUrl: string;
+      qrCode: string;
+      amount: number;
+      orderCode: number;
+      expiresAt: string;
+    }>(`/api/bookings/${bookingId}/payos`, {
+      method: "POST",
+      body: "{}",
+    });
+  }
+
+  cancelBooking(bookingId: string) {
+    return this.request<{ status: string }>(`/api/bookings/${bookingId}/cancel`, {
+      method: "POST",
+      body: "{}",
+    });
+  }
+
   booking(id: string) {
     return this.request<Booking>(`/api/bookings/${id}`);
   }

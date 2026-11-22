@@ -17,6 +17,7 @@ function TripView() {
   const [seats, setSeats] = useState(Number(params.get("seats") ?? 1));
   const [loading, setLoading] = useState(true);
   const [bookingBusy, setBookingBusy] = useState(false);
+  const [checkout, setCheckout] = useState<{ checkoutUrl: string; qrCode: string; amount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -67,7 +68,16 @@ function TripView() {
         try {
           created = await api.pay(created.id);
         } catch {
-          // PayOS production flow is handled in the mobile app for now.
+          try {
+            const payos = await api.createPayOs(created.id);
+            setCheckout({
+              checkoutUrl: payos.checkoutUrl,
+              qrCode: payos.qrCode,
+              amount: payos.amount,
+            });
+          } catch {
+            // Provider not configured; keep booking pending and show status.
+          }
         }
       }
       setBooking(created);
@@ -157,6 +167,17 @@ function TripView() {
                   {statusLabel(booking.status)}
                 </Badge>
                 <strong className="booking-total">{money(booking.priceTotal)}</strong>
+                {checkout ? (
+                  <div className="booking-pay">
+                    <p>Quét mã hoặc mở PayOS để thanh toán {money(checkout.amount)}.</p>
+                    {checkout.qrCode ? (
+                      <img className="payos-qr" alt="Mã QR PayOS"
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(checkout.qrCode)}`} />
+                    ) : null}
+                    <a className="sh-btn sh-btn-primary sh-btn-md" href={checkout.checkoutUrl}
+                      target="_blank" rel="noreferrer">Mở PayOS</a>
+                  </div>
+                ) : null}
                 <Link href="/account/" className="sh-btn sh-btn-primary sh-btn-md">
                   Xem chuyến của tôi
                 </Link>

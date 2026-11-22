@@ -16,6 +16,7 @@ export function SiteHeader() {
         </Link>
         <nav className="main-nav" aria-label="Điều hướng chính">
           <Link href="/#tim-chuyen">Tìm chuyến</Link>
+          <Link href="/nearby/">Gần bạn</Link>
           <Link href="/publish/">Đăng chuyến</Link>
           <Link href="/account/">Chuyến của tôi</Link>
           <a href={APP_URL} target="_blank" rel="noreferrer">

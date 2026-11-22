@@ -46,6 +46,9 @@ export default function HomePage() {
               <span>✓ Hỗ trợ tranh chấp</span>
             </div>
             <div className="hero-actions">
+              <Link href="/nearby/" className="sh-btn sh-btn-primary sh-btn-lg">
+                Tìm chuyến gần bạn
+              </Link>
               <a
                 className="sh-btn sh-btn-secondary sh-btn-lg"
                 href="https://github.com/xuanvuong1702/sharee/releases/latest"
