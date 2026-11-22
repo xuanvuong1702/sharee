@@ -35,6 +35,23 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
   const [note, setNote] = useState("");
   const dropoffRef = useRef<HTMLInputElement>(null);
 
+  function fallbackPickup(reason: string) {
+    let place: TripPlace = {
+      label: "Hà Nội (mặc định)",
+      fullName: "Chạm bản đồ để chọn đúng vị trí của bạn",
+      lat: 21.0278, lng: 105.8342,
+    };
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      const saved = raw ? JSON.parse(raw) as TripPlace[] : [];
+      if (saved.length > 0) place = saved[0];
+    } catch { /* ignore */ }
+    onChange("pickup", place);
+    setPickupQuery(place.label);
+    setActive("dropoff");
+    setNote(reason);
+  }
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(RECENT_KEY);
@@ -59,12 +76,12 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
         setPickupQuery(place.label);
         setActive("dropoff");
         setNote("GPS cần HTTPS, nên điểm đón đang được ước tính theo IP. Chạm bản đồ nếu chưa đúng.");
-      }).catch(() => setNote(
-        "GPS chỉ hoạt động trên HTTPS. Hãy chọn điểm đón trên bản đồ hoặc tìm địa chỉ."));
+      }).catch(() => fallbackPickup(
+        "GPS chỉ hoạt động trên HTTPS. Đang dùng Hà Nội/địa điểm gần đây; chạm bản đồ để đổi."));
       return;
     }
     if (!navigator.geolocation) {
-      setNote("Trình duyệt không hỗ trợ định vị. Hãy chọn điểm đón trên bản đồ.");
+      fallbackPickup("Trình duyệt không hỗ trợ định vị. Đang dùng Hà Nội/địa điểm gần đây.");
       return;
     }
     setLocating(true);
@@ -93,7 +110,7 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
       setTimeout(() => dropoffRef.current?.focus(), 150);
     }, () => {
       setLocating(false);
-      setNote("Không lấy được GPS. Bạn có thể tìm địa chỉ hoặc chạm bản đồ.");
+      fallbackPickup("Không lấy được GPS. Đang dùng Hà Nội/địa điểm gần đây; chạm bản đồ để đổi.");
     }, { enableHighAccuracy: true, timeout: 10000 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoLocate]);
