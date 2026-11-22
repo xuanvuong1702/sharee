@@ -13,6 +13,7 @@ type Props = {
   onChange: (kind: Kind, place: TripPlace | null) => void;
   autoLocate?: boolean;
   compact?: boolean;
+  inlineMap?: boolean;
 };
 
 const RECENT_KEY = "sharee.web.recentPlaces";
@@ -25,8 +26,11 @@ const distanceKm = (a: TripPlace, b: TripPlace) => {
   return 2 * r * Math.asin(Math.sqrt(h));
 };
 
-export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, compact = false }: Props) {
+export function LocationFields({
+  pickup, dropoff, onChange, autoLocate = true, compact = false, inlineMap = false,
+}: Props) {
   const [active, setActive] = useState<Kind>(pickup ? "dropoff" : "pickup");
+  const [mapOpen, setMapOpen] = useState(false);
   const [pickupQuery, setPickupQuery] = useState(pickup?.label ?? "");
   const [dropoffQuery, setDropoffQuery] = useState(dropoff?.label ?? "");
   const [suggestions, setSuggestions] = useState<TripPlace[]>([]);
@@ -155,6 +159,7 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
     remember(place);
     setSuggestions([]);
     setNote("");
+    if (kind === "dropoff" && mapOpen) setMapOpen(false);
   }
 
   function edit(kind: Kind, value: string) {
@@ -255,6 +260,7 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
       )}
       <div className="location-actions">
         <button type="button" onClick={useCurrent}>⌖ Vị trí của tôi</button>
+        <button type="button" onClick={() => setMapOpen(true)}>▦ Chọn trên bản đồ</button>
         {recent.length > 0 && recent.slice(0, 3).map((place) => (
           <button type="button" key={`${place.lat}-${place.lng}`}
             className="recent-chip" onClick={() => choose(active, place)}>
@@ -263,15 +269,41 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
         ))}
       </div>
       {note && <p className="location-note">{note}</p>}
-      <MapPicker
-        pickup={pickup}
-        dropoff={dropoff}
-        active={active}
-        onActiveChange={setActive}
-        onChange={(kind, place) => choose(kind, place)}
-        showActions={false}
-        height={compact ? 210 : 280}
-      />
+      {inlineMap && (
+        <MapPicker
+          pickup={pickup}
+          dropoff={dropoff}
+          active={active}
+          onActiveChange={setActive}
+          onChange={(kind, place) => choose(kind, place)}
+          showActions={false}
+          height={compact ? 210 : 280}
+        />
+      )}
+      {mapOpen && (
+        <div className="map-modal" role="dialog" aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget) setMapOpen(false); }}>
+          <div className="map-modal-card">
+            <div className="map-modal-head">
+              <strong>Chọn {active === "pickup" ? "điểm đón" : "điểm đến"} trên bản đồ</strong>
+              <button type="button" onClick={() => setMapOpen(false)} aria-label="Đóng">×</button>
+            </div>
+            <MapPicker
+              pickup={pickup}
+              dropoff={dropoff}
+              active={active}
+              onActiveChange={setActive}
+              onChange={(kind, place) => choose(kind, place)}
+              showActions
+              height={420}
+            />
+            <div className="map-modal-foot">
+              <button type="button" className="sh-btn sh-btn-primary sh-btn-md"
+                onClick={() => setMapOpen(false)}>Xong</button>
+            </div>
+          </div>
+        </div>
+      )}
       {routeLabel && <p className="location-route">Tuyến ước tính: {routeLabel}</p>}
     </div>
   );

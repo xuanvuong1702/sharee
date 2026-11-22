@@ -40,6 +40,7 @@ export default function NearbyPage() {
           pickup={pickup}
           dropoff={dropoff}
           onChange={(kind, place) => kind === "pickup" ? setPickup(place) : setDropoff(place)}
+          inlineMap
         />
         <div className="search-row">
           <label className="sh-field"><span>Ngày đi</span>
