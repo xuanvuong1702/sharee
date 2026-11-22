@@ -33,7 +33,7 @@ export function SearchBox({ compact = false }: { compact?: boolean }) {
     <Card className={compact ? "search-card search-card-compact" : "search-card"}>
       <div className="search-card-head">
         <h2>Tìm chuyến</h2>
-        <p>Điểm đón tự lấy vị trí hiện tại · chọn điểm đến trên bản đồ</p>
+        <p>Dùng vị trí hiện tại hoặc chọn điểm đón trên bản đồ, sau đó chọn điểm đến.</p>
       </div>
       <form onSubmit={submit} className="search-form">
         <LocationFields

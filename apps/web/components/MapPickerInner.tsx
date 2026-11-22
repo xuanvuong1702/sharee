@@ -30,9 +30,11 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
   return null;
 }
 
-function Recenter({ center }: { center: [number, number] }) {
+function Recenter({ lat, lng }: { lat?: number; lng?: number }) {
   const map = useMap();
-  useEffect(() => { map.setView(center, 14); }, [center, map]);
+  useEffect(() => {
+    if (lat != null && lng != null) map.setView([lat, lng], 14);
+  }, [lat, lng, map]);
   return null;
 }
 
@@ -110,7 +112,7 @@ export default function MapPickerInner({
         {pickup && <Marker position={[pickup.lat, pickup.lng]} icon={icon("#0f9f8f")} />}
         {dropoff && <Marker position={[dropoff.lat, dropoff.lng]} icon={icon("#f59e0b")} />}
         <ClickHandler onPick={pick} />
-        <Recenter center={center} />
+        <Recenter lat={pickup?.lat ?? dropoff?.lat} lng={pickup?.lng ?? dropoff?.lng} />
       </MapContainer>
       <p className="map-picker-hint">
         {busy ? "Đang lấy địa chỉ..." : `Chạm bản đồ để chọn ${active === "pickup" ? "điểm đón" : "điểm đến"}`}
