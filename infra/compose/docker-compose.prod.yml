@@ -92,6 +92,7 @@ services:
       ReverseProxy__KnownNetworks__1: 127.0.0.1/32
       Storage__VerificationRoot: /data/verifications
       Storage__AppealRoot: /data/appeals
+      ObjectStorage__LocalRoot: /data
     volumes:
       - ${FCM_CREDENTIALS_FILE:?FCM_CREDENTIALS_FILE is required}:/run/secrets/firebase.json:ro
       - sharee-prod-verification:/data/verifications

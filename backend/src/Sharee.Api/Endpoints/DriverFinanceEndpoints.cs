@@ -32,7 +32,7 @@ public static class DriverFinanceEndpoints
                 """, new { driverId });
             var pending = await conn.ExecuteScalarAsync<long>("""
                 select coalesce(sum(amount), 0) from driver_withdrawals
-                where driver_id = @driverId and status in ('pending','approved')
+                where driver_id = @driverId and status in ('pending','approved','processing')
                 """, new { driverId });
             var rows = await conn.QueryAsync<dynamic>("""
                 select id, amount, bank_name, account_number, status, provider_ref, note,
@@ -97,7 +97,7 @@ public static class DriverFinanceEndpoints
                 """, new { driverId }, tx);
             var pending = await conn.ExecuteScalarAsync<long>("""
                 select coalesce(sum(amount), 0) from driver_withdrawals
-                where driver_id = @driverId and status in ('pending','approved')
+                where driver_id = @driverId and status in ('pending','approved','processing')
                 """, new { driverId }, tx);
             if (request.Amount > balance - pending)
             {
@@ -181,7 +181,7 @@ public static class DriverFinanceEndpoints
             await using (var tx = await conn.BeginTransactionAsync(ct))
             {
                 var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-                    select amount, status, approved_by, idempotency_key
+                    select driver_id, amount, status, approved_by, idempotency_key
                     from driver_withdrawals where id = @id for update
                     """, new { id }, tx);
                 if (row is null) { await tx.RollbackAsync(ct); return Results.NotFound(); }
@@ -199,6 +199,30 @@ public static class DriverFinanceEndpoints
                 }
                 amount = (int)row.amount;
                 approvedBy = row.approved_by is null ? null : (Guid)row.approved_by;
+                // Re-check available balance while holding the withdrawal row.
+                await conn.ExecuteAsync(
+                    "select pg_advisory_xact_lock(hashtext(@driverId::text))",
+                    new { driverId = (Guid)row.driver_id }, tx);
+                var balance = await conn.ExecuteScalarAsync<long>("""
+                    select coalesce(sum(case when e.direction = 'C' then e.amount else -e.amount end), 0)
+                    from ledger_entries e join ledger_transactions t on t.id = e.txn_id
+                    where e.account = 'driver_payable'
+                      and ((t.ref_type = 'booking' and exists (
+                            select 1 from bookings b join trips tr on tr.id = b.trip_id
+                            where b.id = t.ref_id and tr.driver_id = @driverId))
+                        or (t.ref_type = 'withdrawal' and t.ref_id in (
+                            select id from driver_withdrawals where driver_id = @driverId)))
+                    """, new { driverId = (Guid)row.driver_id }, tx);
+                var pendingTotal = await conn.ExecuteScalarAsync<long>("""
+                    select coalesce(sum(amount), 0) from driver_withdrawals
+                    where driver_id = @driverId
+                      and status in ('pending','approved','processing')
+                    """, new { driverId = (Guid)row.driver_id }, tx);
+                if (balance - pendingTotal < 0)
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.Conflict(new { error = "Số dư ví không đủ để chi lệnh này." });
+                }
                 if (amount >= dualApprovalAbove && approvedBy == adminId)
                 {
                     await tx.RollbackAsync(ct);

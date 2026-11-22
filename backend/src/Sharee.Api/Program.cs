@@ -156,6 +156,14 @@ if (isProduction && config.GetValue("Auth:ExposeOtp", false) && !demoMode)
     throw new InvalidOperationException("Auth:ExposeOtp is not allowed in production");
 if (isProduction && (config["Auth:OtpPepper"]?.Length ?? 0) < 16 && !demoMode)
     throw new InvalidOperationException("Auth:OtpPepper must be configured in production");
+if (isProduction)
+{
+    RequireSecret(jwt.Key, "Jwt:Key", 32);
+    RequireSecret(config["Auth:OtpPepper"], "Auth:OtpPepper", 16);
+    if (connectionString.Contains("replace-with", StringComparison.OrdinalIgnoreCase)
+        || connectionString.Contains("change-me", StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("Production database credentials still contain placeholders");
+}
 builder.Services.AddSingleton(jwt);
 
 builder.Services.AddRateLimiter(options =>
@@ -299,7 +307,6 @@ app.Use(async (context, next) =>
 if (isProduction) app.UseHsts();
 app.UseResponseCompression();
 app.UseCors();
-app.UseRateLimiter();
 
 var swaggerEnabled = !isProduction || config.GetValue("Swagger:Enabled", false);
 if (swaggerEnabled)
@@ -313,6 +320,9 @@ if (swaggerEnabled)
 }
 
 app.UseAuthentication();
+// Authentication must run before the limiter so user-partitioned policies can
+// see ctx.User; IP remains the fallback for anonymous requests.
+app.UseRateLimiter();
 app.UseAuthorization();
 app.Use(async (context, next) =>
 {
@@ -400,5 +410,15 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.Run();
+
+static void RequireSecret(string? value, string name, int minLength)
+{
+    if (string.IsNullOrWhiteSpace(value) || value.Length < minLength)
+        throw new InvalidOperationException($"{name} must be at least {minLength} characters in production");
+    var lower = value.ToLowerInvariant();
+    if (lower.Contains("replace-with") || lower.Contains("change-me")
+        || lower.Contains("change-in-production") || lower.Contains("example"))
+        throw new InvalidOperationException($"{name} still contains a placeholder value");
+}
 
 public partial class Program;

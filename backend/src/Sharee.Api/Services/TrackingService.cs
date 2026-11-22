@@ -149,12 +149,14 @@ public sealed class TrackingService(Db db)
             where l.trip_id = @tripId and l.role = 'driver'
             order by l.updated_at desc limit 1
             """, new { tripId });
-        var passengerRows = (await conn.QueryAsync<dynamic>("""
-            select l.user_id, l.role, l.lat, l.lng, l.heading, l.speed, l.updated_at, u.full_name
-            from trip_locations l join users u on u.id = l.user_id
-            where l.trip_id = @tripId and l.role = 'passenger'
-            order by l.updated_at desc
-            """, new { tripId })).ToList();
+        var passengerRows = isDriver
+            ? (await conn.QueryAsync<dynamic>("""
+                select l.user_id, l.role, l.lat, l.lng, l.heading, l.speed, l.updated_at, u.full_name
+                from trip_locations l join users u on u.id = l.user_id
+                where l.trip_id = @tripId and l.role = 'passenger'
+                order by l.updated_at desc
+                """, new { tripId })).ToList()
+            : [];
 
         LivePositionDto? driver = driverRow is null ? null : ToPosition(driverRow);
         var passengers = new List<LivePositionDto>();

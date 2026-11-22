@@ -4,7 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <application>
+    <application android:usesCleartextTraffic="true">
         <!-- API 37 emulators can crash with Impeller + SwiftShader. Keep the
              debug emulator on the stable Skia renderer; release is unchanged. -->
         <meta-data

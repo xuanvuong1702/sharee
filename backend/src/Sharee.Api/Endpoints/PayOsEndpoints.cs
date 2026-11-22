@@ -62,6 +62,8 @@ public static class PayOsEndpoints
             {
                 loggerFactory.CreateLogger("PayOS").LogWarning(
                     "PayOS webhook could not be settled for order {OrderCode}", webhook.OrderCode);
+                // Let PayOS retry: acknowledging an unsettled payment loses money.
+                return Results.Json(new { success = false }, statusCode: 503);
             }
             return Results.Ok(new { success = true });
         }).WithTags("Payments");

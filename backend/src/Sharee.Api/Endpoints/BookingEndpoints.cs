@@ -211,7 +211,7 @@ public static class BookingEndpoints
 
         group.MapPost("/{id:guid}/cancel", async (
             Guid id, HttpContext http, Db db, LedgerService ledger, ReadService read,
-            CancellationToken ct) =>
+            PayOsService payos, CancellationToken ct) =>
         {
             var userId = http.User.GetUserId();
             var booking = await read.GetBookingAsync(id, ct);
@@ -228,6 +228,21 @@ public static class BookingEndpoints
                 : 0;
 
             await using var conn = await db.OpenAsync(ct);
+            if (booking.Payment?.Status == "succeeded" && refundAmount > 0
+                && booking.Payment.Provider == "payos" && payos.Enabled)
+            {
+                var providerRef = await conn.ExecuteScalarAsync<string?>(
+                    "select provider_ref from payments where booking_id = @id and status = 'succeeded'",
+                    new { id });
+                if (!string.IsNullOrWhiteSpace(providerRef))
+                {
+                    var refund = await payos.RefundAsync(
+                        providerRef, refundAmount, driverCancelled ? "driver_cancel" : "passenger_cancel", ct);
+                    if (!refund.Ok)
+                        return Results.Json(new { error = refund.Error ?? "Hoàn tiền PayOS thất bại" },
+                            statusCode: StatusCodes.Status502BadGateway);
+                }
+            }
             await using var tx = await conn.BeginTransactionAsync(ct);
             var mustHold = await conn.ExecuteScalarAsync<bool>("""
                 select exists(select 1 from appeals
@@ -263,18 +278,18 @@ public static class BookingEndpoints
                 where id = @tripId
                 """, new { tripId = booking.TripId, seats = booking.Seats }, tx);
 
-            if (refundAmount > 0)
+            var paid = booking.Payment?.Status == "succeeded";
+            if (paid && paymentMethod != "cash")
             {
-                await conn.ExecuteAsync(
-                    "update payments set status = 'refunded' where booking_id = @id", new { id }, tx);
-                if (paymentMethod != "cash")
+                if (refundAmount > 0)
+                {
+                    await conn.ExecuteAsync(
+                        "update payments set status = 'refunded' where booking_id = @id", new { id }, tx);
                     await ledger.RecordAsync(conn, tx, "refund", "booking", id,
                         ("escrow", 'D', refundAmount),
                         ("customer_receivable", 'C', refundAmount));
-            }
+                }
 
-            if (paymentMethod != "cash")
-            {
                 var remainder = booking.PriceTotal - refundAmount;
                 if (remainder > 0)
                     await ledger.RecordAsync(conn, tx, "fee", "booking", id,
@@ -291,13 +306,14 @@ public static class BookingEndpoints
                     status = refundAmount >= booking.PriceTotal ? "refunded" : "partial_refunded"
                 }, tx);
             }
-            else
+            else if (paymentMethod == "cash")
             {
                 await conn.ExecuteAsync("""
                     update escrow_holds set status = 'released', released_at = now(), updated_at = now()
                     where booking_id = @id and status <> 'released'
                     """, new { id }, tx);
             }
+            // Unpaid bookings: no ledger/refund/escrow rows may be fabricated.
 
             await Notifier.NotifyAsync(conn, tx,
                 driverCancelled ? booking.Passenger.Id : booking.Driver.Id,

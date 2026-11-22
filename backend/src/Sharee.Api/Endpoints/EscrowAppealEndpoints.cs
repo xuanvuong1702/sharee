@@ -274,7 +274,7 @@ public static class EscrowAppealEndpoints
 
         admin.MapPost("/{appealId:guid}/resolve", async (
             Guid appealId, ResolveAppealRequest request, HttpContext http, Db db,
-            LedgerService ledger, CancellationToken ct) =>
+            LedgerService ledger, PayOsService payos, CancellationToken ct) =>
         {
             var outcome = (request.Outcome ?? "").Trim().ToLowerInvariant();
             var note = request.Note?.Trim() ?? "";
@@ -340,9 +340,24 @@ public static class EscrowAppealEndpoints
                         error = "Tiền đã được giải ngân; không thể hoàn tự động. Cần xử lý thủ công."
                     });
                 }
+                var paymentRow = await conn.QuerySingleOrDefaultAsync<dynamic>("""
+                    select provider, provider_ref, status from payments where booking_id = @bookingId
+                    """, new { bookingId = appeal.BookingId }, tx);
                 await conn.ExecuteAsync(
                     "update payments set status = 'refunded' where booking_id = @bookingId",
                     new { bookingId = appeal.BookingId }, tx);
+                if (paymentRow is not null && (string)paymentRow.provider == "payos"
+                    && (string)paymentRow.status == "succeeded" && payos.Enabled)
+                {
+                    var refund = await payos.RefundAsync((string)paymentRow.provider_ref, amount,
+                        "appeal_refund", ct);
+                    if (!refund.Ok)
+                    {
+                        await tx.RollbackAsync(ct);
+                        return Results.Json(new { error = refund.Error ?? "Hoàn tiền PayOS thất bại" },
+                            statusCode: StatusCodes.Status502BadGateway);
+                    }
+                }
                 var alreadyRefunded = await conn.ExecuteScalarAsync<bool>("""
                     select exists(select 1 from ledger_transactions
                                   where type = 'refund' and ref_type = 'booking' and ref_id = @bookingId)

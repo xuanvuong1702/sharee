@@ -31,6 +31,12 @@ public static class SensitiveDataProtector
                 "sharee-dev-data-key-change-in-production")))
             throw new InvalidOperationException(
                 "SECURITY_DATA_KEY must not use the public development default");
+        var raw = Environment.GetEnvironmentVariable("SECURITY_DATA_KEY") ?? "";
+        var lower = raw.ToLowerInvariant();
+        if (lower.Contains("replace-with") || lower.Contains("change-me")
+            || lower.Contains("example"))
+            throw new InvalidOperationException(
+                "SECURITY_DATA_KEY still contains a placeholder value");
     }
 
     public static string? Protect(string? value)
