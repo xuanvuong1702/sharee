@@ -168,7 +168,7 @@ public static class UserEndpoints
             foreach (var v in validations)
             {
                 recent.Add(new EarningItemDto("daily", (string)v.stop_name,
-                    (int)(long)v.amount_minor, "EUR", Time.ToDto((DateTime)v.validated_at)));
+                    (int)(long)v.amount_minor, "VND", Time.ToDto((DateTime)v.validated_at)));
             }
 
             var tips = await conn.QueryAsync<dynamic>("""

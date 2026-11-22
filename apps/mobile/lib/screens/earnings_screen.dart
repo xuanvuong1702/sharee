@@ -105,7 +105,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                 const SizedBox(width: 7),
                                 Expanded(
                                   child: Text(
-                                    'Daily: ${(data.dailyEarningsMinor / 100).toStringAsFixed(2)} € · ${data.dailyValidations} lượt',
+                                    'Daily: ${money(data.dailyEarningsMinor)} · ${data.dailyValidations} lượt',
                                     style: const TextStyle(
                                         color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                                   ),
@@ -170,8 +170,8 @@ class _EarningsScreenState extends State<EarningsScreen> {
                             style: const TextStyle(fontSize: 10.5, color: AppTheme.muted),
                           ),
                           trailing: Text(
-                            data.recent[i].currency == 'EUR'
-                                ? '${(data.recent[i].amount / 100).toStringAsFixed(2)} €'
+                            data.recent[i].currency == 'VND'
+                                ? money(data.recent[i].amount)
                                 : money(data.recent[i].amount),
                             style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
                           ),
@@ -181,7 +181,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                   ),
                 ),
               const SizedBox(height: 12),
-              const Text('Thu nhập chuyến đi được tính từ các booking đã hoàn thành. Daily hiển thị theo euro.',
+              const Text('Thu nhập chuyến đi được tính từ các booking đã hoàn thành. Daily hiển thị theo VND.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 10, color: AppTheme.muted)),
             ],

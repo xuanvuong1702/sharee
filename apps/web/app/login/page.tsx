@@ -10,7 +10,7 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { api, signIn } = useAuth();
-  const [phone, setPhone] = useState("+84912345678");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);

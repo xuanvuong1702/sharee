@@ -268,9 +268,9 @@ function Dashboard({ token, onNavigate }) {
           <h3>Sức khỏe vận hành</h3>
           <div className="health-list">
             <div><span className="health-dot ok" /><b>API</b><small>Đang hoạt động</small></div>
-            <div><span className="health-dot ok" /><b>Thanh toán</b><small>Mock · cho phép thử nghiệm</small></div>
+            <div><span className="health-dot ok" /><b>Thanh toán</b><small>Theo cấu hình máy chủ</small></div>
             <div><span className="health-dot ok" /><b>Escrow</b><small>{money(data?.escrowHeld)} đang được bảo vệ</small></div>
-            <div><span className="health-dot" /><b>Đối soát</b><small>Chạy tự động 02:00 hằng ngày</small></div>
+            <div><span className="health-dot" /><b>Đối soát</b><small>Thủ công · tab Hoàn tiền</small></div>
           </div>
           <div className="dashboard-note">
             <BadgeText>{data?.bookings ?? 0} booking · {data?.trips ?? 0} chuyến · {data?.dailyTickets ?? 0} vé Daily 24h</BadgeText>

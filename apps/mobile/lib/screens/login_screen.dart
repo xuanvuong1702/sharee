@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phone = TextEditingController(text: '+84912345678');
+  final _phone = TextEditingController();
   final _otp = TextEditingController();
   bool _otpSent = false;
   bool _busy = false;

@@ -228,6 +228,18 @@ public static class BookingEndpoints
                 : 0;
 
             await using var conn = await db.OpenAsync(ct);
+            // Check locks before the irreversible provider refund.
+            var preHold = await conn.ExecuteScalarAsync<bool>("""
+                select exists(select 1 from appeals
+                              where booking_id = @id and status in ('open','investigating'))
+                    or exists(select 1 from escrow_holds
+                              where booking_id = @id and status = 'released')
+                """, new { id });
+            if (preHold)
+                return Results.Conflict(new
+                {
+                    error = "Booking đang có khiếu nại mở hoặc tiền đã được giải ngân, không thể huỷ."
+                });
             if (booking.Payment?.Status == "succeeded" && refundAmount > 0
                 && booking.Payment.Provider == "payos" && payos.Enabled)
             {
