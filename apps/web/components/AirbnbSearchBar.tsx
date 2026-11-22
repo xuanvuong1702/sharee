@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LocationFields, type TripPlace } from "./LocationFields";
-import { dateLabel, nextDate } from "@/lib/sharee";
+import { nextDate } from "@/lib/sharee";
 
 type Panel = "places" | "date" | "seats" | null;
 
@@ -42,7 +42,11 @@ export function AirbnbSearchBar() {
     ? `${pickup.label.split(",")[0]} → ${dropoff.label.split(",")[0]}`
     : pickup
       ? `Từ ${pickup.label.split(",")[0]}`
-      : "Điểm đón, điểm đến";
+      : "Chọn điểm";
+
+  const shortDate = new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit", month: "2-digit",
+  }).format(new Date(`${date}T00:00:00+07:00`));
 
   const search = () => {
     if (!pickup || !dropoff) { setPanel("places"); return; }
@@ -70,7 +74,7 @@ export function AirbnbSearchBar() {
           className={`airbnb-seg date ${panel === "date" ? "active" : ""}`}
           onClick={() => setPanel(panel === "date" ? null : "date")}>
           <span className="airbnb-label">Khi nào</span>
-          <span className="airbnb-value">{dateLabel(date)}</span>
+          <span className="airbnb-value">{shortDate}</span>
         </button>
         <span className="airbnb-divider" />
         <button type="button"
@@ -81,7 +85,7 @@ export function AirbnbSearchBar() {
         </button>
         <button type="button" className="airbnb-search-btn"
           onClick={search} aria-label="Tìm chuyến">
-          <span aria-hidden="true">⌕</span>
+          <span aria-hidden="true">→</span>
         </button>
       </div>
 
