@@ -397,3 +397,39 @@ h1, h2, h3, p { margin-top: 0; }
 .search-card{color:var(--sh-ink,#102a43)}.search-card .search-card-head h2{color:var(--sh-ink,#102a43)}
 
 .map-modal-card{color:#102a43}.map-modal-head strong{color:#102a43}
+
+/* Airbnb-style search pill */
+.airbnb-search{position:relative;width:100%;max-width:680px;color:#102a43;z-index:30}
+.airbnb-pill{display:flex;align-items:center;gap:2px;background:#fff;border:1px solid #e6ebf1;border-radius:999px;padding:6px;box-shadow:0 18px 48px rgba(0,0,0,.22);min-height:66px}
+.airbnb-seg{border:0;background:transparent;border-radius:999px;padding:9px 16px;min-width:0;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px;flex:1 1 auto;transition:background .15s}
+.airbnb-seg:hover,.airbnb-seg.active{background:#f2f5f7}
+.airbnb-seg.places{flex:1.5 1 0}
+.airbnb-seg.date,.airbnb-seg.seats{flex:.85 1 0}
+.airbnb-label{font-size:11px;font-weight:800;color:#102a43;line-height:1.1}
+.airbnb-value{font-size:12.5px;color:#5c6b7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.airbnb-seg.active .airbnb-value{color:#102a43}
+.airbnb-divider{width:1px;height:28px;background:#e6ebf1;flex:none}
+.airbnb-search-btn{width:46px;height:46px;border:0;border-radius:50%;background:#0f9f8f;color:#fff;font-size:24px;display:grid;place-items:center;cursor:pointer;flex:none;margin-left:4px}
+.airbnb-search-btn:hover{background:#0b8578}
+.airbnb-panel{position:absolute;top:calc(100% + 10px);right:0;width:min(560px,calc(100vw - 32px));max-height:min(76vh,620px);overflow:auto;background:#fff;border:1px solid #e6ebf1;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.24);padding:18px;z-index:60;color:#102a43}
+.airbnb-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.airbnb-panel-head strong{font-size:17px;letter-spacing:-.3px}
+.airbnb-panel-head button{border:0;background:#f2f5f7;width:32px;height:32px;border-radius:50%;font-size:20px;cursor:pointer;color:#102a43}
+.airbnb-panel-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #edf1f6;margin-top:12px;padding-top:12px}
+.airbnb-clear{border:0;background:transparent;text-decoration:underline;font-size:12px;color:#4b5b6b;cursor:pointer;padding:6px}
+.airbnb-done{border:0;background:#102a43;color:#fff;border-radius:10px;padding:9px 18px;font-weight:800;font-size:13px;cursor:pointer}
+.airbnb-date-quick{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.airbnb-date-quick button{border:1px solid #dce5ee;background:#fff;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;color:#102a43}
+.airbnb-date-quick button.active{background:#102a43;color:#fff;border-color:#102a43}
+.airbnb-date-input{display:grid;gap:5px;font-size:11px;font-weight:800;color:#5c6b7a}
+.airbnb-date-input input{border:1px solid #dce5ee;border-radius:12px;padding:11px 12px;font-size:14px;color:#102a43}
+.airbnb-muted{font-size:12px;color:#5c6b7a;margin:2px 0 12px}
+.airbnb-stepper{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+.airbnb-stepper strong{display:block;font-size:14px}
+.airbnb-stepper small{display:block;font-size:11px;color:#71808f}
+.airbnb-stepper-controls{display:flex;align-items:center;gap:12px}
+.airbnb-stepper-controls button{width:34px;height:34px;border-radius:50%;border:1px solid #cfd9e3;background:#fff;font-size:18px;cursor:pointer;color:#102a43}
+.airbnb-stepper-controls button:disabled{opacity:.35;cursor:not-allowed}
+.airbnb-stepper-controls span{min-width:20px;text-align:center;font-weight:800}
+@media (max-width:1000px){.hero-grid>.airbnb-search{width:100%;max-width:none;order:0}.hero-grid{display:flex;flex-direction:column-reverse;gap:22px}.hero-grid>.search-card{width:100%}}
+@media (max-width:620px){.airbnb-pill{min-height:60px;padding:5px}.airbnb-seg{padding:8px 10px}.airbnb-label{font-size:10px}.airbnb-value{font-size:11px}.airbnb-search-btn{width:42px;height:42px}.airbnb-divider{height:24px}.airbnb-panel{left:0;right:auto;width:calc(100vw - 28px);padding:14px;border-radius:20px}}
