@@ -79,7 +79,6 @@ public static class SensitiveDataProtector
     private static string DecryptLegacy(string payload)
     {
         var key = LegacyKey.Length > 0 ? LegacyKey : SHA256.HashData(Master);
-        using var hmac = new HMACSHA256(key);
         var packed = Convert.FromBase64String(payload);
         if (packed.Length < 29) throw new CryptographicException("Ciphertext too short");
         var nonce = packed[..12];
@@ -109,13 +108,8 @@ public static class SensitiveDataProtector
     {
         var raw = Environment.GetEnvironmentVariable("SECURITY_DATA_KEY_LEGACY");
         if (string.IsNullOrWhiteSpace(raw)) return [];
-        try
-        {
-            var bytes = Convert.FromBase64String(raw);
-            if (bytes.Length >= 16) return bytes;
-        }
-        catch (FormatException) { }
-        return Encoding.UTF8.GetBytes(raw);
+        // v1 used SHA-256(raw) directly as the AES key.
+        return SHA256.HashData(Encoding.UTF8.GetBytes(raw));
     }
 
     private static byte[] Derive(byte[] master, string info) =>
