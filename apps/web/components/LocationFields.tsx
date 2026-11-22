@@ -44,7 +44,29 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
 
   useEffect(() => {
     if (!autoLocate || pickup) return;
-    if (!navigator.geolocation) return;
+    if (typeof window === "undefined" || !window.isSecureContext) {
+      // HTTP deployment: browser geolocation is blocked. Use city-level IP
+      // fallback so "near you" still starts somewhere useful, clearly labelled.
+      fetch(`${API_URL}/api/geo/ip`).then(async (res) => {
+        if (!res.ok) throw new Error("no ip location");
+        const data = await res.json();
+        const place: TripPlace = {
+          label: `${data.label || "Khu vực của bạn"} (ước tính)`,
+          fullName: data.fullName || data.label || "Vị trí ước tính theo IP",
+          lat: data.lat, lng: data.lng,
+        };
+        onChange("pickup", place);
+        setPickupQuery(place.label);
+        setActive("dropoff");
+        setNote("GPS cần HTTPS, nên điểm đón đang được ước tính theo IP. Chạm bản đồ nếu chưa đúng.");
+      }).catch(() => setNote(
+        "GPS chỉ hoạt động trên HTTPS. Hãy chọn điểm đón trên bản đồ hoặc tìm địa chỉ."));
+      return;
+    }
+    if (!navigator.geolocation) {
+      setNote("Trình duyệt không hỗ trợ định vị. Hãy chọn điểm đón trên bản đồ.");
+      return;
+    }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude: lat, longitude: lng } = pos.coords;
@@ -126,6 +148,20 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
   }
 
   function useCurrent() {
+    if (typeof window === "undefined" || !window.isSecureContext) {
+      fetch(`${API_URL}/api/geo/ip`).then(async (res) => {
+        if (!res.ok) throw new Error("no ip location");
+        const data = await res.json();
+        const place: TripPlace = {
+          label: `${data.label || "Khu vực của bạn"} (ước tính)`,
+          fullName: data.fullName || "Vị trí ước tính theo IP",
+          lat: data.lat, lng: data.lng,
+        };
+        choose("pickup", place);
+        setNote("Đang dùng vị trí ước tính theo IP. Chạm bản đồ nếu chưa đúng.");
+      }).catch(() => setNote("GPS chỉ hoạt động trên HTTPS. Bạn có thể chọn điểm đón trên bản đồ."));
+      return;
+    }
     if (!navigator.geolocation) { setNote("Trình duyệt không hỗ trợ định vị."); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(async (pos) => {

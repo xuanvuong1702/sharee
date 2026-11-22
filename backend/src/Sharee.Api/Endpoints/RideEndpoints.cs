@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
 using Sharee.Api.Contracts;
 using Sharee.Api.Infrastructure;
@@ -36,6 +37,49 @@ public static class RideEndpoints
             if (!ValidPoint(lat, lng)) return Results.BadRequest(new { message = "Toạ độ không hợp lệ." });
             return Results.Ok(await geo.ReverseAsync(lat, lng));
         }).RequireAuthorization().WithTags("Rides");
+
+        // City-level fallback for browsers where geolocation is blocked on HTTP.
+        // This is deliberately approximate and never used as a precise pin.
+        app.MapGet("/api/geo/ip", async (
+            HttpContext http, IHttpClientFactory factory, IMemoryCache cache) =>
+        {
+            var ip = http.Connection.RemoteIpAddress;
+            if (ip is null || ip.IsIPv4MappedToIPv6) ip = ip?.MapToIPv4();
+            if (ip is null || System.Net.IPAddress.IsLoopback(ip) || IsPrivate(ip))
+                return Results.NotFound(new { message = "Không xác định được IP công cộng." });
+            var key = $"geoip:{ip}";
+            if (cache.TryGetValue(key, out object? cached)) return Results.Ok(cached);
+            try
+            {
+                var client = factory.CreateClient("geo");
+                using var response = await client.GetAsync($"https://ipwho.is/{ip}");
+                if (!response.IsSuccessStatusCode) return Results.NotFound();
+                using var doc = System.Text.Json.JsonDocument.Parse(
+                    await response.Content.ReadAsStringAsync());
+                var root = doc.RootElement;
+                if (!root.TryGetProperty("success", out var success) || !success.GetBoolean())
+                    return Results.NotFound();
+                var result = new
+                {
+                    label = root.TryGetProperty("city", out var city) ? city.GetString() : null,
+                    fullName = string.Join(", ", new[]
+                    {
+                        root.TryGetProperty("city", out var c) ? c.GetString() : null,
+                        root.TryGetProperty("region", out var r) ? r.GetString() : null,
+                        root.TryGetProperty("country", out var co) ? co.GetString() : null
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                    lat = root.GetProperty("latitude").GetDouble(),
+                    lng = root.GetProperty("longitude").GetDouble(),
+                    approximate = true
+                };
+                cache.Set(key, result, TimeSpan.FromHours(6));
+                return Results.Ok(result);
+            }
+            catch
+            {
+                return Results.NotFound();
+            }
+        }).WithTags("Rides");
 
         app.MapGet("/api/drivers/nearby", async (
             double lat, double lng, double? radiusKm, HttpContext http, Db db, CancellationToken ct) =>
@@ -409,6 +453,18 @@ public static class RideEndpoints
 
     private static bool ValidPoint(double lat, double lng)
         => lat is >= -90 and <= 90 && lng is >= -180 and <= 180 && !(lat == 0 && lng == 0);
+
+    private static bool IsPrivate(System.Net.IPAddress ip)
+    {
+        if (System.Net.IPAddress.IsLoopback(ip)) return true;
+        var bytes = ip.GetAddressBytes();
+        return bytes.Length == 4 && (
+            bytes[0] == 10 ||
+            bytes[0] == 127 ||
+            (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) ||
+            (bytes[0] == 192 && bytes[1] == 168) ||
+            (bytes[0] == 169 && bytes[1] == 254));
+    }
 
     private static string CleanLabel(string value)
         => (value ?? "").Trim() is { Length: > 160 } s ? s[..160] : (value ?? "").Trim();
