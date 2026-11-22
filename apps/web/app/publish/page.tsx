@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Field } from "@sharee/ui";
 import { useAuth } from "@/components/AuthProvider";
-import { MapPicker } from "@/components/MapPicker";
+import { LocationFields, type TripPlace } from "@/components/LocationFields";
 import { API_URL } from "@/lib/sharee";
 
-type Place = { label: string; fullName: string; lat: number; lng: number };
+type Place = TripPlace;
 type Vehicle = { id: string; make: string; model: string; plate: string; seats: number };
 
 export default function PublishPage() {
@@ -17,10 +17,6 @@ export default function PublishPage() {
   const [vehicleId, setVehicleId] = useState("");
   const [from, setFrom] = useState<Place | null>(null);
   const [to, setTo] = useState<Place | null>(null);
-  const [fromQuery, setFromQuery] = useState("");
-  const [toQuery, setToQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Place[]>([]);
-  const [active, setActive] = useState<"from" | "to" | null>(null);
   const [departure, setDeparture] = useState(() => {
     const d = new Date(Date.now() + 86400000);
     d.setHours(8, 0, 0, 0);
@@ -41,25 +37,6 @@ export default function PublishPage() {
       })
       .catch(() => setVehicles([]));
   }, [token]);
-
-  useEffect(() => {
-    const query = (active === "from" ? fromQuery : toQuery).trim();
-    if (!active || query.length < 2) { setSuggestions([]); return; }
-    const timer = setTimeout(async () => {
-      const res = await fetch(`${API_URL}/api/geo/search?q=${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSuggestions(Array.isArray(data) ? data : data.items ?? []);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [active, fromQuery, toQuery]);
-
-  const choose = (place: Place) => {
-    if (active === "from") { setFrom(place); setFromQuery(place.label); }
-    else { setTo(place); setToQuery(place.label); }
-    setSuggestions([]); setActive(null);
-  };
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -112,30 +89,11 @@ export default function PublishPage() {
       </div>
       <Card className="search-card">
         <form onSubmit={submit} className="search-form">
-          <label className="sh-field"><span>Điểm đón</span>
-            <input value={fromQuery} placeholder="Số nhà, đường..."
-              onFocus={() => setActive("from")}
-              onChange={(e) => { setFromQuery(e.target.value); setFrom(null); setActive("from"); }} />
-          </label>
-          <label className="sh-field"><span>Điểm đến</span>
-            <input value={toQuery} placeholder="Số nhà, đường..."
-              onFocus={() => setActive("to")}
-              onChange={(e) => { setToQuery(e.target.value); setTo(null); setActive("to"); }} />
-          </label>
-          {active && suggestions.length > 0 && (
-            <div className="search-suggestions">
-              {suggestions.slice(0, 6).map((place) => (
-                <button type="button" key={`${place.lat}-${place.lng}`} onClick={() => choose(place)}>
-                  <strong>{place.label}</strong><small>{place.fullName}</small>
-                </button>
-              ))}
-            </div>
-          )}
-          <MapPicker pickup={from} dropoff={to}
-            onChange={(kind, place) => {
-              if (kind === "pickup") { setFrom(place); setFromQuery(place.label); }
-              else { setTo(place); setToQuery(place.label); }
-            }} />
+          <LocationFields
+            pickup={from}
+            dropoff={to}
+            onChange={(kind, place) => kind === "pickup" ? setFrom(place) : setTo(place)}
+          />
           <label className="sh-field"><span>Xe</span>
             <select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
               {vehicles.map((v) => <option key={v.id} value={v.id}>{v.make} {v.model} · {v.plate}</option>)}
