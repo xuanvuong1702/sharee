@@ -198,7 +198,7 @@ export function LocationFields({ pickup, dropoff, onChange, autoLocate = true, c
             value={pickupQuery}
             onFocus={() => setActive("pickup")}
             onChange={(e) => edit("pickup", e.target.value)}
-            placeholder={locating ? "Đang lấy vị trí..." : "Vị trí hiện tại hoặc tìm địa chỉ"}
+            placeholder={locating ? "Đang lấy vị trí..." : "Chọn điểm đón hoặc dùng vị trí hiện tại"}
             autoComplete="off"
           />
         </label>
