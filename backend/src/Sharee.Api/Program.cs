@@ -23,6 +23,7 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 var isProduction = builder.Environment.IsProduction();
+SensitiveDataProtector.EnsureConfigured(isProduction);
 var demoMode = config.GetValue("Demo:Mode", false);
 
 if (config.GetValue("Logging:Json", false))
@@ -93,7 +94,7 @@ if (!string.IsNullOrWhiteSpace(redisConnection))
     }
 }
 builder.Services.AddSingleton(sp =>
-    new OtpRateGuard(sp.GetService<StackExchange.Redis.IConnectionMultiplexer>()));
+    new OtpRateGuard(config, sp.GetService<StackExchange.Redis.IConnectionMultiplexer>()));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddProblemDetails();
 builder.Services.AddResponseCompression(o => o.EnableForHttps = true);

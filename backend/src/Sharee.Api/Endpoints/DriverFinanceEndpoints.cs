@@ -77,6 +77,11 @@ public static class DriverFinanceEndpoints
                 return Results.Json(new { error = "Hồ sơ tài xế chưa được duyệt." }, statusCode: 403);
 
             await using var tx = await conn.BeginTransactionAsync(ct);
+            // Serialize balance checks for this driver; otherwise two parallel
+            // withdrawal requests both observe the same available balance.
+            await conn.ExecuteAsync(
+                "select pg_advisory_xact_lock(hashtext(@driverId::text))",
+                new { driverId }, tx);
             var balance = await conn.ExecuteScalarAsync<long>("""
                 select coalesce(sum(case when e.direction = 'C' then e.amount else -e.amount end), 0)
                 from ledger_entries e
@@ -151,8 +156,9 @@ public static class DriverFinanceEndpoints
         {
             await using var conn = await db.OpenAsync(ct);
             var affected = await conn.ExecuteAsync("""
-                update driver_withdrawals set status = 'approved', processed_by = @adminId,
-                    processed_at = now() where id = @id and status = 'pending'
+                update driver_withdrawals set status = 'approved', approved_by = @adminId,
+                    processed_by = @adminId, processed_at = now()
+                where id = @id and status = 'pending'
                 """, new { id, adminId = http.User.GetUserId() });
             return affected == 0 ? Results.Conflict(new { error = "Yêu cầu không còn chờ duyệt." })
                 : Results.Ok(new { status = "approved" });
@@ -160,44 +166,106 @@ public static class DriverFinanceEndpoints
 
         admin.MapPost("/{id:guid}/paid", async (
             Guid id, MarkWithdrawalPaidRequest request, HttpContext http, Db db,
-            LedgerService ledger, BankPayoutService bank, CancellationToken ct) =>
+            LedgerService ledger, BankPayoutService bank, IConfiguration config,
+            CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(request.ProviderRef) || request.ProviderRef.Length > 160)
                 return Results.BadRequest(new { error = "Mã giao dịch ngân hàng không hợp lệ." });
+            var adminId = http.User.GetUserId();
+            decimal dualApprovalAbove = config.GetValue("Admin:DualApprovalAbove", 5_000_000m);
+
             await using var conn = await db.OpenAsync(ct);
-            await using var tx = await conn.BeginTransactionAsync(ct);
-            var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-                select driver_id, amount, status, bank_name, account_number, account_name
-                from driver_withdrawals where id = @id for update
-                """, new { id }, tx);
-            if (row is null) { await tx.RollbackAsync(ct); return Results.NotFound(); }
-            if ((string)row.status == "paid") { await tx.RollbackAsync(ct); return Results.Ok(new { status = "paid" }); }
-            if ((string)row.status is not ("pending" or "approved"))
+            Guid? approvedBy;
+            int amount;
+            string idempotencyKey;
+            await using (var tx = await conn.BeginTransactionAsync(ct))
             {
-                await tx.RollbackAsync(ct);
-                return Results.Conflict(new { error = "Yêu cầu không thể thanh toán." });
+                var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
+                    select amount, status, approved_by, idempotency_key
+                    from driver_withdrawals where id = @id for update
+                    """, new { id }, tx);
+                if (row is null) { await tx.RollbackAsync(ct); return Results.NotFound(); }
+                var status = (string)row.status;
+                if (status == "paid") { await tx.RollbackAsync(ct); return Results.Ok(new { status = "paid" }); }
+                if (status == "pending")
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.Conflict(new { error = "Yêu cầu phải được duyệt trước khi chi tiền." });
+                }
+                if (status is not ("approved" or "processing"))
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.Conflict(new { error = "Yêu cầu không thể thanh toán." });
+                }
+                amount = (int)row.amount;
+                approvedBy = row.approved_by is null ? null : (Guid)row.approved_by;
+                if (amount >= dualApprovalAbove && approvedBy == adminId)
+                {
+                    await tx.RollbackAsync(ct);
+                    return Results.Conflict(new
+                    {
+                        error = "Khoản chi lớn phải do người duyệt khác thực hiện (maker-checker)."
+                    });
+                }
+                idempotencyKey = (string?)row.idempotency_key
+                    ?? $"withdrawal-{id:N}-{amount}";
+                // Commit processing BEFORE calling the provider. A crash after
+                // the bank call leaves a visible processing record for retry.
+                await conn.ExecuteAsync("""
+                    update driver_withdrawals
+                    set status = 'processing', processing_started_at = coalesce(processing_started_at, now()),
+                        idempotency_key = @idempotencyKey
+                    where id = @id
+                    """, new { id, idempotencyKey }, tx);
+                await tx.CommitAsync(ct);
             }
-            var amount = (int)row.amount;
-            var providerRef = request.ProviderRef.Trim();
-            var payout = await bank.TransferAsync(id, amount, (string)row.bank_name,
-                SensitiveDataProtector.Unprotect((string)row.account_number)!, (string)row.account_name, ct);
+
+            BankPayoutResult payout;
+            if (bank.Enabled)
+            {
+                var row = await conn.QuerySingleAsync<dynamic>(
+                    "select bank_name, account_number, account_name from driver_withdrawals where id = @id",
+                    new { id });
+                payout = await bank.TransferAsync(id, amount, (string)row.bank_name,
+                    SensitiveDataProtector.Unprotect((string)row.account_number)!,
+                    (string)row.account_name, idempotencyKey, ct);
+            }
+            else
+            {
+                payout = new BankPayoutResult(true, null, null);
+            }
+
             if (bank.Enabled && !payout.Ok)
             {
-                await tx.RollbackAsync(ct);
+                await conn.ExecuteAsync("""
+                    update driver_withdrawals
+                    set status = 'approved', failure_reason = @error, note = @note
+                    where id = @id and status = 'processing'
+                    """, new { id, error = payout.Error, note = request.Note });
                 return Results.Json(new { error = payout.Error ?? "Bank payout thất bại" },
                     statusCode: StatusCodes.Status502BadGateway);
             }
-            if (payout.ProviderRef is { Length: > 0 }) providerRef = payout.ProviderRef;
-            await ledger.RecordAsync(conn, tx, "withdrawal", "withdrawal", id,
-                ("driver_payable", 'D', amount), ("driver_paid", 'C', amount));
-            await conn.ExecuteAsync("""
-                update driver_withdrawals set status = 'paid', provider_ref = @ref,
-                    processed_by = @adminId, processed_at = now(), note = @note
-                where id = @id
-                """, new { id, @ref = providerRef, adminId = http.User.GetUserId(), note = request.Note }, tx);
-            await Audit.LogAsync(conn, tx, http.User.GetUserId(), "withdrawal.paid",
-                "withdrawal", id.ToString(), new { amount, request.ProviderRef });
-            await tx.CommitAsync(ct);
+
+            var providerRef = payout.ProviderRef is { Length: > 0 }
+                ? payout.ProviderRef : request.ProviderRef.Trim();
+            await using (var tx = await conn.BeginTransactionAsync(ct))
+            {
+                var current = await conn.ExecuteScalarAsync<string>(
+                    "select status from driver_withdrawals where id = @id for update",
+                    new { id }, tx);
+                if (current == "paid") { await tx.RollbackAsync(ct); return Results.Ok(new { status = "paid" }); }
+                await ledger.RecordAsync(conn, tx, "withdrawal", "withdrawal", id,
+                    ("driver_payable", 'D', amount), ("driver_paid", 'C', amount));
+                await conn.ExecuteAsync("""
+                    update driver_withdrawals set status = 'paid', provider_ref = @ref,
+                        processed_by = @adminId, processed_at = now(), note = @note,
+                        failure_reason = null
+                    where id = @id
+                    """, new { id, @ref = providerRef, adminId, note = request.Note }, tx);
+                await Audit.LogAsync(conn, tx, adminId, "withdrawal.paid",
+                    "withdrawal", id.ToString(), new { amount, providerRef, idempotencyKey });
+                await tx.CommitAsync(ct);
+            }
             return Results.Ok(new { status = "paid" });
         });
 

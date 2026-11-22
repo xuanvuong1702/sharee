@@ -123,6 +123,6 @@ public sealed partial class OtpService(Db db, IConfiguration config)
         return digits;
     }
 
-    [GeneratedRegex(@"^\+[1-9]\d{7,14}$")]
+    [GeneratedRegex(@"^\+84\d{9}$")]
     private static partial Regex PhoneRegex();
 }

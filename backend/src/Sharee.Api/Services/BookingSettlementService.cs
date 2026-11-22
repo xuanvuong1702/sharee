@@ -166,24 +166,36 @@ public sealed class BookingSettlementService(
             if (payment is not null && (string)payment.provider == "payos" &&
                 (string)payment.status == "succeeded" && payos.Enabled)
             {
-                var refund = await payos.RefundAsync((string)payment.provider_ref, amount, reason, ct);
-                await conn.ExecuteAsync("""
+                // Persist a processing marker on its own connection so a failed
+                // provider call or a rolled-back settlement still leaves an audit trail.
+                await using var auditConn = await db.OpenAsync(ct);
+                var refundId = await auditConn.ExecuteScalarAsync<Guid>("""
                     insert into payment_refunds
-                      (booking_id, payment_id, amount, reason, provider, provider_ref, status,
-                       error, completed_at)
-                    values (@bookingId, @paymentId, @amount, @reason, 'payos', @providerRef,
-                            @status, @error, @completedAt)
+                      (booking_id, payment_id, amount, reason, provider, status)
+                    values (@bookingId, @paymentId, @amount, @reason, 'payos', 'processing')
+                    returning id
+                    """, new { bookingId, paymentId = (Guid)payment.id, amount, reason });
+                (bool Ok, string? ProviderRef, string? Error) refund;
+                try
+                {
+                    // Provider call happens outside the settlement transaction's
+                    // control flow; the marker is already committed.
+                    refund = await payos.RefundAsync((string)payment.provider_ref, amount, reason, ct);
+                }
+                catch (Exception ex)
+                {
+                    refund = (false, null, ex.Message);
+                }
+                await auditConn.ExecuteAsync("""
+                    update payment_refunds set status = @status, provider_ref = @providerRef,
+                        error = @error, completed_at = now() where id = @id
                     """, new
                 {
-                    bookingId,
-                    paymentId = (Guid)payment.id,
-                    amount,
-                    reason,
-                    providerRef = refund.ProviderRef,
+                    id = refundId,
                     status = refund.Ok ? "succeeded" : "failed",
-                    error = refund.Error,
-                    completedAt = refund.Ok ? DateTimeOffset.UtcNow : (DateTimeOffset?)null
-                }, tx);
+                    providerRef = refund.ProviderRef,
+                    error = refund.Error
+                });
                 if (!refund.Ok)
                 {
                     await tx.RollbackAsync(ct);

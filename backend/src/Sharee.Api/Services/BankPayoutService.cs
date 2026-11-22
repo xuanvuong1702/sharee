@@ -22,7 +22,7 @@ public sealed class BankPayoutService(
 
     public async Task<BankPayoutResult> TransferAsync(
         Guid withdrawalId, int amount, string bankName, string accountNumber,
-        string accountName, CancellationToken ct = default)
+        string accountName, string? idempotencyKey = null, CancellationToken ct = default)
     {
         if (!options.Enabled)
             return new BankPayoutResult(false, null, "Bank payout provider chưa được cấu hình");
@@ -32,6 +32,8 @@ public sealed class BankPayoutService(
                 $"{options.BaseUrl.TrimEnd('/')}{options.Path}");
             if (!string.IsNullOrWhiteSpace(options.ApiKey))
                 request.Headers.Add("Authorization", $"Bearer {options.ApiKey}");
+            if (!string.IsNullOrWhiteSpace(idempotencyKey))
+                request.Headers.Add("Idempotency-Key", idempotencyKey);
             request.Content = JsonContent.Create(new
             {
                 reference = withdrawalId,

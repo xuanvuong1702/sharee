@@ -58,6 +58,8 @@ services:
       ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD},abortConnect=false"
       Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
       Jwt__ExpiryMinutes: "15"
+      SECURITY_DATA_KEY: ${SECURITY_DATA_KEY:?SECURITY_DATA_KEY is required}
+      SECURITY_DATA_KEY_LEGACY: ${SECURITY_DATA_KEY_LEGACY:-}
       Auth__ExposeOtp: "false"
       Auth__OtpPepper: ${OTP_PEPPER:?OTP_PEPPER is required}
       Auth__OtpResendSeconds: "60"
@@ -86,6 +88,8 @@ services:
       Cors__AllowedOrigins__1: ${ADMIN_ORIGIN:?ADMIN_ORIGIN is required}
       Cors__AllowedOrigins__2: ${WEB_ORIGIN:?WEB_ORIGIN is required}
       ReverseProxy__TrustForwarded: "true"
+      ReverseProxy__KnownNetworks__0: 172.16.0.0/12
+      ReverseProxy__KnownNetworks__1: 127.0.0.1/32
       Storage__VerificationRoot: /data/verifications
       Storage__AppealRoot: /data/appeals
     volumes:

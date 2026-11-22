@@ -10,8 +10,15 @@ public sealed class OtpRateGuard
     private readonly IConnectionMultiplexer? _redis;
     private readonly ConcurrentDictionary<string, Window> _ips = new();
     private readonly Window _global = new();
+    private readonly int _globalPerMinute;
+    private readonly int _perIpPer10Minutes;
 
-    public OtpRateGuard(IConnectionMultiplexer? redis = null) => _redis = redis;
+    public OtpRateGuard(IConfiguration config, IConnectionMultiplexer? redis = null)
+    {
+        _redis = redis;
+        _globalPerMinute = Math.Clamp(config.GetValue("Otp:GlobalPerMinute", 600), 1, 100_000);
+        _perIpPer10Minutes = Math.Clamp(config.GetValue("Otp:PerIpPer10Minutes", 10), 1, 1_000);
+    }
 
     public async Task<bool> AllowAsync(string? ip)
     {
@@ -24,12 +31,12 @@ public sealed class OtpRateGuard
                 var globalKey = $"otp:global:{minute}";
                 var count = await db.StringIncrementAsync(globalKey);
                 if (count == 1) await db.KeyExpireAsync(globalKey, TimeSpan.FromMinutes(2));
-                if (count > 100) return false;
+                if (count > _globalPerMinute) return false;
                 if (string.IsNullOrWhiteSpace(ip)) return true;
                 var ipKey = $"otp:ip:{ip}";
                 var ipCount = await db.StringIncrementAsync(ipKey);
                 if (ipCount == 1) await db.KeyExpireAsync(ipKey, TimeSpan.FromMinutes(10));
-                return ipCount <= 10;
+                return ipCount <= _perIpPer10Minutes;
             }
             catch
             {
@@ -38,9 +45,10 @@ public sealed class OtpRateGuard
         }
 
         var now = DateTimeOffset.UtcNow;
-        if (!_global.TryTake(now, 100, TimeSpan.FromMinutes(1))) return false;
+        if (!_global.TryTake(now, _globalPerMinute, TimeSpan.FromMinutes(1))) return false;
         if (string.IsNullOrWhiteSpace(ip)) return true;
-        return _ips.GetOrAdd(ip, _ => new Window()).TryTake(now, 10, TimeSpan.FromMinutes(10));
+        return _ips.GetOrAdd(ip, _ => new Window()).TryTake(now, _perIpPer10Minutes,
+            TimeSpan.FromMinutes(10));
     }
 
     private sealed class Window

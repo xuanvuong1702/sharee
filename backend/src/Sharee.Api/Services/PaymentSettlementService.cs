@@ -36,8 +36,22 @@ public sealed class PaymentSettlementService(Db db, LedgerService ledger)
         }
         if ((int)row.amount != webhook.Amount || (int)row.price_total != webhook.Amount)
         {
-            await tx.RollbackAsync(ct);
-            return false;
+            // Never acknowledge a wrong-amount payment without a trace.
+            await conn.ExecuteAsync("""
+                insert into payment_reconciliation
+                  (booking_id, order_code, amount, reason, status, note)
+                values (@bookingId, @orderCode, @amount, 'amount_mismatch', 'open',
+                        @note)
+                on conflict (order_code) do nothing
+                """, new
+            {
+                bookingId = (Guid)row.booking_id,
+                orderCode = webhook.OrderCode.ToString(CultureInfo.InvariantCulture),
+                amount = webhook.Amount,
+                note = $"Expected {row.price_total}/{row.amount}, got {webhook.Amount}"
+            }, tx);
+            await tx.CommitAsync(ct);
+            return true;
         }
         if ((string)row.booking_status != "pending_payment")
         {
