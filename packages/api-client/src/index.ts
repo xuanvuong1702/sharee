@@ -241,6 +241,28 @@ export class ShareeApi {
     });
   }
 
+  createRide(payload: {
+    pickupLabel: string; pickupLat: number; pickupLng: number;
+    dropoffLabel: string; dropoffLat: number; dropoffLng: number;
+    vehicleClass: string; paymentMethod: string; note?: string;
+  }) {
+    return this.request<Record<string, unknown>>("/api/rides", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  ride(id: string) {
+    return this.request<Record<string, unknown>>(`/api/rides/${id}`);
+  }
+
+  cancelRide(id: string) {
+    return this.request<Record<string, unknown>>(`/api/rides/${id}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({ reason: "web_cancel" }),
+    });
+  }
+
   booking(id: string) {
     return this.request<Booking>(`/api/bookings/${id}`);
   }

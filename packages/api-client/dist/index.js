@@ -96,6 +96,21 @@ export class ShareeApi {
             body: "{}",
         });
     }
+    createRide(payload) {
+        return this.request("/api/rides", {
+            method: "POST",
+            body: JSON.stringify(payload),
+        });
+    }
+    ride(id) {
+        return this.request(`/api/rides/${id}`);
+    }
+    cancelRide(id) {
+        return this.request(`/api/rides/${id}/cancel`, {
+            method: "POST",
+            body: JSON.stringify({ reason: "web_cancel" }),
+        });
+    }
     booking(id) {
         return this.request(`/api/bookings/${id}`);
     }

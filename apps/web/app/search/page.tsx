@@ -6,7 +6,10 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import type { SearchResult } from "@sharee/api-client";
 import { Badge, Button, Card, EmptyState } from "@sharee/ui";
 import { useAuth } from "@/components/AuthProvider";
+import { ResultsMap } from "@/components/ResultsMap";
 import { dateLabel, money, routePresets, timeLabel } from "@/lib/sharee";
+
+const routeImages = ["/images/vietnam-road.jpg", "/images/hanoi.jpg", "/images/vietnam-city.jpg"];
 
 function SearchResults() {
   const params = useSearchParams();
@@ -14,6 +17,7 @@ function SearchResults() {
   const [items, setItems] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sort, setSort] = useState("recommended");
 
   const query = useMemo(() => {
     const route = routePresets.find((item) => item.id === params.get("route")) ?? routePresets[0];
@@ -39,6 +43,16 @@ function SearchResults() {
       .finally(() => setLoading(false));
   }, [api, query]);
 
+  const visible = useMemo(() => {
+    const copy = [...items];
+    if (sort === "price") copy.sort((a, b) => a.pricePerSeat - b.pricePerSeat);
+    if (sort === "time") copy.sort((a, b) =>
+      new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime());
+    if (sort === "rating") copy.sort((a, b) =>
+      b.driver.ratingAvg - a.driver.ratingAvg);
+    return copy;
+  }, [items, sort]);
+
   return (
     <div className="sh-container page-section">
       <div className="page-heading">
@@ -57,6 +71,18 @@ function SearchResults() {
         <Link href="/#tim-chuyen" className="sh-btn sh-btn-ghost sh-btn-md">
           Đổi tìm kiếm
         </Link>
+      </div>
+
+      <div className="air-filter-bar">
+        {[
+          ["recommended", "Đề xuất"],
+          ["price", "Giá thấp"],
+          ["time", "Sớm nhất"],
+          ["rating", "Đánh giá cao"],
+        ].map(([id, label]) => (
+          <button key={id} type="button" className={sort === id ? "active" : ""}
+            onClick={() => setSort(id)}>{label}</button>
+        ))}
       </div>
 
       {loading ? (
@@ -79,8 +105,15 @@ function SearchResults() {
       ) : (
         <div className="results-layout">
           <div className="results-list">
-            {items.map((item) => (
-              <Card key={item.tripId} className="trip-result">
+            {visible.map((item, index) => (
+              <Card key={item.tripId} className="trip-result air-result">
+                <div className="air-result-img"
+                  style={{ backgroundImage: `url(${routeImages[index % routeImages.length]})` }}>
+                  <span className="air-listing-badge">
+                    {item.bookingMode === "instant" ? "Đặt ngay" : "Tài xế duyệt"}
+                  </span>
+                  <span className="air-result-seats">Còn {item.seatsAvailable} ghế</span>
+                </div>
                 <div className="trip-result-main">
                   <div className="trip-time">
                     <strong>{timeLabel(item.departureTime)}</strong>
@@ -113,22 +146,17 @@ function SearchResults() {
                     <span className="rating">★ {item.driver.ratingAvg.toFixed(1)}</span>
                     <span className="muted">· {item.vehicle.make} {item.vehicle.model}</span>
                   </div>
-                  <div className="trip-tags">
-                    <Badge tone="green">Còn {item.seatsAvailable} ghế</Badge>
-                    {item.bookingMode === "instant" ? (
-                      <Badge tone="blue">Đặt ngay</Badge>
-                    ) : (
-                      <Badge tone="amber">Tài xế duyệt</Badge>
-                    )}
-                  </div>
                   <Link href={`/trip/?id=${item.tripId}&from=${item.pickupStop.id}&to=${item.dropoffStop.id}&seats=${query.seats}`}>
-                    <Button>Chọn chuyến</Button>
+                    <Button>Xem chuyến</Button>
                   </Link>
                 </div>
               </Card>
             ))}
           </div>
           <aside className="results-aside">
+            <Card className="results-map-card">
+              <ResultsMap items={visible} />
+            </Card>
             <Card>
               <h3>Mẹo đặt chuyến</h3>
               <ul>

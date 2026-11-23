@@ -153,6 +153,19 @@ export declare class ShareeApi {
     cancelBooking(bookingId: string): Promise<{
         status: string;
     }>;
+    createRide(payload: {
+        pickupLabel: string;
+        pickupLat: number;
+        pickupLng: number;
+        dropoffLabel: string;
+        dropoffLat: number;
+        dropoffLng: number;
+        vehicleClass: string;
+        paymentMethod: string;
+        note?: string;
+    }): Promise<Record<string, unknown>>;
+    ride(id: string): Promise<Record<string, unknown>>;
+    cancelRide(id: string): Promise<Record<string, unknown>>;
     booking(id: string): Promise<Booking>;
     myBookings(): Promise<Booking[]>;
 }
