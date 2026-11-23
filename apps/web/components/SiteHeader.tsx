@@ -1,46 +1,61 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Logo } from "@sharee/ui";
 import { useAuth } from "./AuthProvider";
-import { Logo, Button } from "@sharee/ui";
 
-const APP_URL = "https://github.com/xuanvuong1702/sharee/releases/latest";
+const tabs = [
+  { href: "/", icon: "🏠", label: "Tất cả" },
+  { href: "/#chuyen-noi-bat", icon: "🚗", label: "Đi chung" },
+  { href: "/ride/", icon: "🛵", label: "Đặt xe" },
+  { href: "/daily/", icon: "🚌", label: "Daily" },
+  { href: "/nearby/", icon: "✈️", label: "Sân bay" },
+];
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const { user, ready, signOut } = useAuth();
+  const [menu, setMenu] = useState(false);
+
   return (
     <header className="site-header">
-      <div className="sh-container-wide header-inner">
-        <Link href="/" aria-label="Sharee trang chủ" className="logo-link">
+      <div className="header-inner">
+        <Link href="/" className="header-logo" aria-label="Sharee trang chủ">
           <Logo />
         </Link>
+
         <nav className="main-nav" aria-label="Điều hướng chính">
-          <Link href="/#chuyen-noi-bat">Đi chung</Link>
-          <Link href="/ride/">Đặt xe</Link>
-          <Link href="/daily/">Daily</Link>
-          <Link href="/publish/">Đăng chuyến</Link>
-          <Link href="/account/">Chuyến của tôi</Link>
-          <a href={APP_URL} target="_blank" rel="noreferrer">
-            Tải app
-          </a>
-        </nav>
-        <div className="header-actions">
-          {!ready ? null : user ? (
-            <>
-              <Link href="/account/" className="user-chip">
-                <span className="avatar">{user.fullName.slice(0, 1).toUpperCase()}</span>
-                <span>{user.fullName.split(" ")[0]}</span>
-              </Link>
-              <Button variant="ghost" size="sm" onClick={signOut}>
-                Đăng xuất
-              </Button>
-            </>
-          ) : (
-            <Link href="/login/">
-              <Button variant="primary" size="sm">
-                Đăng nhập
-              </Button>
+          {tabs.map((tab) => (
+            <Link key={tab.label} href={tab.href}
+              className={pathname === tab.href ? "active" : ""}>
+              <span className="nav-icon">{tab.icon}</span>
+              {tab.label}
             </Link>
+          ))}
+        </nav>
+
+        <div className="header-actions">
+          <Link href="/publish/" className="host-link">Đăng chuyến</Link>
+          <button type="button" className="header-icon" aria-label="Ngôn ngữ">🌐</button>
+          {ready && user ? (
+            <div className="header-user">
+              <button type="button" className="user-menu-button" onClick={() => setMenu(!menu)}
+                aria-label="Tài khoản">
+                <span className="avatar">{user.fullName.slice(0, 1).toUpperCase()}</span>
+                <span className="hamburger">☰</span>
+              </button>
+              {menu && (
+                <div className="user-dropdown">
+                  <Link href="/account/" onClick={() => setMenu(false)}>Chuyến của tôi</Link>
+                  <Link href="/publish/" onClick={() => setMenu(false)}>Đăng chuyến</Link>
+                  <button type="button" onClick={() => { setMenu(false); signOut(); }}>Đăng xuất</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login/" className="login-button">Đăng nhập</Link>
           )}
         </div>
       </div>
