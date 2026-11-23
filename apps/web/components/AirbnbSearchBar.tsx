@@ -12,14 +12,24 @@ function dateAfter(days: number) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(d);
 }
 
-export function AirbnbSearchBar() {
+export function AirbnbSearchBar({
+  initialPickup = null,
+  initialDropoff = null,
+  initialDate,
+  initialSeats = 1,
+}: {
+  initialPickup?: TripPlace | null;
+  initialDropoff?: TripPlace | null;
+  initialDate?: string;
+  initialSeats?: number;
+} = {}) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const [panel, setPanel] = useState<Panel>(null);
-  const [pickup, setPickup] = useState<TripPlace | null>(null);
-  const [dropoff, setDropoff] = useState<TripPlace | null>(null);
-  const [date, setDate] = useState(nextDate());
-  const [seats, setSeats] = useState(1);
+  const [pickup, setPickup] = useState<TripPlace | null>(initialPickup);
+  const [dropoff, setDropoff] = useState<TripPlace | null>(initialDropoff);
+  const [date, setDate] = useState(initialDate || nextDate());
+  const [seats, setSeats] = useState(initialSeats);
 
   useEffect(() => {
     function onDown(event: MouseEvent) {

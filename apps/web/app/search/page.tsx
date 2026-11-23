@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import type { SearchResult } from "@sharee/api-client";
 import { Badge, Button, Card, EmptyState } from "@sharee/ui";
 import { useAuth } from "@/components/AuthProvider";
+import { AirbnbSearchBar } from "@/components/AirbnbSearchBar";
 import { ResultsMap } from "@/components/ResultsMap";
 import { dateLabel, money, routePresets, timeLabel } from "@/lib/sharee";
 
@@ -55,6 +56,14 @@ function SearchResults() {
 
   return (
     <div className="sh-container page-section">
+      <div className="search-page-pill">
+        <AirbnbSearchBar
+          initialPickup={{ label: query.fromLabel, fullName: query.fromLabel, lat: query.fromLat, lng: query.fromLng }}
+          initialDropoff={{ label: query.toLabel, fullName: query.toLabel, lat: query.toLat, lng: query.toLng }}
+          initialDate={query.date || undefined}
+          initialSeats={query.seats}
+        />
+      </div>
       <div className="page-heading">
         <div>
           <Link href="/" className="back-link">
