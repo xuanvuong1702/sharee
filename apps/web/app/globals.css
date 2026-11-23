@@ -563,3 +563,35 @@ h1, h2, h3, p { margin-top: 0; }
 .user-chip{display:flex;align-items:center;gap:8px;border:1px solid #e2e9ef;border-radius:999px;padding:5px 10px 5px 5px;text-decoration:none;color:#102a43;font-size:12px;font-weight:700}
 .user-chip .avatar{width:30px;height:30px;font-size:11px}
 @media(max-width:900px){.main-nav{display:none}.header-inner{min-height:62px}}
+
+.air-home{background:#fff;padding-top:10px}
+.air-search-shell{padding-bottom:8px}
+.air-categories{justify-content:center;border-bottom:1px solid #edf1f5;padding:10px 0 0;gap:26px}
+.air-category{border-radius:0;padding:10px 2px 14px;flex-direction:column;gap:5px;font-size:11px;color:#66757f;position:relative}
+.air-category:hover{background:transparent;color:#102a43}
+.air-category.active{color:#102a43;font-weight:800}
+.air-category.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#102a43}
+.air-category-icon{width:30px;height:30px;background:transparent;font-size:22px}
+.air-search-center{max-width:850px;margin:22px auto 24px;display:flex;justify-content:center}
+.air-search-center .airbnb-search{max-width:850px}
+.air-home-body{padding-bottom:50px}
+.air-row-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 14px}
+.air-row-head h2{font-size:22px;letter-spacing:-.5px;margin:0}
+.air-row-head>a{font-size:12px;font-weight:800;color:#0f9f8f;text-decoration:none;white-space:nowrap}
+.air-horizontal-row{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.air-horizontal-row::-webkit-scrollbar{display:none}
+.air-listing-horizontal{flex:0 0 270px;scroll-snap-align:start}
+.air-listing-horizontal .air-listing-media{aspect-ratio:1.35/1}
+.air-experience-section{margin-top:26px}
+.air-experience-row{display:flex;gap:18px;overflow-x:auto;padding:4px 0 14px;scrollbar-width:none}
+.air-experience-row::-webkit-scrollbar{display:none}
+.air-experience{flex:0 0 96px;text-decoration:none;color:#102a43;text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px}
+.air-experience span{width:78px;height:78px;border-radius:50%;background:#f2f7f7;border:1px solid #e5edef;display:grid;place-items:center;font-size:30px}
+.air-experience strong{font-size:11px;font-weight:700}
+.air-experience:hover span{border-color:#0f9f8f;background:#eaf8f6}
+@media(max-width:900px){
+ .air-categories{justify-content:flex-start;gap:18px;padding-left:2px;overflow-x:auto}
+ .air-search-center{margin:14px auto 18px}
+ .air-listing-horizontal{flex-basis:235px}
+ .air-row-head h2{font-size:19px}
+}
