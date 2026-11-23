@@ -123,6 +123,8 @@ function TripView() {
         <div className="air-detail-img main" style={{ backgroundImage: "url(/images/vietnam-road.jpg)" }} />
         <div className="air-detail-img" style={{ backgroundImage: "url(/images/hanoi.jpg)" }} />
         <div className="air-detail-img" style={{ backgroundImage: "url(/images/vietnam-city.jpg)" }} />
+        <div className="air-detail-img" style={{ backgroundImage: "url(/images/hanoi.jpg)" }} />
+        <div className="air-detail-img" style={{ backgroundImage: "url(/images/vietnam-road.jpg)" }} />
       </div>
       <div className="trip-detail-layout">
         <div>

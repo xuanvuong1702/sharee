@@ -14,14 +14,14 @@ const trips = [
 ];
 
 const experiences = [
-  { icon: "🌊", label: "Biển đảo" },
-  { icon: "🏔️", label: "Núi rừng" },
-  { icon: "🍜", label: "Ẩm thực" },
-  { icon: "🏛️", label: "Di sản" },
-  { icon: "🌾", label: "Miền Tây" },
-  { icon: "🌃", label: "Thành phố" },
-  { icon: "🏕️", label: "Cắm trại" },
-  { icon: "🚴", label: "Đạp xe" },
+  { label: "Biển đảo", image: "/images/vietnam-city.jpg" },
+  { label: "Núi rừng", image: "/images/vietnam-road.jpg" },
+  { label: "Ẩm thực", image: "/images/hanoi.jpg" },
+  { label: "Di sản", image: "/images/vietnam-road.jpg" },
+  { label: "Miền Tây", image: "/images/vietnam-city.jpg" },
+  { label: "Thành phố", image: "/images/hanoi.jpg" },
+  { label: "Cắm trại", image: "/images/vietnam-road.jpg" },
+  { label: "Đạp xe", image: "/images/vietnam-city.jpg" },
 ];
 
 export default function HomePage() {
@@ -34,8 +34,7 @@ export default function HomePage() {
       <div className="sh-container-wide air-home-body">
         <section>
           <div className="air-row-head">
-            <h2>Chuyến đi nổi bật tại Hà Nội</h2>
-            <Link href="/nearby/">Xem tất cả →</Link>
+            <h2>Chuyến đi nổi bật tại Hà Nội <span className="air-row-arrow">→</span></h2>
           </div>
           <div className="air-horizontal-row">
             {trips.map(([title, detail, price, image, tag, href]) => (
@@ -44,6 +43,9 @@ export default function HomePage() {
                   <div className="air-listing-img" style={{ backgroundImage: `url(${image})` }} />
                   <span className="air-listing-badge">{tag}</span>
                   <button type="button" className="air-heart" aria-label="Lưu chuyến">♡</button>
+                  <span className="air-listing-dots" aria-hidden="true">
+                    <i /><i /><i /><i /><i />
+                  </span>
                 </div>
                 <div className="air-listing-body">
                   <div className="air-listing-top">
@@ -62,15 +64,39 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section>
+          <div className="air-row-head">
+            <h2>Chuyến đi từ TP. Hồ Chí Minh <span className="air-row-arrow">→</span></h2>
+          </div>
+          <div className="air-horizontal-row">
+            {trips.slice(2, 7).map(([title, detail, price, image, tag, href]) => (
+              <Link key={`hcm-${String(title)}`} href={String(href)} className="air-listing air-listing-horizontal">
+                <div className="air-listing-media">
+                  <div className="air-listing-img" style={{ backgroundImage: `url(${image})` }} />
+                  <span className="air-listing-badge">{tag}</span>
+                  <button type="button" className="air-heart" aria-label="Lưu chuyến">♡</button>
+                </div>
+                <div className="air-listing-body">
+                  <div className="air-listing-top">
+                    <strong>{title}</strong><span className="air-rating">★ 4.8</span>
+                  </div>
+                  <p>{detail}</p>
+                  <small>Khởi hành linh hoạt · Tài xế KYC</small>
+                  <div className="air-listing-price"><strong>{money(Number(price))}</strong><span>/ ghế · từ</span></div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section className="air-experience-section">
           <div className="air-row-head">
-            <h2>Khám phá trải nghiệm gần đây</h2>
-            <Link href="/#diem-den">Xem tất cả →</Link>
+            <h2>Khám phá trải nghiệm gần đây <span className="air-row-arrow">→</span></h2>
           </div>
           <div className="air-experience-row">
             {experiences.map((item) => (
               <Link key={item.label} href="/nearby/" className="air-experience">
-                <span>{item.icon}</span>
+                <span className="air-experience-img" style={{ backgroundImage: `url(${item.image})` }} />
                 <strong>{item.label}</strong>
               </Link>
             ))}
