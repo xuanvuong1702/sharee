@@ -66,7 +66,7 @@ export default function HomePage() {
 
         <section>
           <div className="air-row-head">
-            <h2>Chuyến đi từ TP. Hồ Chí Minh <span className="air-row-arrow">→</span></h2>
+            <h2>Chuyến đi đường dài <span className="air-row-arrow">→</span></h2>
           </div>
           <div className="air-horizontal-row">
             {trips.slice(2, 7).map(([title, detail, price, image, tag, href]) => (
