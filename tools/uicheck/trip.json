@@ -1,0 +1,36 @@
+{
+    "departureTime":  "2026-11-24T01:00:00Z",
+    "origin":  {
+                   "label":  "B?n xe M? Ðình, Hà N?i",
+                   "lng":  105.7749,
+                   "lat":  21.0285
+               },
+    "petsAllowed":  false,
+    "destination":  {
+                        "label":  "L?ch Tray, H?i Phòng",
+                        "lng":  106.6881,
+                        "lat":  20.8449
+                    },
+    "bookingMode":  "instant",
+    "pricePerSeat":  180000,
+    "smokingAllowed":  false,
+    "stops":  [
+                  {
+                      "lng":  105.7749,
+                      "name":  "B?n xe M? Ðình",
+                      "allowPickup":  true,
+                      "allowDropoff":  false,
+                      "lat":  21.0285
+                  },
+                  {
+                      "lng":  106.6881,
+                      "name":  "L?ch Tray",
+                      "allowPickup":  false,
+                      "allowDropoff":  true,
+                      "lat":  20.8449
+                  }
+              ],
+    "vehicleId":  "a1111111-1111-1111-1111-111111111111",
+    "luggage":  true,
+    "seatsTotal":  3
+}

@@ -111,6 +111,19 @@ function TripView() {
       <Link href="/" className="back-link">
         ← Tìm chuyến khác
       </Link>
+      <div className="air-detail-title">
+        <div>
+          <span className="sh-eyebrow">CHUYẾN ĐI</span>
+          <h1>{trip.origin.label.split(",")[0]} → {trip.destination.label.split(",")[0]}</h1>
+          <p>★ {trip.driver.ratingAvg.toFixed(1)} · {trip.driver.ratingCount} đánh giá · {trip.vehicle.make} {trip.vehicle.model}</p>
+        </div>
+        <span className="air-detail-seats">Còn {trip.seatsAvailable} ghế</span>
+      </div>
+      <div className="air-detail-gallery">
+        <div className="air-detail-img main" style={{ backgroundImage: "url(/images/vietnam-road.jpg)" }} />
+        <div className="air-detail-img" style={{ backgroundImage: "url(/images/hanoi.jpg)" }} />
+        <div className="air-detail-img" style={{ backgroundImage: "url(/images/vietnam-city.jpg)" }} />
+      </div>
       <div className="trip-detail-layout">
         <div>
           <Card className="trip-detail-head">

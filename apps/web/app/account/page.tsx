@@ -85,8 +85,10 @@ export default function AccountPage() {
         </Card>
       ) : (
         <div className="bookings-list">
-          {bookings.map((booking) => (
-            <Card key={booking.id} className="booking-row">
+          {bookings.map((booking, index) => (
+            <Card key={booking.id} className="booking-row air-account-row">
+              <div className="air-account-img"
+                style={{ backgroundImage: `url(${["/images/vietnam-road.jpg", "/images/hanoi.jpg", "/images/vietnam-city.jpg"][index % 3]})` }} />
               <div className={`booking-status-bar ${booking.status}`} />
               <div className="booking-row-main">
                 <div className="booking-row-head">
