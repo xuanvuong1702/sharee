@@ -3,15 +3,6 @@ import { Badge, Card, SectionTitle } from "@sharee/ui";
 import { SearchBox } from "@/components/SearchBox";
 import { money } from "@/lib/sharee";
 
-const categories = [
-  { icon: "🏠", label: "Tất cả", href: "/" },
-  { icon: "🚗", label: "Đi chung", href: "/#chuyen-noi-bat" },
-  { icon: "🛵", label: "Đặt xe", href: "/ride/" },
-  { icon: "✈️", label: "Sân bay", href: "/nearby/" },
-  { icon: "🚌", label: "Daily", href: "/daily/" },
-  { icon: "🏞️", label: "Đi tỉnh", href: "/#diem-den" },
-];
-
 const trips = [
   ["Hà Nội → Hải Phòng", "Bến xe Mỹ Đình · Lạch Tray", 180000, "/images/vietnam-road.jpg", "Phổ biến", "/search/?route=hanoi-haiphong&fromLat=21.0285&fromLng=105.7749&toLat=20.8449&toLng=106.6881&fromLabel=B%E1%BA%BFn%20xe%20M%E1%BB%B9%20%C4%90%C3%ACnh%2C%20H%C3%A0%20N%E1%BB%99i&toLabel=L%E1%BA%A1ch%20Tray%2C%20H%E1%BA%A3i%20Ph%C3%B2ng&seats=1"],
   ["Hà Nội → Nội Bài", "Sân bay Nội Bài · Đón tận nơi", 90000, "/images/hanoi.jpg", "Sân bay", "/nearby/"],
@@ -37,15 +28,6 @@ export default function HomePage() {
   return (
     <div className="air-home">
       <div className="sh-container-wide air-search-shell">
-        <nav className="air-categories" aria-label="Danh mục">
-          {categories.map((category) => (
-            <Link key={category.label} href={category.href}
-              className={`air-category ${category.label === "Tất cả" ? "active" : ""}`}>
-              <span className="air-category-icon">{category.icon}</span>
-              <span>{category.label}</span>
-            </Link>
-          ))}
-        </nav>
         <div className="air-search-center"><SearchBox /></div>
       </div>
 
