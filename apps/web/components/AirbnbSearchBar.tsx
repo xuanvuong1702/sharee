@@ -48,6 +48,23 @@ export function AirbnbSearchBar() {
     day: "2-digit", month: "2-digit",
   }).format(new Date(`${date}T00:00:00+07:00`));
 
+  const now = new Date();
+  const todayValue = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(now);
+  const months = [0, 1].map((offset) => {
+    const first = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    const cells: Array<string | null> = Array(first.getDay()).fill(null);
+    for (let day = 1; day <= days; day++) {
+      cells.push(`${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+    }
+    return {
+      title: new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(first),
+      cells,
+    };
+  });
+
   const search = () => {
     if (!pickup || !dropoff) { setPanel("places"); return; }
     const params = new URLSearchParams({
@@ -119,21 +136,33 @@ export function AirbnbSearchBar() {
                 <strong>Khi nào bạn muốn đi?</strong>
                 <button type="button" onClick={() => setPanel(null)} aria-label="Đóng">×</button>
               </div>
+              <div className="airbnb-calendar">
+                {months.map((month) => (
+                  <div key={month.title} className="airbnb-month">
+                    <strong>{month.title}</strong>
+                    <div className="airbnb-weekdays">
+                      {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map((d) => <span key={d}>{d}</span>)}
+                    </div>
+                    <div className="airbnb-days">
+                      {month.cells.map((value, index) => value ? (
+                        <button key={value} type="button"
+                          className={`${value === date ? "selected" : ""} ${value < todayValue ? "disabled" : ""}`}
+                          disabled={value < todayValue}
+                          onClick={() => setDate(value)}>{Number(value.slice(-2))}</button>
+                      ) : <span key={`empty-${index}`} />)}
+                    </div>
+                  </div>
+                ))}
+              </div>
               <div className="airbnb-date-quick">
-                {[
-                  ["Hôm nay", 0], ["Ngày mai", 1], ["Cuối tuần", 3],
-                ].map(([label, days]) => (
+                {[["Hôm nay", 0], ["Ngày mai", 1], ["Cuối tuần", 3]].map(([label, days]) => (
                   <button key={String(label)} type="button"
                     className={date === dateAfter(Number(days)) ? "active" : ""}
                     onClick={() => setDate(dateAfter(Number(days)))}>{label}</button>
                 ))}
               </div>
-              <label className="airbnb-date-input">
-                <span>Chọn ngày cụ thể</span>
-                <input type="date" value={date} min={dateAfter(0)}
-                  onChange={(e) => setDate(e.target.value)} />
-              </label>
               <div className="airbnb-panel-foot">
+                <span className="airbnb-date-summary">Đã chọn: {shortDate}</span>
                 <button type="button" className="airbnb-done" onClick={() => setPanel(null)}>Xong</button>
               </div>
             </>

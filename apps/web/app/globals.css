@@ -595,3 +595,17 @@ h1, h2, h3, p { margin-top: 0; }
  .air-listing-horizontal{flex-basis:235px}
  .air-row-head h2{font-size:19px}
 }
+
+.airbnb-calendar{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:10px 0 14px}
+.airbnb-month strong{display:block;text-align:center;font-size:13px;margin-bottom:8px}
+.airbnb-weekdays,.airbnb-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.airbnb-weekdays span{text-align:center;font-size:10px;color:#7b8a97;padding:4px 0;font-weight:700}
+.airbnb-days button,.airbnb-days>span{height:34px;border:0;background:transparent;border-radius:50%;font-size:12px;cursor:pointer;color:#102a43}
+.airbnb-days button:hover:not(:disabled){background:#f2f5f7}
+.airbnb-days button.selected{background:#102a43;color:#fff;font-weight:800}
+.airbnb-days button.disabled{color:#c6cfd7;cursor:not-allowed;text-decoration:line-through}
+.airbnb-date-summary{font-size:12px;color:#5c6b7a}
+.airbnb-panel{width:min(760px,calc(100vw - 32px))}
+@media(max-width:620px){.airbnb-calendar{grid-template-columns:1fr}.airbnb-calendar .airbnb-month:nth-child(2){display:none}}
+
+.header-inner{position:relative}.main-nav{position:absolute;left:50%;transform:translateX(-50%);gap:26px}.header-actions{margin-left:auto}@media(max-width:1000px){.main-nav{position:static;transform:none;display:none}}
