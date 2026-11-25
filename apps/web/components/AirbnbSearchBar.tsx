@@ -30,6 +30,7 @@ export function AirbnbSearchBar({
   const [dropoff, setDropoff] = useState<TripPlace | null>(initialDropoff);
   const [date, setDate] = useState(initialDate || nextDate());
   const [seats, setSeats] = useState(initialSeats);
+  const [placeField, setPlaceField] = useState<"pickup" | "dropoff">("pickup");
 
   useEffect(() => {
     function onDown(event: MouseEvent) {
@@ -47,12 +48,6 @@ export function AirbnbSearchBar({
       document.removeEventListener("keydown", onKey);
     };
   }, [panel]);
-
-  const locationValue = pickup && dropoff
-    ? `${pickup.label.split(",")[0]} → ${dropoff.label.split(",")[0]}`
-    : pickup
-      ? `Từ ${pickup.label.split(",")[0]}`
-      : "Chọn điểm";
 
   const shortDate = new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit", month: "2-digit",
@@ -76,7 +71,11 @@ export function AirbnbSearchBar({
   });
 
   const search = () => {
-    if (!pickup || !dropoff) { setPanel("places"); return; }
+    if (!pickup || !dropoff) {
+      setPlaceField(pickup ? "dropoff" : "pickup");
+      setPanel("places");
+      return;
+    }
     const params = new URLSearchParams({
       fromLat: String(pickup.lat), fromLng: String(pickup.lng),
       toLat: String(dropoff.lat), toLng: String(dropoff.lng),
@@ -91,10 +90,17 @@ export function AirbnbSearchBar({
     <div className="airbnb-search" ref={rootRef}>
       <div className={`airbnb-pill ${panel ? "open" : ""}`}>
         <button type="button"
-          className={`airbnb-seg places ${panel === "places" ? "active" : ""}`}
-          onClick={() => setPanel(panel === "places" ? null : "places")}>
-          <span className="airbnb-label">Địa điểm</span>
-          <span className="airbnb-value">{locationValue}</span>
+          className={`airbnb-seg pickup ${panel === "places" && placeField === "pickup" ? "active" : ""}`}
+          onClick={() => { setPlaceField("pickup"); setPanel("places"); }}>
+          <span className="airbnb-label">Điểm đón</span>
+          <span className="airbnb-value">{pickup?.label.split(",")[0] ?? "Chọn điểm đón"}</span>
+        </button>
+        <span className="airbnb-divider" />
+        <button type="button"
+          className={`airbnb-seg dropoff ${panel === "places" && placeField === "dropoff" ? "active" : ""}`}
+          onClick={() => { setPlaceField("dropoff"); setPanel("places"); }}>
+          <span className="airbnb-label">Điểm đến</span>
+          <span className="airbnb-value">{dropoff?.label.split(",")[0] ?? "Chọn điểm đến"}</span>
         </button>
         <span className="airbnb-divider" />
         <button type="button"
@@ -130,9 +136,14 @@ export function AirbnbSearchBar({
                 <button type="button" onClick={() => setPanel(null)} aria-label="Đóng">×</button>
               </div>
               <LocationFields
+                key={placeField}
                 pickup={pickup}
                 dropoff={dropoff}
-                onChange={(kind, place) => kind === "pickup" ? setPickup(place) : setDropoff(place)}
+                initialActive={placeField}
+                onChange={(kind, place) => {
+                  if (kind === "pickup") setPickup(place);
+                  else setDropoff(place);
+                }}
                 compact
               />
               <div className="airbnb-panel-foot">

@@ -14,6 +14,7 @@ type Props = {
   autoLocate?: boolean;
   compact?: boolean;
   inlineMap?: boolean;
+  initialActive?: Kind;
 };
 
 const RECENT_KEY = "sharee.web.recentPlaces";
@@ -28,8 +29,9 @@ const distanceKm = (a: TripPlace, b: TripPlace) => {
 
 export function LocationFields({
   pickup, dropoff, onChange, autoLocate = true, compact = false, inlineMap = false,
+  initialActive,
 }: Props) {
-  const [active, setActive] = useState<Kind>(pickup ? "dropoff" : "pickup");
+  const [active, setActive] = useState<Kind>(initialActive ?? (pickup ? "dropoff" : "pickup"));
   const [mapOpen, setMapOpen] = useState(false);
   const [pickupQuery, setPickupQuery] = useState(pickup?.label ?? "");
   const [dropoffQuery, setDropoffQuery] = useState(dropoff?.label ?? "");

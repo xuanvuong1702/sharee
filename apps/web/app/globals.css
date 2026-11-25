@@ -468,3 +468,39 @@ main { min-height: 60vh; }
 .air-detail-gallery{grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;height:400px}.air-detail-img.main{grid-row:span 2}@media(max-width:1000px){.air-detail-gallery{grid-template-columns:1fr 1fr;grid-template-rows:200px 150px}.air-detail-img.main{grid-column:span 2;grid-row:auto}.air-detail-gallery .air-detail-img:nth-child(5){display:none}}
 
 .site-footer{background:#f7f7f7;border-top:1px solid #ebebeb;padding:36px 0 22px;margin-top:40px}.footer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-bottom:24px;border-bottom:1px solid #ddd}.footer-grid strong{display:block;font-size:12px;margin-bottom:10px}.footer-grid a{display:block;font-size:11px;color:#555;margin:7px 0}.footer-grid a:hover{text-decoration:underline}.footer-bottom{display:flex;justify-content:space-between;gap:16px;padding-top:18px;font-size:11px;color:#555;flex-wrap:wrap}@media(max-width:650px){.footer-grid{grid-template-columns:1fr 1fr;gap:18px}.footer-grid>div:last-child{grid-column:span 2}}
+
+.airbnb-pill{min-height:63px;border-radius:500px;padding:6px}.airbnb-seg.pickup,.airbnb-seg.dropoff{flex:1.25 1 0}.airbnb-seg.date,.airbnb-seg.seats{flex:.8 1 0}.airbnb-seg{padding:8px 16px}.airbnb-search{max-width:920px}.airbnb-search-btn{width:48px;height:48px}@media(max-width:650px){.airbnb-seg{padding:7px 8px}.airbnb-seg.pickup,.airbnb-seg.dropoff{flex:1.1 1 0}.airbnb-label{font-size:9px}.airbnb-value{font-size:10px}}
+
+/* Figma design tokens: Sharee web version */
+:root{
+  --ink:#222222;
+  --muted:#717171;
+  --line:#dddddd;
+  --soft:#f7f7f7;
+  --brand:#ff385c;
+  --brand-dark:#f6475f;
+  --teal:#008a05;
+  --radius:12px;
+  --gradient-primary: radial-gradient(ellipse at 0% 100%, #d33753 0%, #d13660 53%, #c72d65 100%);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Be Vietnam Pro",sans-serif}
+h1,h2,h3{font-weight:600}
+.sh-btn{border-radius:8px;padding:14px 24px;font-size:16px;font-weight:590;background:#fff;color:#222}
+.sh-btn-primary{background:var(--gradient-primary);color:#fff}
+.sh-btn-primary:hover{background:radial-gradient(ellipse at 0% 100%, #c72d65 0%, #d23760 53%, #d23755 100%)}
+.sh-btn-secondary{border:1px solid #222;background:#fff}
+.sh-btn-ghost{border:1px solid #ddd;background:#fff}
+.sh-btn-md{padding:12px 20px;font-size:14px}
+.sh-btn-lg{padding:14px 24px;font-size:16px}
+.sh-card{border-radius:12px}
+.sh-field input,.sh-field select{border-radius:8px;font-size:14px;padding:12px}
+.header-inner{height:81px}
+.host-link{font-size:14px}
+.main-nav a{font-size:12px}
+.airbnb-search-btn{background:var(--gradient-primary)}
+.airbnb-search-btn:hover{background:radial-gradient(ellipse at 0% 100%, #c72d65 0%, #d23760 53%, #d23755 100%)}
+.air-filter-bar button{border-radius:500px;padding:10px 20px;font-size:12px}
+.air-listing-media{border-radius:12px}
+.air-listing-top strong{font-size:14px}
+.air-listing-body p,.air-listing-body small{font-size:12px}
+.air-listing-price strong{font-size:14px}
