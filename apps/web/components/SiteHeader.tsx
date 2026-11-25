@@ -39,24 +39,32 @@ export function SiteHeader() {
         <div className="header-actions">
           <Link href="/publish/" className="host-link">Đăng chuyến</Link>
           <button type="button" className="header-icon" aria-label="Ngôn ngữ">🌐</button>
-          {ready && user ? (
-            <div className="header-user">
-              <button type="button" className="user-menu-button" onClick={() => setMenu(!menu)}
-                aria-label="Tài khoản">
-                <span className="avatar">{user.fullName.slice(0, 1).toUpperCase()}</span>
-                <span className="hamburger">☰</span>
-              </button>
-              {menu && (
-                <div className="user-dropdown">
-                  <Link href="/account/" onClick={() => setMenu(false)}>Chuyến của tôi</Link>
-                  <Link href="/publish/" onClick={() => setMenu(false)}>Đăng chuyến</Link>
-                  <button type="button" onClick={() => { setMenu(false); signOut(); }}>Đăng xuất</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link href="/login/" className="login-button">Đăng nhập</Link>
-          )}
+          <div className="header-user">
+            <button type="button" className="user-menu-button" onClick={() => setMenu(!menu)}
+              aria-label="Tài khoản">
+              <span className="hamburger">☰</span>
+              <span className="avatar user-avatar">
+                {ready && user ? user.fullName.slice(0, 1).toUpperCase() : "◯"}
+              </span>
+            </button>
+            {menu && (
+              <div className="user-dropdown">
+                {ready && user ? (
+                  <>
+                    <Link href="/account/" onClick={() => setMenu(false)}>Chuyến của tôi</Link>
+                    <Link href="/publish/" onClick={() => setMenu(false)}>Đăng chuyến</Link>
+                    <button type="button" onClick={() => { setMenu(false); signOut(); }}>Đăng xuất</button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login/" className="dropdown-login" onClick={() => setMenu(false)}>Đăng nhập</Link>
+                    <Link href="/publish/" onClick={() => setMenu(false)}>Đăng chuyến</Link>
+                    <Link href="/account/" onClick={() => setMenu(false)}>Chuyến của tôi</Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

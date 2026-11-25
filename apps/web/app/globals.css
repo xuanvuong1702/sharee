@@ -504,3 +504,5 @@ h1,h2,h3{font-weight:600}
 .air-listing-top strong{font-size:14px}
 .air-listing-body p,.air-listing-body small{font-size:12px}
 .air-listing-price strong{font-size:14px}
+
+.user-menu-button{border-radius:29px;height:38px;padding:3px 4px 3px 12px;gap:10px}.user-avatar{width:32px;height:32px;background:#717171;color:#fff;font-size:13px}.user-dropdown .dropdown-login{background:var(--gradient-primary);color:#fff;font-weight:600}.user-dropdown .dropdown-login:hover{background:radial-gradient(ellipse at 0% 100%,#c72d65,#d23760 53%,#d23755)}
